@@ -1,0 +1,420 @@
+<!doctype html>
+<html lang="it">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>HOLO RBQ | Preventivi e fatture</title>
+<style>
+:root{font:16px system-ui,sans-serif;color:#182941;background:#eef2f7;line-height:1.5}
+*{box-sizing:border-box}body{margin:0}header{background:#10243b;color:#fff;padding:18px 5%;display:flex;align-items:center;justify-content:space-between;gap:12px}header strong{letter-spacing:.09em}header span{font-size:.85rem;color:#c7daeb}main{width:min(1160px,92%);margin:40px auto}h1{font-size:clamp(2rem,5vw,3.2rem);line-height:1.1;margin:0 0 12px;letter-spacing:-.05em}h2{margin:0 0 14px;font-size:1.25rem}p{margin:0 0 14px}.sub{color:#465b73}.grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin:24px 0;align-items:start}.card{background:#fff;border:1px solid #d6e0ea;border-radius:18px;padding:24px;box-shadow:0 10px 30px #10243b08}label{display:block;font-weight:650;margin-bottom:12px}input,select,button{font:inherit;border-radius:8px}input,select{display:block;width:100%;border:1px solid #aebed0;background:#fff;color:inherit;padding:8px 10px;margin-top:4px}button{border:1px solid #244e74;background:#244e74;color:white;padding:8px 14px;cursor:pointer;font-weight:650}button:disabled{opacity:.45;cursor:default}.secondary{background:white;color:#244e74}.line{display:flex;gap:8px;flex-wrap:wrap}.split{display:grid;grid-template-columns:1fr 1fr;gap:12px}.messages{max-height:300px;overflow:auto;margin:12px 0}.message{border-radius:10px;background:#eef5fb;padding:12px;margin:0 0 8px;overflow-wrap:anywhere}.user{background:#e4f4ec}.hint{font-size:.88rem;color:#465b73}.receipt{margin:14px 0;padding:12px;background:#edf7f3;border-radius:10px;white-space:pre-line;overflow-wrap:anywhere}ol{padding-left:22px}li{margin-bottom:7px;overflow-wrap:anywhere}button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid #00745d;outline-offset:2px}@media(max-width:730px){.grid{grid-template-columns:1fr}main{margin-top:24px}.card{padding:18px}}
+#invoice-table th,#invoice-table td{padding:8px 12px;border-bottom:1px solid #d6e0ea}#invoice-table th{background:#eef5fb}
+</style>
+<header><strong>HOLO RBQ</strong><span>Demo · dati fittizi</span></header>
+<main>
+<h1>Preventivi</h1>
+<p class="sub">Cerca un cliente, controlla il preventivo e salva una bozza nell’archivio locale.</p>
+<div class="grid">
+<section class="card" aria-labelledby="assistant-heading">
+<h2 id="assistant-heading">Assistente demo</h2>
+<p class="hint">Interpreta richieste di esempio per cliente, servizio, importo e sconto.</p>
+<div class="messages" id="messages" role="log" aria-label="Conversazione"></div>
+<button class="secondary" id="guide-example" type="button">Prova la guida</button>
+<button class="secondary" id="example" type="button">Usa una richiesta di esempio</button>
+<form id="chat">
+<label for="request">Richiesta<input id="request" required maxlength="500" placeholder="Es. Cerca Rossi"></label>
+<button>Invia</button>
+</form>
+</section>
+<section class="card" aria-labelledby="quote-heading">
+<h2 id="quote-heading">Nuovo preventivo</h2>
+<form id="quote">
+<label>Cliente<select name="client" required><option value="">Seleziona un cliente</option></select></label>
+<label>Oggetto del preventivo<input name="subject" required maxlength="140" placeholder="Es. Consulenza"></label>
+<div class="split">
+<label>Importo (€)<input name="amount" type="number" min="0.01" max="1000000" step=".01" required></label>
+<label>Sconto (%)<input name="discount" type="number" min="0" max="100" step=".01" value="0" required></label>
+</div>
+<button>Mostra anteprima</button>
+<button id="exit-edit" type="button" class="secondary" hidden>Esci dalla modifica</button>
+</form>
+<div id="preview" class="receipt" hidden></div>
+<div class="line">
+<button id="save" disabled>Conferma e salva bozza</button>
+<button id="cancel" class="secondary" disabled>Annulla anteprima</button>
+</div>
+<p id="status" class="hint" role="status"></p>
+</section>
+</div>
+<section class="card"><h2 id="archive-heading" tabindex="-1">Bozze salvate</h2><form id="search"><label>Cerca per cliente, oggetto o codice<input id="query" type="search"></label><button>Cerca</button></form><p id="empty" class="hint">Nessuna bozza salvata.</p><ol id="drafts"></ol></section>
+<section class="card" id="invoice-section" style="margin-top:20px">
+<h2 id="invoice-heading" tabindex="-1">Fatture e scadenze</h2>
+<p class="hint">Fatture e incassi dimostrativi.</p>
+<form id="invoice-search">
+<div class="split">
+<label>Cliente o numero fattura<input id="invoice-query" type="search" placeholder="Es. Rossi"></label>
+<label>Stato<select id="invoice-status">
+<option value="all">Tutte</option><option value="open">Da incassare, incluse le scadute</option>
+<option value="overdue">Scadute</option><option value="paid">Saldate</option>
+</select></label>
+</div>
+<button>Cerca fatture</button>
+</form>
+<p id="invoice-summary" role="status" style="margin-top:14px"></p>
+<div style="overflow-x:auto">
+<table id="invoice-table" hidden style="width:100%;border-collapse:collapse;text-align:left">
+<thead><tr><th scope="col">Numero</th><th scope="col">Cliente</th><th scope="col">Scadenza</th><th scope="col">Importo</th><th scope="col">Incassato</th><th scope="col">Residuo</th><th scope="col">Stato</th></tr></thead>
+<tbody id="invoice-rows"></tbody>
+</table>
+</div>
+</section>
+</main>
+<script>
+'use strict';
+const byId = id => document.getElementById(id);
+const form = byId('quote');
+const fields = form.elements;
+let clients = [];
+const currency = new Intl.NumberFormat('it-IT', {style: 'currency', currency: 'EUR'});
+let revision = 0;
+let saving = false;
+let editing = null;
+let archiveRequest = 0;
+let preview = null;
+
+function message(value, author = 'Assistente') {
+  const item = document.createElement('p');
+  item.className = author === 'Tu' ? 'message user' : 'message';
+  item.textContent = author + ' · ' + value;
+  byId('messages').append(item);
+  item.scrollIntoView({block: 'nearest'});
+}
+function clearPreview() {
+  const previous = preview;
+  preview = null;
+  revision += 1;
+  if (previous && !saving) request('/api/previews/' + previous.id, 'DELETE').catch(() => {});
+  byId('preview').hidden = true;
+  byId('save').disabled = true;
+  byId('cancel').disabled = true;
+  byId('status').textContent = '';
+}
+async function request(path, method = 'GET', data) {
+  const response = await fetch(path, {
+    method,
+    ...(data ? {headers: {'Content-Type': 'application/json'}, body: JSON.stringify(data)} : {})
+  });
+  if (response.status === 204) return;
+  if (!response.ok) {
+    const body = await response.json().catch(() => ({}));
+    throw new Error(typeof body.detail === 'string' ? body.detail : 'Operazione non riuscita. Controlla i dati e riprova.');
+  }
+  return response.json();
+}
+async function loadClients() {
+  clients = await request('/api/clients');
+  for (const client of clients) fields.client.add(new Option(client.name, client.id));
+}
+async function renderDrafts() {
+  const list = byId('drafts');
+  const sequence = ++archiveRequest;
+  const query = byId('query').value.trim();
+  try {
+    const drafts = await request('/api/drafts?q=' + encodeURIComponent(query));
+    if (sequence !== archiveRequest) return;
+    list.replaceChildren();
+    byId('empty').textContent = query ? 'Nessuna bozza corrispondente.' : 'Nessuna bozza salvata.';
+    byId('empty').hidden = drafts.length > 0;
+    for (const draft of drafts) {
+      const row = document.createElement('li');
+      row.textContent = draft.id + ' · ' + draft.client + ' · ' + draft.subject + ' · ' + currency.format(draft.total / 100);
+      const open = document.createElement('button');
+      open.type = 'button';
+      open.className = 'secondary';
+      open.textContent = 'Apri ' + draft.id;
+      open.addEventListener('click', () => openDraft(draft.id));
+      row.append(' ', open);
+      list.append(row);
+    }
+  } catch {
+    if (sequence !== archiveRequest) return;
+    list.replaceChildren();
+    byId('empty').hidden = false;
+    byId('empty').textContent = 'Archivio locale non disponibile.';
+  }
+}
+function setEditing(draft) {
+  editing = draft;
+  byId('quote-heading').textContent = draft ? 'Modifica ' + draft.id : 'Nuovo preventivo';
+  byId('exit-edit').hidden = !draft;
+}
+async function openDraft(id) {
+  if (saving) return;
+  clearPreview();
+  const version = revision;
+  try {
+    const draft = await request('/api/drafts/' + encodeURIComponent(id));
+    if (version !== revision || saving) return;
+    setEditing(draft);
+    fields.client.value = draft.client_id || '';
+    fields.subject.value = draft.subject;
+    fields.amount.value = (draft.amount / 100).toFixed(2);
+    fields.discount.value = (draft.discount / 100).toFixed(2);
+    fields.subject.focus();
+  } catch (error) {
+    if (version === revision) byId('status').textContent = error.message;
+  }
+}
+byId('exit-edit').addEventListener('click', () => {
+  if (saving) return;
+  clearPreview();
+  setEditing(null);
+  form.reset();
+});
+byId('search').addEventListener('submit', event => {
+  event.preventDefault();
+  renderDrafts();
+});
+let invoiceRequest = 0;
+async function renderInvoices() {
+  const sequence = ++invoiceRequest;
+  const params = new URLSearchParams({
+    q: byId('invoice-query').value.trim(), status: byId('invoice-status').value
+  });
+  const summary = byId('invoice-summary');
+  const rows = byId('invoice-rows');
+  byId('invoice-table').hidden = true;
+  summary.textContent = 'Ricerca in corso…';
+  try {
+    const result = await request('/api/invoices?' + params);
+    if (sequence !== invoiceRequest) return;
+    rows.replaceChildren();
+    for (const invoice of result.invoices) {
+      const row = document.createElement('tr');
+      const dueDate = invoice.due_date.split('-').reverse().join('/');
+      const values = [invoice.number, invoice.client, dueDate,
+        ...[invoice.amount, invoice.paid, invoice.remaining].map(value => currency.format(value / 100)),
+        invoice.status];
+      for (const value of values) {
+        const cell = document.createElement('td');
+        cell.textContent = value;
+        row.append(cell);
+      }
+      rows.append(row);
+    }
+    byId('invoice-table').hidden = result.invoices.length === 0;
+    summary.textContent = result.invoices.length
+      ? 'Totale residuo: ' + currency.format(result.total_remaining / 100)
+      : 'Nessuna fattura corrispondente.';
+    return result;
+  } catch (error) {
+    if (sequence === invoiceRequest) summary.textContent = error.message;
+  }
+}
+byId('invoice-search').addEventListener('submit', event => {
+  event.preventDefault();
+  renderInvoices();
+});
+async function showGuide(question) {
+  try {
+    const result = await request('/api/guide?q=' + encodeURIComponent(question));
+    if (!result.articles.length) {
+      message('La guida dimostrativa non copre questa domanda. Puoi chiedere come registrare un incasso, creare o modificare una bozza oppure consultare le scadenze.');
+      return;
+    }
+    for (const article of result.articles) {
+      const card = document.createElement('div');
+      card.className = 'message';
+      const heading = document.createElement('strong');
+      heading.textContent = article.title;
+      const steps = document.createElement('ol');
+      for (const step of article.steps) {
+        const item = document.createElement('li');
+        item.textContent = step;
+        steps.append(item);
+      }
+      const scope = document.createElement('p');
+      scope.textContent = article.scope;
+      const source = document.createElement('small');
+      source.textContent = 'Fonte: ' + result.source + ' · ' + article.title;
+      card.append(heading, steps, scope, source);
+      byId('messages').append(card);
+      heading.scrollIntoView({block: 'nearest'});
+    }
+  } catch (error) {
+    message(error.message);
+  }
+}
+byId('guide-example').addEventListener('click', () => {
+  byId('request').value = 'Come registro un incasso?';
+  byId('request').focus();
+});
+function parseInvoiceSearch(question) {
+  const text = question.trim().replace(/[?.!]+$/, '').trim().replace(/\s+/g, ' ');
+  const patterns = [
+    /^(?:cosa|quanto) (?:deve ancora pagare|deve pagare ancora|deve pagare) (.+)$/i,
+    /^quanto (?:resta|rimane|manca) da incassare(?: (?:da|dal|dalla|per) (.+))?$/i,
+    /^quanto (?:devo|dobbiamo) ancora incassare(?: (?:da|dal|dalla|per) (.+))?$/i,
+    /^quanto (.+?) deve (?:ancora )?pagare$/i,
+  ];
+  for (const pattern of patterns) {
+    const match = text.match(pattern);
+    if (match) return {query: match[1] || '', status: 'open'};
+  }
+  const invoices = text.match(/^(?:quali|mostrami|mostra|cerca|elenca) (?:le )?fatture(?: (?:di|del|per) (.+?))?(?: (?:(?:sono )?(?:(?:ancora )?da incassare|non pagate|aperte|scadute|saldate)))?$/i);
+  if (!invoices) return null;
+  const status = /(?:da incassare|non pagate|aperte)$/i.test(text) ? 'open'
+    : /scadute$/i.test(text) ? 'overdue'
+    : /saldate$/i.test(text) ? 'paid' : 'all';
+  return {query: invoices[1] || '', status};
+}
+async function showInvoiceSearch({query, status}) {
+  byId('invoice-query').value = query;
+  byId('invoice-status').value = status;
+  const result = await renderInvoices();
+  if (!result) return;
+  const count = result.invoices.length;
+  const target = query ? ' per «' + query + '»' : '';
+  if (!count) {
+    message('Nessuna fattura corrispondente' + target + ' con il filtro selezionato.');
+    return;
+  }
+  const label = count === 1 ? ' fattura' : ' fatture';
+  message(count + label + target + '. Residuo complessivo ' +
+    currency.format(result.total_remaining / 100) + '. Dettaglio in Fatture e scadenze.');
+}
+function handleRequest(request) {
+  if (/^(?:come\b|guida\b|aiuto\b|istruzioni\b|procedura\b)/i.test(request)) {
+    showGuide(request);
+    return;
+  }
+  const invoiceSearch = parseInvoiceSearch(request);
+  if (invoiceSearch) {
+    showInvoiceSearch(invoiceSearch);
+    return;
+  }
+  const search = request.match(/^(?:mostrami|mostra|cerca|elenca|trova)\s+(?:(?:i|le)\s+)?(?:preventivi|bozze)(?:\s+(?:di|del|per)\s+(.+?))?[?.!]*$/i);
+  if (search) {
+    byId('query').value = search[1] || '';
+    renderDrafts();
+    message('Ho aggiornato la ricerca in Bozze salvate.');
+    byId('archive-heading').focus();
+    return;
+  }
+  const input = request.toLowerCase();
+  const exact = clients.filter(client => input.includes(client.name.toLowerCase()));
+  const matches = exact.length ? exact : clients.filter(client => input.includes(client.name.split(' ').at(-1).toLowerCase()));
+  const amount = input.match(/(?:\b(?:da|di)\s+)?(\d+(?:[.,]\d{1,2})?)\s*(?:€|euro\b)/);
+  const discount = input.match(/sconto\s+(?:del?\s+)?(\d+(?:[.,]\d{1,2})?)\s*%/);
+  const subject = request.match(/\bper\s+([^.,;€]+?)(?=\s+(?:con\s+sconto|da\s+\d|di\s+\d)|[.,;€]|$)/i);
+  if (!matches.length && !amount && !discount && !subject) {
+    message('Prova a indicare il nome del cliente oppure usa la richiesta di esempio.');
+    return;
+  }
+  clearPreview();
+  if (matches.length === 1) fields.client.value = matches[0].id;
+  if (matches.length > 1) fields.client.value = '';
+  if (amount) fields.amount.value = amount[1].replace(',', '.');
+  if (discount) fields.discount.value = discount[1].replace(',', '.');
+  if (subject) fields.subject.value = subject[1].trim().slice(0, 140);
+  if (matches.length > 1) {
+    message('Ho trovato ' + matches.map(client => client.name).join(' e ') + '. Scegli il cliente nel modulo, poi controlla i dati.');
+  } else {
+    message((matches.length ? 'Cliente selezionato: ' + matches[0].name + '. ' : '') + 'Controlla e completa i dati nel modulo, poi mostra l’anteprima.');
+  }
+}
+byId('chat').addEventListener('submit', event => {
+  event.preventDefault();
+  const request = byId('request').value.trim();
+  if (!request || saving) return;
+  message(request, 'Tu');
+  handleRequest(request);
+  byId('request').value = '';
+});
+byId('example').addEventListener('click', () => {
+  byId('request').value = 'Cerca Rossi e prepara un preventivo da 800 € per consulenza, con sconto del 10%';
+  byId('request').focus();
+});
+form.addEventListener('input', clearPreview);
+form.addEventListener('submit', async event => {
+  event.preventDefault();
+  if (saving) return;
+  clearPreview();
+  const version = revision;
+  const subject = fields.subject.value.trim();
+  if (!subject) {
+    byId('status').textContent = 'Inserisci un oggetto valido.';
+    fields.subject.focus();
+    return;
+  }
+  try {
+    const result = await request('/api/previews', 'POST', {
+      client_id: fields.client.value, subject,
+      amount: fields.amount.value, discount: fields.discount.value,
+      ...(editing ? {draft_id: editing.id, draft_version: editing.version} : {})
+    });
+    if (version !== revision) {
+      await request('/api/previews/' + result.id, 'DELETE');
+      return;
+    }
+    preview = result;
+    const output = byId('preview');
+    output.textContent = result.client + '\n' + result.subject + '\nImporto: ' +
+      currency.format(result.amount / 100) + ' · Sconto: ' + result.discount / 100 +
+      '%\nTotale al netto dello sconto: ' + currency.format(result.total / 100);
+    output.hidden = false;
+    byId('save').disabled = false;
+    byId('cancel').disabled = false;
+  } catch (error) {
+    if (version === revision) byId('status').textContent = error.message;
+  }
+});
+byId('cancel').addEventListener('click', async () => {
+  if (!preview || saving) return;
+  const current = preview;
+  byId('save').disabled = true;
+  byId('cancel').disabled = true;
+  try {
+    await request('/api/previews/' + current.id, 'DELETE');
+    if (preview === current) {
+      preview = null;
+      clearPreview();
+      byId('status').textContent = 'Anteprima annullata.';
+    }
+  } catch (error) {
+    if (preview === current) {
+      byId('status').textContent = error.message;
+      byId('save').disabled = false;
+      byId('cancel').disabled = false;
+    }
+  }
+});
+byId('save').addEventListener('click', async () => {
+  if (!preview || saving) return;
+  saving = true;
+  byId('save').disabled = true;
+  byId('cancel').disabled = true;
+  for (const control of fields) control.disabled = true;
+  try {
+    const draft = await request('/api/drafts/' + preview.id, 'PUT');
+    const action = editing ? ' aggiornata' : ' salvata';
+    clearPreview();
+    setEditing(null);
+    form.reset();
+    await renderDrafts();
+    byId('status').textContent = 'Bozza ' + draft.id + action + ' nell’archivio locale.';
+  } catch (error) {
+    byId('status').textContent = error.message;
+    byId('save').disabled = false;
+    byId('cancel').disabled = false;
+  } finally {
+    for (const control of fields) control.disabled = false;
+    saving = false;
+  }
+});
+loadClients().catch(() => {
+  byId('status').textContent = 'Elenco clienti non disponibile. Verifica che il server sia avviato e ricarica.';
+});
+renderDrafts();
+renderInvoices();
+message('Cerca un cliente o chiedimi di compilare un preventivo. Prima del salvataggio potrai verificare i dati.');
+</script>
+</html>

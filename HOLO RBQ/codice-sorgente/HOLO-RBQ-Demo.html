@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="it">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>HOLO RBQ | Preventivi</title>
+<style>
+:root{font:16px system-ui,sans-serif;color:#182941;background:#eef2f7;line-height:1.5}
+*{box-sizing:border-box}body{margin:0}header{background:#10243b;color:#fff;padding:18px 5%;display:flex;align-items:center;justify-content:space-between;gap:12px}header strong{letter-spacing:.09em}header span{font-size:.85rem;color:#c7daeb}main{width:min(1160px,92%);margin:40px auto}h1{font-size:clamp(2rem,5vw,3.2rem);line-height:1.1;margin:0 0 12px;letter-spacing:-.05em}h2{margin:0 0 14px;font-size:1.25rem}p{margin:0 0 14px}.sub{color:#465b73}.grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin:24px 0;align-items:start}.card{background:#fff;border:1px solid #d6e0ea;border-radius:18px;padding:24px;box-shadow:0 10px 30px #10243b08}label{display:block;font-weight:650;margin-bottom:12px}input,select,button{font:inherit;border-radius:8px}input,select{display:block;width:100%;border:1px solid #aebed0;background:#fff;color:inherit;padding:8px 10px;margin-top:4px}button{border:1px solid #244e74;background:#244e74;color:white;padding:8px 14px;cursor:pointer;font-weight:650}button:disabled{opacity:.45;cursor:default}.secondary{background:white;color:#244e74}.line{display:flex;gap:8px;flex-wrap:wrap}.split{display:grid;grid-template-columns:1fr 1fr;gap:12px}.messages{max-height:300px;overflow:auto;margin:12px 0}.message{border-radius:10px;background:#eef5fb;padding:12px;margin:0 0 8px;overflow-wrap:anywhere}.user{background:#e4f4ec}.hint{font-size:.88rem;color:#465b73}.receipt{margin:14px 0;padding:12px;background:#edf7f3;border-radius:10px;white-space:pre-line;overflow-wrap:anywhere}ol{padding-left:22px}li{margin-bottom:7px;overflow-wrap:anywhere}button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid #00745d;outline-offset:2px}@media(max-width:730px){.grid{grid-template-columns:1fr}main{margin-top:24px}.card{padding:18px}}
+</style>
+<header><strong>HOLO RBQ</strong><span>Demo · dati fittizi</span></header>
+<main>
+<h1>Preventivi</h1>
+<p class="sub">Cerca un cliente, controlla il preventivo e salva una bozza nel browser.</p>
+<div class="grid">
+<section class="card" aria-labelledby="assistant-heading">
+<h2 id="assistant-heading">Assistente demo</h2>
+<p class="hint">Interpreta richieste di esempio per cliente, servizio, importo e sconto.</p>
+<div class="messages" id="messages" role="log" aria-label="Conversazione"></div>
+<button class="secondary" id="example" type="button">Usa una richiesta di esempio</button>
+<form id="chat">
+<label for="request">Richiesta<input id="request" required maxlength="500" placeholder="Es. Cerca Rossi"></label>
+<button>Invia</button>
+</form>
+</section>
+<section class="card" aria-labelledby="quote-heading">
+<h2 id="quote-heading">Nuovo preventivo</h2>
+<form id="quote">
+<label>Cliente<select name="client" required><option value="">Seleziona un cliente</option><option>Studio Rossi</option><option>Martina Rossi</option><option>Studio Bianchi</option></select></label>
+<label>Oggetto del preventivo<input name="subject" required maxlength="140" placeholder="Es. Consulenza"></label>
+<div class="split">
+<label>Importo (€)<input name="amount" type="number" min="0.01" max="1000000" step=".01" required></label>
+<label>Sconto (%)<input name="discount" type="number" min="0" max="100" step=".01" value="0" required></label>
+</div>
+<button>Mostra anteprima</button>
+</form>
+<div id="preview" class="receipt" hidden></div>
+<div class="line">
+<button id="save" disabled>Conferma e salva bozza</button>
+<button id="cancel" class="secondary" disabled>Annulla anteprima</button>
+</div>
+<p id="status" class="hint" role="status"></p>
+</section>
+</div>
+<section class="card"><h2>Bozze salvate</h2><p id="empty" class="hint">Nessuna bozza salvata.</p><ol id="drafts"></ol></section>
+</main>
+<script>
+'use strict';
+const byId = id => document.getElementById(id);
+const form = byId('quote');
+const fields = form.elements;
+const clients = Array.from(fields.client.options).slice(1).map(option => option.value);
+const currency = new Intl.NumberFormat('it-IT', {style: 'currency', currency: 'EUR'});
+const storageKey = 'holo-rbq-demo-drafts-v1';
+let preview = null;
+
+function message(value, author = 'Assistente') {
+  const item = document.createElement('p');
+  item.className = author === 'Tu' ? 'message user' : 'message';
+  item.textContent = author + ' · ' + value;
+  byId('messages').append(item);
+  item.scrollIntoView({block: 'nearest'});
+}
+function clearPreview() {
+  preview = null;
+  byId('preview').hidden = true;
+  byId('save').disabled = true;
+  byId('cancel').disabled = true;
+  byId('status').textContent = '';
+}
+function readDrafts() {
+  return JSON.parse(localStorage.getItem(storageKey) || '[]');
+}
+function renderDrafts() {
+  const list = byId('drafts');
+  list.replaceChildren();
+  try {
+    const drafts = readDrafts();
+    byId('empty').hidden = drafts.length > 0;
+    for (const draft of drafts) {
+      const row = document.createElement('li');
+      row.textContent = draft.id + ' · ' + draft.client + ' · ' + draft.subject + ' · ' + currency.format(draft.total / 100);
+      list.append(row);
+    }
+  } catch {
+    byId('empty').hidden = false;
+    byId('empty').textContent = 'Archivio locale non disponibile.';
+  }
+}
+function handleRequest(request) {
+  const input = request.toLowerCase();
+  const exact = clients.filter(client => input.includes(client.toLowerCase()));
+  const matches = exact.length ? exact : clients.filter(client => input.includes(client.split(' ').at(-1).toLowerCase()));
+  const amount = input.match(/(?:\b(?:da|di)\s+)?(\d+(?:[.,]\d{1,2})?)\s*(?:€|euro\b)/);
+  const discount = input.match(/sconto\s+(?:del?\s+)?(\d+(?:[.,]\d{1,2})?)\s*%/);
+  const subject = request.match(/\bper\s+([^.,;€]+?)(?=\s+(?:con\s+sconto|da\s+\d|di\s+\d)|[.,;€]|$)/i);
+  if (!matches.length && !amount && !discount && !subject) {
+    message('Prova a indicare il nome del cliente oppure usa la richiesta di esempio.');
+    return;
+  }
+  clearPreview();
+  if (matches.length === 1) fields.client.value = matches[0];
+  if (matches.length > 1) fields.client.value = '';
+  if (amount) fields.amount.value = amount[1].replace(',', '.');
+  if (discount) fields.discount.value = discount[1].replace(',', '.');
+  if (subject) fields.subject.value = subject[1].trim().slice(0, 140);
+  if (matches.length > 1) {
+    message('Ho trovato ' + matches.join(' e ') + '. Scegli il cliente nel modulo, poi controlla i dati.');
+  } else {
+    message((matches.length ? 'Cliente selezionato: ' + matches[0] + '. ' : '') + 'Controlla e completa i dati nel modulo, poi mostra l’anteprima.');
+  }
+}
+byId('chat').addEventListener('submit', event => {
+  event.preventDefault();
+  const request = byId('request').value.trim();
+  if (!request) return;
+  message(request, 'Tu');
+  handleRequest(request);
+  byId('request').value = '';
+});
+byId('example').addEventListener('click', () => {
+  byId('request').value = 'Cerca Rossi e prepara un preventivo da 800 € per consulenza, con sconto del 10%';
+  byId('request').focus();
+});
+form.addEventListener('input', clearPreview);
+form.addEventListener('submit', event => {
+  event.preventDefault();
+  clearPreview();
+  const subject = fields.subject.value.trim();
+  if (!subject) {
+    byId('status').textContent = 'Inserisci un oggetto valido.';
+    fields.subject.focus();
+    return;
+  }
+  const amount = Math.round(fields.amount.valueAsNumber * 100);
+  const discount = Math.round(fields.discount.valueAsNumber * 100);
+  const total = amount - Math.round(amount * discount / 10000);
+  preview = {client: fields.client.value, subject, amount, discount, total};
+  const output = byId('preview');
+  output.textContent = preview.client + '\n' + subject + '\nImporto: ' + currency.format(amount / 100) + ' · Sconto: ' + discount / 100 + '%\nTotale al netto dello sconto: ' + currency.format(total / 100);
+  output.hidden = false;
+  byId('save').disabled = false;
+  byId('cancel').disabled = false;
+});
+byId('cancel').addEventListener('click', () => {
+  clearPreview();
+  byId('status').textContent = 'Anteprima annullata.';
+});
+byId('save').addEventListener('click', () => {
+  if (!preview) return;
+  try {
+    const drafts = readDrafts();
+    const id = 'DEMO-' + String(drafts.length + 1).padStart(3, '0');
+    drafts.push({id, ...preview});
+    localStorage.setItem(storageKey, JSON.stringify(drafts));
+    clearPreview();
+    form.reset();
+    renderDrafts();
+    byId('status').textContent = 'Bozza ' + id + ' salvata nel browser.';
+  } catch {
+    byId('status').textContent = 'Salvataggio non riuscito. Il browser potrebbe bloccare l’archivio locale.';
+  }
+});
+renderDrafts();
+message('Cerca un cliente o chiedimi di compilare un preventivo. Prima del salvataggio potrai verificare i dati.');
+</script>
+</html>
