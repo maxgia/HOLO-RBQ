@@ -51,3 +51,42 @@ class PreventiviBrowserTest(unittest.TestCase):
                     expect(rows).to_contain_text("640,00")
             finally:
                 browser.close()
+
+    def test_annullamento_anteprima_senza_bozza(self):
+        with TemporaryDirectory() as folder, sync_playwright() as playwright:
+            database = Path(folder) / "holo-e2e.sqlite3"
+            with serve(database) as url:
+                browser = playwright.chromium.launch()
+                try:
+                    page = browser.new_page()
+                    page.goto(url)
+                    quote = page.locator("#quote")
+                    quote.get_by_label("Cliente").select_option("studio-rossi")
+                    quote.get_by_label("Oggetto").fill("Consulenza da annullare")
+                    quote.get_by_label("Importo").fill("800")
+                    page.get_by_role("button", name="Mostra anteprima").click()
+                    preview = page.locator("#preview")
+                    save = page.get_by_role("button", name="Conferma e salva bozza")
+                    expect(preview).to_be_visible()
+                    expect(save).to_be_enabled()
+
+                    with page.expect_response(
+                        lambda response: response.request.method == "DELETE"
+                        and "/api/previews/" in response.url
+                    ) as cancelled:
+                        page.get_by_role("button", name="Annulla anteprima").click()
+                    self.assertTrue(cancelled.value.ok)
+                    expect(page.locator("#status")).to_have_text("Anteprima annullata.")
+                    expect(preview).to_be_hidden()
+                    expect(save).to_be_disabled()
+
+                    with page.expect_response(
+                        lambda response: response.request.method == "GET"
+                        and "/api/drafts?" in response.url
+                    ) as archive:
+                        page.reload()
+                    self.assertEqual(archive.value.json(), [])
+                    expect(page.locator("#empty")).to_be_visible()
+                    expect(page.locator("#drafts").get_by_role("listitem")).to_have_count(0)
+                finally:
+                    browser.close()
