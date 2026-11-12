@@ -36,3 +36,15 @@ Ferma il server. Se provieni dallo ZIP precedente, puoi copiare i sorgenti aggio
 - Chat fatture. Verificate otto formulazioni in JavaScript, tre comandi esistenti esclusi dal riconoscimento fatture e risultati API per Rossi, Studio Rossi e cliente sconosciuto.
 
 Fatture e anagrafiche sono dimostrative. Lo stato delle scadenze dipende dalla data del server. Il materiale operativo e i dettagli dei singoli incrementi sono in [Storico-MVP.md](Storico-MVP.md).
+
+## Regressione automatizzata
+
+Da PowerShell in `HOLO RBQ\codice-sorgente`, con l'ambiente virtuale già creato, esegui:
+
+```powershell
+.\.venv\Scripts\python.exe -m pip install -r requirements-test.txt
+.\.venv\Scripts\python.exe -m unittest discover -s tests -v
+node --test tests/chat.test.cjs
+```
+
+Per la suite JavaScript serve Node.js 18 o successivo. Il server locale può essere spento durante i test. Risultato atteso: 7 test Python e 11 test Node superati. I test Node verificano il riconoscimento delle frasi in un ambiente simulato. Per le prove dell'interfaccia usa i passi del collaudo funzionale.
