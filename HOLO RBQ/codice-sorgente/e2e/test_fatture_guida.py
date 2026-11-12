@@ -71,3 +71,15 @@ class FattureGuidaBrowserTest(unittest.TestCase):
         self.ask("Come invio la fattura allo SdI?")
         expect(messages).to_contain_text("La guida dimostrativa non copre questa domanda.")
         expect(messages.get_by_text("Fonte:", exact=False)).to_have_count(1)
+
+    def test_riepilogo_e_navigazione_del_nuovo_layout(self):
+        page = self.page
+        nav = page.get_by_role("navigation", name="Navigazione principale")
+        expect(page.locator("#metric-open")).to_have_text(re.compile(r"^1[.\s]?550,00\s*€$"))
+        expect(page.locator("#metric-overdue")).to_have_text(re.compile(r"^500,00\s*€$"))
+        expect(page.locator("#metric-drafts")).to_have_text("0")
+        invoices = nav.get_by_role("link", name="Fatture e scadenze")
+        invoices.click()
+        expect(invoices).to_have_attribute("aria-current", "location")
+        nav.get_by_role("button", name="Guida operativa").click()
+        expect(page.get_by_role("log")).to_contain_text("Registrare un incasso")

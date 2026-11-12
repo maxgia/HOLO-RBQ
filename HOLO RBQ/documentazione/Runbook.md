@@ -76,3 +76,7 @@ Esito del 12 novembre 2026: [GitHub Actions · run 43239189016](https://github.c
 Il test RBQ-03 genera un’anteprima con dati dimostrativi, la annulla e verifica che il pulsante di salvataggio sia disabilitato. Controlla la risposta HTTP 204 alla cancellazione, il rifiuto HTTP 404 di un successivo tentativo di salvare la stessa anteprima e l’archivio vuoto dopo il ricaricamento. Si esegue con lo stesso comando della suite browser e usa un database temporaneo.
 
 Esito del 12 novembre 2026: [GitHub Actions · run 43239996580](https://github.com/maxgia/HOLO-RBQ/actions/runs/43239996580) sul commit `2c4773f`. Superati 7 test API, 11 test JavaScript e 4 test browser Chromium.
+
+## Interfaccia MVP con navigazione laterale
+
+La barra laterale apre Assistente, Preventivi, Bozze salvate, Fatture e scadenze e Guida operativa. Il riepilogo mostra gli importi da incassare e scaduti, oltre al numero delle bozze salvate. Le API di FastAPI alimentano le schermate e le bozze restano nell’archivio SQLite. Il collaudo browser verifica anche importi del riepilogo, navigazione e avvio della guida dalla barra laterale. [Verifiche della pull request #1](https://github.com/maxgia/HOLO-RBQ/pull/1/checks)
