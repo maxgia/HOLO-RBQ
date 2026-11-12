@@ -9,7 +9,7 @@ Aggiornato al 12 novembre 2026. Il target qui assunto è un **pilota a perimetro
 | A01 | MVP locale, repository e runbook | Completata | Consuntivo non rilevato | — | Avvio dal codice GitHub verificato dall'utente. Preventivi, fatture demo e guida disponibili. |
 | A02 | Regressione API e riconoscimento delle richieste | Completata | Consuntivo non rilevato | A01 | 7 test Python e 11 test Node superati. |
 | A03 | Collaudo browser preventivi e automazione CI | Completata | Consuntivo non rilevato | A01, A02 | E2E verde su GitHub Actions o su una copia pulita. Bozza a 720 €, modifica a 640 €, stesso codice dopo il riavvio. |
-| A04 | Estendere il collaudo browser a fatture e guida | Da fare | 2–3 gg | A03 | Filtri e residui corretti, guida con fonte e risposta fuori copertura. Suite ripetibile e documentata. |
+| A04 | Estendere il collaudo browser a fatture e guida | Completata | Consuntivo non rilevato | A03 | Filtri e residui corretti, guida con fonte e risposta fuori copertura. Suite ripetibile e documentata. |
 | A05 | Sperimentare il flusso di sviluppo multiagente | Da fare | 2–4 gg | A03 | Un'attività con implementazione, revisione, QA, controllo sicurezza, evidenze collegate e approvazione registrata. |
 | A06 | Definire il pilota e selezionare il gestionale | Rinviata | 2–4 gg | Disponibilità del referente | Gestionale e operazioni concordati, azienda di test, accesso API, utenti e criteri di accettazione identificati. |
 | A07 | Integrare il gestionale in sola lettura | In attesa | 4–7 gg | A06 | Test contrattuali e confronto su anagrafiche, fatture, scadenze, incassato e residui rispetto al gestionale. |
@@ -18,7 +18,7 @@ Aggiornato al 12 novembre 2026. Il target qui assunto è un **pilota a perimetro
 | A10 | Implementare e verificare i controlli del pilota | In attesa | 4–8 gg | A07, A09 | Verifiche di accesso tra utenti, segreti, audit, dipendenze e ripristino completate. Rischi residui assegnati. |
 | A11 | Rilascio pilota e collaudo di accettazione | In attesa | 2–4 gg | A05, A08, A10 | Configurazione riproducibile, suite verde, accettazione utenti e decisione di rilascio registrate. |
 
-**Stima residua di pianificazione: 22–40 giorni-persona** per A04–A11. Con una persona a tempo pieno e attività in sequenza equivale a circa 5–9 settimane lavorative. Sono escluse le attese per scelta del gestionale, accessi, feedback e approvazioni. Mentre A06 è rinviata, A04–A05 possono avanzare con i dati demo. La scrittura nel gestionale, un'eventuale certificazione e il rollout di produzione richiedono un perimetro e una stima dedicati.
+**Stima residua di pianificazione: 20–37 giorni-persona** per A05–A11. Con una persona a tempo pieno e attività in sequenza equivale a circa 4–8 settimane lavorative. Sono escluse le attese per scelta del gestionale, accessi, feedback e approvazioni. Mentre A06 è rinviata, A05 può avanzare con i dati demo. La scrittura nel gestionale, un'eventuale certificazione e il rollout di produzione richiedono un perimetro e una stima dedicati.
 
 ## Traguardi e modalità di aggiornamento
 
@@ -29,6 +29,8 @@ Aggiornato al 12 novembre 2026. Il target qui assunto è un **pilota a perimetro
 | Integrazione verificata | A06–A07 completate con confronto su azienda di test. |
 | Pilota accettato | A08–A11 completate. Esiti funzionali, usabilità e sicurezza disponibili per la decisione di rilascio. |
 
-A ogni aggiornamento registrare stato, giorni spesi e residui, blocchi, prossimo passo e collegamenti a PR, commit ed esecuzione dei test. Un'attività passa a **Completata** quando il criterio è verificato. Avanzamento iniziale: **3 attività completate su 11**. Il conteggio misura la chiusura delle attività, che hanno durate diverse. Per i comandi e i casi di collaudo consultare il [runbook](Runbook.md).
+A ogni aggiornamento registrare stato, giorni spesi e residui, blocchi, prossimo passo e collegamenti a PR, commit ed esecuzione dei test. Un'attività passa a **Completata** quando il criterio è verificato. Avanzamento: **4 attività completate su 11**. Il conteggio misura la chiusura delle attività, che hanno durate diverse. Per i comandi e i casi di collaudo consultare il [runbook](Runbook.md).
 
 Evidenza A03: [GitHub Actions · run 43237001468](https://github.com/maxgia/HOLO-RBQ/actions/runs/43237001468) sul commit `97c0cfa`. Suite API, JavaScript e browser superate.
+
+Evidenza A04: [GitHub Actions · run 43239189016](https://github.com/maxgia/HOLO-RBQ/actions/runs/43239189016) sul commit `c0d5e88`. Superati 7 test API, 11 test JavaScript e 3 test browser Chromium.

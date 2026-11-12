@@ -24,7 +24,7 @@ Ferma il server. Se provieni dallo ZIP precedente, puoi copiare i sorgenti aggio
 | RBQ-05–06 | Cerca Rossi in Bozze salvate o chiedi «Mostrami i preventivi di Studio Rossi». Apri la bozza da 800 €, applica 20%, conferma e riavvia. Stesso codice, 640 €. | API e prova locale sul PC dell'utente |
 | RBQ-07–08 | Chiedi «Quali fatture di Rossi sono ancora da incassare?». Attese tre fatture e 1.200 € di residuo. F-001 ha 300 € incassati e 500 € residui. Controlla filtri scadute e saldate. | API e prova locale sul PC dell'utente |
 | RBQ-09 | Premi Prova la guida e invia «Come registro un incasso?». Verifica passaggi, indicazione del gestionale e fonte Guida dimostrativa HOLO RBQ · v1. Prova anche creazione e modifica bozza, scadenze e una richiesta fuori copertura. | Quattro procedure e richieste fuori copertura via API. L'utente ha confermato il funzionamento della guida |
-| RBQ-10 | «Cosa deve ancora pagare Rossi?» dà tre fatture e 1.200 €. «Quanto resta da incassare da Studio Rossi?» dà due fatture e 950 €. Un cliente assente restituisce un elenco vuoto. | Otto formulazioni in JavaScript e importi via API. Collaudo in browser da registrare |
+| RBQ-10 | «Cosa deve ancora pagare Rossi?» dà tre fatture e 1.200 €. «Quanto resta da incassare da Studio Rossi?» dà due fatture e 950 €. Un cliente assente restituisce un elenco vuoto. | Otto formulazioni in JavaScript e importi via API. Collaudo browser delle formulazioni equivalenti superato |
 
 ## Verifiche tecniche svolte
 
@@ -64,3 +64,9 @@ Da PowerShell, nella cartella dei sorgenti:
 La suite è configurata anche in GitHub Actions, con i test Python e Node. Per registrare un esito, annotare commit, ambiente e risultato o link al run. Per dipendenze e traguardi consultare il [piano generale](Piano-generale.md).
 
 Esito del 12 novembre 2026: [GitHub Actions · run 43237001468](https://github.com/maxgia/HOLO-RBQ/actions/runs/43237001468) sul commit `97c0cfa`. Passati 7 test Python, 11 test Node e il test browser Chromium.
+
+## Test end-to-end di fatture e guida operativa
+
+Lo stesso comando della suite browser esegue anche i test RBQ-07–10. Per le fatture verifica richieste equivalenti in chat, filtro per cliente, scadute, saldate, importo residuo e ricerca senza risultati. Per la guida verifica i passaggi per registrare un incasso, la fonte e la risposta a una domanda fuori copertura.
+
+Esito del 12 novembre 2026: [GitHub Actions · run 43239189016](https://github.com/maxgia/HOLO-RBQ/actions/runs/43239189016) sul commit `c0d5e88`. Superati 7 test API, 11 test JavaScript e 3 test browser Chromium.

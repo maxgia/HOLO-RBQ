@@ -12,8 +12,8 @@ Quando si introduce un orchestratore multiagente, registrare per ogni esecuzione
 |---|---|---|
 | RBQ-01–04 | Clienti, anteprime, bozze e SQLite | `test_home_and_client_search`, `test_validation_and_cancel`, `test_concurrent_confirmation_and_restart` |
 | RBQ-05–06 | Ricerca, dettaglio e modifica bozze | `test_edit_and_stale_preview`, `test_legacy_database` |
-| RBQ-07–08 | Ricerca fatture, filtri e residui | `test_invoices` |
-| RBQ-09 | Guida operativa e fonte | `test_guide` |
+| RBQ-07–08 | Ricerca fatture, filtri e residui | `test_invoices`, `test_fatture_da_chat_e_filtri` |
+| RBQ-09 | Guida operativa e fonte | `test_guide`, `test_guida_con_fonte_e_domanda_fuori_copertura` |
 | RBQ-10 | Formulazioni equivalenti nella chat | `chat.test.cjs` e `test_invoices` |
 
 In una pull request indicare ID del requisito, commit, comando di test, esito, eventuali prove manuali e approvazione. Per le prove manuali registrare data, versione, ambiente, risultato atteso e osservato.
@@ -22,7 +22,7 @@ In una pull request indicare ID del requisito, commit, comando di test, esito, e
 
 La suite esegue 7 test Python a livello API, con sottocasi, e 11 test Node sul riconoscimento delle frasi. I test usano database temporanei. I passi per il collaudo nel browser sono nel runbook.
 
-Per il pilota, far svolgere a utenti rappresentativi creazione, modifica, ricerca fatture e uso della guida. Rilevare completamento senza aiuto, tempo, errori e chiarezza della conferma. Il primo test browser dei preventivi è implementato. L’esito E2E è registrato nel [piano generale](Piano-generale.md). Resta il collaudo con utenti rappresentativi.
+Per il pilota, far svolgere a utenti rappresentativi creazione, modifica, ricerca fatture e uso della guida. Rilevare completamento senza aiuto, tempo, errori e chiarezza della conferma. I tre test browser coprono preventivi, fatture e guida operativa. L’esito E2E è registrato nel [piano generale](Piano-generale.md). Resta il collaudo con utenti rappresentativi.
 
 ## 8. Sicurezza
 
