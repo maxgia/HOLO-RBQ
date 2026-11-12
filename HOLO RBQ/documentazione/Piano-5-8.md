@@ -22,7 +22,7 @@ In una pull request indicare ID del requisito, commit, comando di test, esito, e
 
 La suite esegue 7 test Python a livello API, con sottocasi, e 11 test Node sul riconoscimento delle frasi. I test usano database temporanei. I passi per il collaudo nel browser sono nel runbook.
 
-Per il pilota, far svolgere a utenti rappresentativi creazione, modifica, ricerca fatture e uso della guida. Rilevare completamento senza aiuto, tempo, errori e chiarezza della conferma. Il primo test browser dei preventivi è implementato. Esito E2E e collaudo con utenti rappresentativi vanno registrati nel [piano generale](Piano-generale.md).
+Per il pilota, far svolgere a utenti rappresentativi creazione, modifica, ricerca fatture e uso della guida. Rilevare completamento senza aiuto, tempo, errori e chiarezza della conferma. Il primo test browser dei preventivi è implementato. L’esito E2E è registrato nel [piano generale](Piano-generale.md). Resta il collaudo con utenti rappresentativi.
 
 ## 8. Sicurezza
 

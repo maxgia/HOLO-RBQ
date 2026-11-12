@@ -62,3 +62,5 @@ Da PowerShell, nella cartella dei sorgenti:
 ```
 
 La suite è configurata anche in GitHub Actions, con i test Python e Node. Per registrare un esito, annotare commit, ambiente e risultato o link al run. Per dipendenze e traguardi consultare il [piano generale](Piano-generale.md).
+
+Esito del 12 novembre 2026: [GitHub Actions · run 43237001468](https://github.com/maxgia/HOLO-RBQ/actions/runs/43237001468) sul commit `97c0cfa`. Passati 7 test Python, 11 test Node e il test browser Chromium.
