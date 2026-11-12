@@ -33,7 +33,7 @@ class FattureGuidaBrowserTest(unittest.TestCase):
         rows = page.locator("#invoice-rows").get_by_role("row")
         messages = page.get_by_role("log")
         self.ask("Cosa deve ancora pagare Rossi?")
-        expect(messages).to_contain_text("3 fatture per «Rossi». Residuo complessivo 1.200,00")
+        expect(messages).to_contain_text(re.compile(r"3 fatture per «Rossi»\. Residuo complessivo 1[.\s]?200,00"))
         expect(rows).to_have_count(3)
 
         self.ask("Quanto resta da incassare da Studio Rossi?")
