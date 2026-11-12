@@ -48,3 +48,17 @@ node --test tests/chat.test.cjs
 ```
 
 Per la suite JavaScript serve Node.js 18 o successivo. Il server locale può essere spento durante i test. Risultato atteso: 7 test Python e 11 test Node superati. I test Node verificano il riconoscimento delle frasi in un ambiente simulato. Per le prove dell'interfaccia usa i passi del collaudo funzionale.
+
+## Test end-to-end dei preventivi nel browser
+
+Requisiti RBQ-01–06. Il test avvia Uvicorn su una porta libera con un database temporaneo. Verifica richiesta di esempio, scelta cliente, creazione a 720 €, ricerca, modifica a 640 €, mantenimento del codice e rilettura dopo arresto e nuovo avvio del server.
+
+Da PowerShell, nella cartella dei sorgenti:
+
+```powershell
+.\.venv\Scripts\python.exe -m pip install -r requirements-e2e.txt
+.\.venv\Scripts\python.exe -m playwright install chromium
+.\.venv\Scripts\python.exe -m unittest discover -s e2e -v
+```
+
+La suite è configurata anche in GitHub Actions, con i test Python e Node. Per registrare un esito, annotare commit, ambiente e risultato o link al run. Per dipendenze e traguardi consultare il [piano generale](Piano-generale.md).
