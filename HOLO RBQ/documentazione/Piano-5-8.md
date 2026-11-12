@@ -6,6 +6,8 @@ Per ogni incremento, aprire un'attività con ID requisito, perimetro e criteri d
 
 Quando si introduce un orchestratore multiagente, registrare per ogni esecuzione l'attività, il ruolo, la versione della configurazione, le azioni rilevanti, l'esito, le revisioni e l'approvazione. Conservare riferimenti agli artefatti ed escludere credenziali e dati personali dalle registrazioni. L'orchestrazione resta da implementare.
 
+La [prova A05](Prova-A05.md) documenta il primo passaggio tra implementazione, revisione, QA, controllo di sicurezza e approvazione.
+
 ## 6. Tracciabilità
 
 | Requisito | Componente | Verifica ripetibile |
@@ -22,7 +24,7 @@ In una pull request indicare ID del requisito, commit, comando di test, esito, e
 
 La suite esegue 7 test Python a livello API, con sottocasi, e 11 test Node sul riconoscimento delle frasi. I test usano database temporanei. I passi per il collaudo nel browser sono nel runbook.
 
-Per il pilota, far svolgere a utenti rappresentativi creazione, modifica, ricerca fatture e uso della guida. Rilevare completamento senza aiuto, tempo, errori e chiarezza della conferma. I tre test browser coprono preventivi, fatture e guida operativa. L’esito E2E è registrato nel [piano generale](Piano-generale.md). Resta il collaudo con utenti rappresentativi.
+Per il pilota, far svolgere a utenti rappresentativi creazione, modifica, ricerca fatture e uso della guida. Rilevare completamento senza aiuto, tempo, errori e chiarezza della conferma. I quattro test browser coprono preventivi, fatture e guida operativa. L’esito E2E è registrato nel [piano generale](Piano-generale.md). Resta il collaudo con utenti rappresentativi.
 
 ## 8. Sicurezza
 
