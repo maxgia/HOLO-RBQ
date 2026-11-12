@@ -75,7 +75,10 @@ class PreventiviBrowserTest(unittest.TestCase):
                         and "/api/previews/" in response.url
                     ) as cancelled:
                         page.get_by_role("button", name="Annulla anteprima").click()
-                    self.assertTrue(cancelled.value.ok)
+                    self.assertEqual(cancelled.value.status, 204)
+                    preview_id = cancelled.value.url.rsplit('/', 1)[-1]
+                    retry = page.request.put(f'{url}api/drafts/{preview_id}')
+                    self.assertEqual(retry.status, 404)
                     expect(page.locator("#status")).to_have_text("Anteprima annullata.")
                     expect(preview).to_be_hidden()
                     expect(save).to_be_disabled()
