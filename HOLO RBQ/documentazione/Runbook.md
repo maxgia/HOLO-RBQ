@@ -24,7 +24,7 @@ Ferma il server. Se provieni dallo ZIP precedente, puoi copiare i sorgenti aggio
 | RBQ-05–06 | Cerca Rossi in Bozze salvate o chiedi «Mostrami i preventivi di Studio Rossi». Apri la bozza da 800 €, applica 20%, conferma e riavvia. Stesso codice, 640 €. | API e prova locale sul PC dell'utente |
 | RBQ-07–08 | Chiedi «Quali fatture di Rossi sono ancora da incassare?». Attese tre fatture e 1.200 € di residuo. F-001 ha 300 € incassati e 500 € residui. Controlla filtri scadute e saldate. | API e prova locale sul PC dell'utente |
 | RBQ-09 | Premi Prova la guida e invia «Come registro un incasso?». Verifica passaggi, indicazione del gestionale e fonte Guida dimostrativa HOLO RBQ · v1. Prova anche creazione e modifica bozza, scadenze e una richiesta fuori copertura. | Quattro procedure e richieste fuori copertura via API. L'utente ha confermato il funzionamento della guida |
-| RBQ-10 | «Cosa deve ancora pagare Rossi?» dà tre fatture e 1.200 €. «Quanto resta da incassare da Studio Rossi?» dà due fatture e 950 €. Un cliente assente restituisce un elenco vuoto. | Otto formulazioni in JavaScript e importi via API. Collaudo in browser da registrare |
+| RBQ-10 | «Cosa deve ancora pagare Rossi?» dà tre fatture e 1.200 €. «Quanto resta da incassare da Studio Rossi?» dà due fatture e 950 €. Un cliente assente restituisce un elenco vuoto. | Otto formulazioni in JavaScript e importi via API. Collaudo browser delle formulazioni equivalenti superato |
 
 ## Verifiche tecniche svolte
 
@@ -48,3 +48,35 @@ node --test tests/chat.test.cjs
 ```
 
 Per la suite JavaScript serve Node.js 18 o successivo. Il server locale può essere spento durante i test. Risultato atteso: 7 test Python e 11 test Node superati. I test Node verificano il riconoscimento delle frasi in un ambiente simulato. Per le prove dell'interfaccia usa i passi del collaudo funzionale.
+
+## Test end-to-end dei preventivi nel browser
+
+Requisiti RBQ-01–06. Il test avvia Uvicorn su una porta libera con un database temporaneo. Verifica richiesta di esempio, scelta cliente, creazione a 720 €, ricerca, modifica a 640 €, mantenimento del codice e rilettura dopo arresto e nuovo avvio del server.
+
+Da PowerShell, nella cartella dei sorgenti:
+
+```powershell
+.\.venv\Scripts\python.exe -m pip install -r requirements-e2e.txt
+.\.venv\Scripts\python.exe -m playwright install chromium
+.\.venv\Scripts\python.exe -m unittest discover -s e2e -v
+```
+
+La suite è configurata anche in GitHub Actions, con i test Python e Node. Per registrare un esito, annotare commit, ambiente e risultato o link al run. Per dipendenze e traguardi consultare il [piano generale](Piano-generale.md).
+
+Esito del 12 novembre 2026: [GitHub Actions · run 43237001468](https://github.com/maxgia/HOLO-RBQ/actions/runs/43237001468) sul commit `97c0cfa`. Passati 7 test Python, 11 test Node e il test browser Chromium.
+
+## Test end-to-end di fatture e guida operativa
+
+Lo stesso comando della suite browser esegue anche i test RBQ-07–10. Per le fatture verifica richieste equivalenti in chat, filtro per cliente, scadute, saldate, importo residuo e ricerca senza risultati. Per la guida verifica i passaggi per registrare un incasso, la fonte e la risposta a una domanda fuori copertura.
+
+Esito del 12 novembre 2026: [GitHub Actions · run 43239189016](https://github.com/maxgia/HOLO-RBQ/actions/runs/43239189016) sul commit `c0d5e88`. Superati 7 test API, 11 test JavaScript e 3 test browser Chromium.
+
+## Annullamento dell’anteprima nel browser
+
+Il test RBQ-03 genera un’anteprima con dati dimostrativi, la annulla e verifica che il pulsante di salvataggio sia disabilitato. Controlla la risposta HTTP 204 alla cancellazione, il rifiuto HTTP 404 di un successivo tentativo di salvare la stessa anteprima e l’archivio vuoto dopo il ricaricamento. Si esegue con lo stesso comando della suite browser e usa un database temporaneo.
+
+Esito del 12 novembre 2026: [GitHub Actions · run 43239996580](https://github.com/maxgia/HOLO-RBQ/actions/runs/43239996580) sul commit `2c4773f`. Superati 7 test API, 11 test JavaScript e 4 test browser Chromium.
+
+## Interfaccia MVP con navigazione laterale
+
+La barra laterale apre Assistente, Preventivi, Bozze salvate, Fatture e scadenze e Guida operativa. Il riepilogo mostra gli importi da incassare e scaduti, oltre al numero delle bozze salvate. Le API di FastAPI alimentano le schermate e le bozze restano nell’archivio SQLite. Il collaudo browser verifica anche importi del riepilogo, navigazione e avvio della guida dalla barra laterale. [Verifiche della pull request #1](https://github.com/maxgia/HOLO-RBQ/pull/1/checks)

@@ -6,14 +6,16 @@ Per ogni incremento, aprire un'attività con ID requisito, perimetro e criteri d
 
 Quando si introduce un orchestratore multiagente, registrare per ogni esecuzione l'attività, il ruolo, la versione della configurazione, le azioni rilevanti, l'esito, le revisioni e l'approvazione. Conservare riferimenti agli artefatti ed escludere credenziali e dati personali dalle registrazioni. L'orchestrazione resta da implementare.
 
+La [prova A05](Prova-A05.md) documenta il primo passaggio tra implementazione, revisione, QA, controllo di sicurezza e approvazione.
+
 ## 6. Tracciabilità
 
 | Requisito | Componente | Verifica ripetibile |
 |---|---|---|
 | RBQ-01–04 | Clienti, anteprime, bozze e SQLite | `test_home_and_client_search`, `test_validation_and_cancel`, `test_concurrent_confirmation_and_restart` |
 | RBQ-05–06 | Ricerca, dettaglio e modifica bozze | `test_edit_and_stale_preview`, `test_legacy_database` |
-| RBQ-07–08 | Ricerca fatture, filtri e residui | `test_invoices` |
-| RBQ-09 | Guida operativa e fonte | `test_guide` |
+| RBQ-07–08 | Ricerca fatture, filtri e residui | `test_invoices`, `test_fatture_da_chat_e_filtri` |
+| RBQ-09 | Guida operativa e fonte | `test_guide`, `test_guida_con_fonte_e_domanda_fuori_copertura` |
 | RBQ-10 | Formulazioni equivalenti nella chat | `chat.test.cjs` e `test_invoices` |
 
 In una pull request indicare ID del requisito, commit, comando di test, esito, eventuali prove manuali e approvazione. Per le prove manuali registrare data, versione, ambiente, risultato atteso e osservato.
@@ -22,7 +24,7 @@ In una pull request indicare ID del requisito, commit, comando di test, esito, e
 
 La suite esegue 7 test Python a livello API, con sottocasi, e 11 test Node sul riconoscimento delle frasi. I test usano database temporanei. I passi per il collaudo nel browser sono nel runbook.
 
-Per il pilota, far svolgere a utenti rappresentativi creazione, modifica, ricerca fatture e uso della guida. Rilevare completamento senza aiuto, tempo, errori e chiarezza della conferma. Un test browser automatizzato e il collaudo con utenti rappresentativi restano da realizzare.
+Per il pilota, far svolgere a utenti rappresentativi creazione, modifica, ricerca fatture e uso della guida. Rilevare completamento senza aiuto, tempo, errori e chiarezza della conferma. I quattro test browser coprono preventivi, fatture e guida operativa. L’esito E2E è registrato nel [piano generale](Piano-generale.md). Resta il collaudo con utenti rappresentativi.
 
 ## 8. Sicurezza
 
