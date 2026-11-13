@@ -19,7 +19,9 @@ class PreventiviBrowserTest(unittest.TestCase):
                     page.goto(url)
                     page.get_by_role("button", name="Usa una richiesta di esempio").click()
                     page.locator("#chat").get_by_role("button", name="Invia").click()
-                    expect(page.locator("#messages")).to_contain_text("Studio Rossi e Martina Rossi")
+                    expect(page.locator("#messages")).to_contain_text(
+                        re.compile(r"Studio Rossi e Martina Rossi|Martina Rossi e Studio Rossi")
+                    )
                     page.locator("#quote").get_by_label("Cliente").select_option("studio-rossi")
                     page.get_by_role("button", name="Mostra anteprima").click()
                     expect(page.locator("#preview")).to_contain_text("720,00")

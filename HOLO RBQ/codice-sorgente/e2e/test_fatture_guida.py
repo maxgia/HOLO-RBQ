@@ -65,7 +65,7 @@ class FattureGuidaBrowserTest(unittest.TestCase):
         messages = self.page.get_by_role("log")
         self.ask("Come registro un incasso?")
         expect(messages).to_contain_text("In HOLO RBQ, apri Fatture e scadenze")
-        expect(messages).to_contain_text("La registrazione si esegue nel gestionale.")
+        expect(messages).to_contain_text("Gli incassi reali si registrano nel gestionale.")
         expect(messages).to_contain_text("Fonte: Guida dimostrativa HOLO RBQ · v1 · Registrare un incasso")
 
         self.ask("Come invio la fattura allo SdI?")
@@ -83,3 +83,44 @@ class FattureGuidaBrowserTest(unittest.TestCase):
         expect(invoices).to_have_attribute("aria-current", "location")
         nav.get_by_role("button", name="Guida operativa").click()
         expect(page.get_by_role("log")).to_contain_text("Registrare un incasso")
+
+    def test_registra_incasso_demo(self):
+        page = self.page
+        payment = page.locator("#demo-payment")
+        payment.get_by_label("Fattura da incassare").select_option("F-001")
+        payment.get_by_label("Importo incassato (€)").fill("100")
+        payment.get_by_role("button", name="Registra incasso demo").click()
+        expect(page.locator("#payment-status")).to_have_text("Incasso demo registrato.")
+        expect(page.locator("#metric-overdue")).to_have_text(re.compile(r"^400,00\s*€$"))
+        page.reload()
+        invoice = page.locator("#invoice-rows").get_by_role("row").filter(has_text="F-001")
+        expect(invoice.get_by_role("cell").nth(5)).to_have_text("400,00 €")
+
+    def test_anagrafica_clienti_e_residuo(self):
+        page = self.page
+        page.get_by_role("link", name="Clienti", exact=True).click()
+        directory = page.locator("#clienti")
+        directory.get_by_label("Nome cliente").fill("Rossi")
+        directory.get_by_role("button", name="Cerca clienti").click()
+        results = directory.locator("#client-results").get_by_role("listitem")
+        expect(results).to_have_count(2)
+        directory.get_by_role("button", name="Studio Rossi", exact=True).click()
+        expect(directory.locator("#client-remaining")).to_contain_text("950,00")
+        expect(directory.locator("#client-invoices")).to_contain_text("F-001")
+        expect(directory.locator("#client-invoices")).not_to_contain_text("F-003")
+        directory.get_by_role("button", name="Martina Rossi", exact=True).click()
+        expect(directory.locator("#client-remaining")).to_contain_text("250,00")
+        expect(directory.locator("#client-invoices")).to_contain_text("F-003")
+        expect(directory.locator("#client-invoices")).not_to_contain_text("F-001")
+
+    def test_inserimento_manuale_cliente(self):
+        page = self.page
+        page.get_by_role("link", name="Clienti", exact=True).click()
+        directory = page.locator("#clienti")
+        directory.get_by_text("Nuovo cliente", exact=True).click()
+        directory.get_by_label("Nome o ragione sociale").fill("Studio Verdi")
+        directory.get_by_label("Email (facoltativa)").fill("studio@example.com")
+        directory.get_by_role("button", name="Salva cliente").click()
+        expect(directory.locator("#client-name")).to_have_text("Studio Verdi")
+        expect(directory.locator("#client-contact")).to_have_text("studio@example.com")
+        expect(page.locator('#quote select[name="client"] option').filter(has_text="Studio Verdi")).to_have_count(1)

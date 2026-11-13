@@ -99,6 +99,53 @@ class MVPTests(unittest.TestCase):
         with TestClient(create_app(self.db)) as restarted:
             self.assertEqual(restarted.get("/api/invoices").json(), self.client.get("/api/invoices").json())
 
+    def test_demo_payment_is_persistent_and_idempotent(self):
+        from uuid import uuid4
+
+        endpoint = "/api/invoices/F-001/demo-payments"
+        payload = {"request_id": str(uuid4()), "amount": "100.00"}
+        with ThreadPoolExecutor(max_workers=2) as pool:
+            responses = list(pool.map(lambda _: self.client.post(endpoint, json=payload), range(2)))
+        self.assertEqual([r.status_code for r in responses], [201, 201])
+        self.assertEqual(self.client.post(endpoint, json=payload | {"amount": "1"}).status_code, 409)
+        self.assertEqual(self.client.post(endpoint, json={"request_id": str(uuid4()), "amount": "401"}).status_code, 409)
+        self.assertEqual(self.client.post(endpoint, json={"request_id": str(uuid4()), "amount": "0"}).status_code, 422)
+        with TestClient(create_app(self.db)) as restarted:
+            result = restarted.get("/api/invoices?q=F-001").json()
+            self.assertEqual(result["total_remaining"], 40000)
+            self.assertEqual(result["invoices"][0]["paid"], 40000)
+            self.assertEqual(restarted.post(endpoint, json={"request_id": str(uuid4()), "amount": "400"}).status_code, 201)
+            self.assertEqual(restarted.get("/api/invoices?q=F-001&status=paid").json()["invoices"][0]["status"], "Saldata")
+
+    def test_client_details_keep_rossi_accounts_separate(self):
+        draft = self.confirm(self.preview()).json()
+        studio = self.client.get("/api/clients/studio-rossi").json()
+        martina = self.client.get("/api/clients/martina-rossi").json()
+        self.assertEqual([item["id"] for item in studio["drafts"]], [draft["id"]])
+        self.assertEqual({item["number"] for item in studio["invoices"]}, {"F-001", "F-002", "F-004"})
+        self.assertEqual(studio["total_remaining"], 95000)
+        self.assertEqual(martina["drafts"], [])
+        self.assertEqual([item["number"] for item in martina["invoices"]], ["F-003"])
+        self.assertEqual(martina["total_remaining"], 25000)
+        self.assertEqual(self.client.get("/api/clients/ignoto").status_code, 404)
+
+    def test_manual_client_persists_and_can_receive_a_quote(self):
+        response = self.client.post("/api/clients", json={
+            "name": " Studio Verdi ", "email": "studio@example.com", "phone": "+39 06 0000",
+        })
+        self.assertEqual(response.status_code, 201)
+        client = response.json()
+        self.assertEqual(client["name"], "Studio Verdi")
+        self.assertEqual(self.client.post("/api/clients", json={"name": "studio verdi"}).status_code, 409)
+        self.assertEqual(self.client.post("/api/clients", json={"name": "   "}).status_code, 422)
+        draft = self.confirm(self.preview(client_id=client["id"])).json()
+        with TestClient(create_app(self.db)) as restarted:
+            detail = restarted.get("/api/clients/" + client["id"]).json()
+            self.assertEqual(detail["email"], "studio@example.com")
+            self.assertEqual(detail["phone"], "+39 06 0000")
+            self.assertEqual([item["id"] for item in detail["drafts"]], [draft["id"]])
+            self.assertEqual(detail["total_remaining"], 0)
+
     def test_guide(self):
         for question, article in [
             ("Come registro un incasso?", "incasso"),
