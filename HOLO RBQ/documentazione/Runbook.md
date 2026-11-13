@@ -100,3 +100,12 @@ Apri **Clienti**, cerca **Studio Rossi**, apri la scheda e seleziona **Analizza 
 Le fatture aperte sono ordinate per scadenza. La fattura scaduta da più tempo ha priorità. Se tutte le fatture aperte sono ancora nei termini, viene proposta la prossima scadenza. La sintesi usa i dati della scheda e regole locali.
 
 Il collaudo browser verifica il passaggio a 400 € sulla F-001 e 850 € complessivi dopo un incasso demo di 100 €, la separazione di Martina Rossi e il messaggio per i nuovi clienti senza bozze o fatture. Eseguire la suite browser con i comandi indicati sopra.
+
+
+### Domande sulla scheda con Ollama
+
+Installa [Ollama per Windows](https://ollama.com/download/windows) e avvialo. In PowerShell scarica il modello con `ollama pull qwen2.5:3b`. Riavvia HOLO RBQ con il comando di avvio abituale. Per scegliere un altro modello locale già scaricato, imposta `$env:HOLO_OLLAMA_MODEL = "nome-modello"` prima di avviare Uvicorn.
+
+In **Clienti → Studio Rossi → Analizza cliente**, usa **Fai una domanda su questo cliente**. Esempi: «Quanto resta da incassare?», «Quale fattura devo gestire per prima?» e «Scrivi un sollecito cordiale per F-001». Il modello locale classifica soltanto la domanda. FastAPI usa i dati della scheda selezionata per comporre importi, scadenze e bozze. L'app chiama Ollama su 127.0.0.1:11434. La bozza è modificabile nella scheda.
+
+La regressione automatica usa un classificatore simulato e verifica che, dopo un incasso demo di 100 €, la bozza riporti 400 € per F-001. Verifica anche che la stessa fattura non sia esposta nella scheda Martina Rossi e che un nuovo cliente mostri l'assenza di storico. Il collaudo con il modello reale si esegue con le domande di esempio dopo aver installato Ollama.

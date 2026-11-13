@@ -10,6 +10,7 @@ from fastapi import FastAPI, HTTPException
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field, field_validator
 
+from customer_assistant import CustomerQuestion, answer_customer_question
 from guide import find_articles
 
 ROOT = Path(__file__).resolve().parent
@@ -285,6 +286,10 @@ def create_app(database: Path = ROOT / "data" / "holo.sqlite3") -> FastAPI:
             **dict(client), "drafts": client_drafts, "invoices": client_invoices,
             "total_remaining": sum(row["remaining"] for row in client_invoices),
         }
+
+    @application.post("/api/clients/{client_id}/questions")
+    def ask_customer_question(client_id: str, data: CustomerQuestion):
+        return answer_customer_question(client_detail(client_id), data.question)
 
     @application.post("/api/invoices/{number}/demo-payments", status_code=201)
     def register_demo_payment(number: str, payment: PaymentInput):

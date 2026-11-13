@@ -112,6 +112,13 @@ label{display:block;font-size:12px;font-weight:600;color:#c6c7d0;margin-bottom:1
 <label id="client-analysis-draft" hidden>Bozza di sollecito da rivedere
 <textarea id="client-analysis-text" rows="6"></textarea>
 </label>
+<form id="client-question" class="inline-search">
+<label>Fai una domanda su questo cliente
+<input name="question" required maxlength="400" placeholder="Es. Quanto resta da incassare?">
+</label>
+<button type="submit">Chiedi</button>
+</form>
+<p id="client-answer" role="status"></p>
 </details>
 <h4>Preventivi in bozza</h4><ul id="client-drafts"></ul>
 <h4>Fatture e scadenze</h4><ul id="client-invoices"></ul>
@@ -541,11 +548,16 @@ byId('save').addEventListener('click', async () => {
 let activeClient;
 let clientRequest = 0;
 async function showClient(id) {
-  if (activeClient !== id) byId('client-analysis').open = false;
+  if (activeClient !== id) {
+    byId('client-analysis').open = false;
+    byId('client-question').reset();
+  }
   activeClient = id;
   const sequence = ++clientRequest;
   const status = byId('client-status');
   byId('client-detail').hidden = true;
+  byId('client-answer').textContent = '';
+  byId('client-question').querySelector('button').disabled = false;
   status.textContent = 'Caricamento scheda…';
   try {
     const client = await request('/api/clients/' + encodeURIComponent(id));
@@ -625,6 +637,31 @@ function renderClientAnalysis(client) {
     text.focus();
   };
 }
+byId('client-question').addEventListener('submit', async event => {
+  event.preventDefault();
+  const form = event.currentTarget;
+  const question = form.elements.question.value.trim();
+  if (!question || !activeClient) return;
+  const sequence = clientRequest;
+  const button = form.querySelector('button');
+  const answer = byId('client-answer');
+  button.disabled = true;
+  answer.textContent = 'Elaborazione in corso…';
+  try {
+    const result = await request('/api/clients/' + encodeURIComponent(activeClient) + '/questions', 'POST', {question});
+    if (sequence !== clientRequest) return;
+    answer.textContent = result.answer;
+    if (result.draft) {
+      byId('client-analysis-text').value = result.draft;
+      byId('client-analysis-draft').hidden = false;
+      byId('client-analysis-text').focus();
+    }
+  } catch (error) {
+    if (sequence === clientRequest) answer.textContent = error.message;
+  } finally {
+    if (sequence === clientRequest) button.disabled = false;
+  }
+});
 function addClientRow(list, text) {
   const item = document.createElement('li');
   item.textContent = text;
