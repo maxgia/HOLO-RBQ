@@ -1,6 +1,6 @@
 # Piano generale HOLO RBQ
 
-Aggiornato al 12 novembre 2026. Il target qui assunto è un **pilota a perimetro limitato con un gestionale reale e utenti rappresentativi**, seguito da una decisione sul rilascio. Il gestionale, l'azienda di test e la data di avvio del pilota restano da concordare. Le stime sono giorni-persona, a partire dal completamento della demo. Includono implementazione, revisione, test e aggiornamento della documentazione.
+Aggiornato al 13 novembre 2026. Il target qui assunto è un **pilota a perimetro limitato con un gestionale reale e utenti rappresentativi**, seguito da una decisione sul rilascio. Il gestionale, l'azienda di test e la data di avvio del pilota restano da concordare. Le stime sono giorni-persona, a partire dal completamento della demo. Includono implementazione, revisione, test e aggiornamento della documentazione.
 
 ## Attività e avanzamento
 
@@ -13,7 +13,7 @@ Aggiornato al 12 novembre 2026. Il target qui assunto è un **pilota a perimetro
 | A05 | Sperimentare il flusso di sviluppo multiagente | Completata | Consuntivo non rilevato | A03 | Un'attività con implementazione, revisione, QA, controllo sicurezza, evidenze collegate e approvazione registrata. |
 | A06 | Definire il pilota e selezionare il gestionale | Rinviata | 2–4 gg | Disponibilità del referente | Gestionale e operazioni concordati, azienda di test, accesso API, utenti e criteri di accettazione identificati. |
 | A07 | Integrare il gestionale in sola lettura | In attesa | 4–7 gg | A06 | Test contrattuali e confronto su anagrafiche, fatture, scadenze, incassato e residui rispetto al gestionale. |
-| A08 | Validare qualità dell'assistente e usabilità | Da fare | 3–5 gg | A04, A07 | Utenti rappresentativi completano i flussi concordati. Registrati tempi, errori, casi ambigui e correzioni. |
+| A08 | Validare qualità dell'assistente e usabilità | Avviata sulla demo | 3–5 gg | A04, A07 | Utenti rappresentativi completano i flussi concordati. Registrati tempi, errori, casi ambigui e correzioni. |
 | A09 | Definire sicurezza e conformità per il pilota | Da fare | 3–5 gg | A06 | Modello delle minacce, ruoli, dati trattati, misure, prove e responsabilità approvati. Valutazioni NIS2 e ISO/IEC 27001 documentate per il perimetro applicabile. |
 | A10 | Implementare e verificare i controlli del pilota | In attesa | 4–8 gg | A07, A09 | Verifiche di accesso tra utenti, segreti, audit, dipendenze e ripristino completate. Rischi residui assegnati. |
 | A11 | Rilascio pilota e collaudo di accettazione | In attesa | 2–4 gg | A05, A08, A10 | Configurazione riproducibile, suite verde, accettazione utenti e decisione di rilascio registrate. |
@@ -36,3 +36,7 @@ Evidenza A03: [GitHub Actions · run 43237001468](https://github.com/maxgia/HOLO
 Evidenza A04: [GitHub Actions · run 43239189016](https://github.com/maxgia/HOLO-RBQ/actions/runs/43239189016) sul commit `c0d5e88`. Superati 7 test API, 11 test JavaScript e 3 test browser Chromium.
 
 Evidenza A05: [prova multiagente e decisione](./Prova-A05.md). Implementazione, revisione e QA completati. Rilascio autorizzato dall’utente il 12 novembre 2026 tramite richiesta di pubblicazione su GitHub.
+ 
+### Avanzamento A08 sulla demo
+
+Incassi e Clienti sono disponibili su `main` dopo la [PR #2](https://github.com/maxgia/HOLO-RBQ/pull/2). L'inserimento manuale dei clienti è stato verificato dall'utente. Il [protocollo di usabilità](Collaudo-usabilita-demo.md) definisce cinque casi ripetibili. Le sessioni con utenti rappresentativi sono da eseguire. L'accettazione del pilota dipende ancora da A07.
