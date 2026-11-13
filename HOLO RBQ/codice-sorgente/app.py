@@ -205,9 +205,7 @@ def create_app(database: Path = ROOT / "data" / "holo.sqlite3") -> FastAPI:
         with closing(connect()) as db:
             return draft_data(find_draft(db, draft_id))
 
-    @application.get("/api/invoices")
-    def invoices(q: str = "", status: Literal["all", "open", "overdue", "paid"] = "all"):
-        query = q.strip().casefold()
+    def list_invoices(db, query="", status="all", client_id=None):
         today = date.today().isoformat()
         filters = {
             "all": lambda invoice: True,
@@ -216,19 +214,44 @@ def create_app(database: Path = ROOT / "data" / "holo.sqlite3") -> FastAPI:
             "paid": lambda invoice: invoice["remaining"] == 0,
         }
         results = []
+        for row in db.execute("SELECT * FROM invoices ORDER BY due_date, number"):
+            if client_id is not None and row["client_id"] != client_id:
+                continue
+            client = CLIENTS[row["client_id"]]
+            if query not in client.casefold() and query not in row["number"].casefold():
+                continue
+            remaining = row["amount"] - row["paid"]
+            invoice_status = "Saldata" if not remaining else (
+                "Scaduta" if row["due_date"] < today else "Da incassare"
+            )
+            invoice = dict(row) | {"client": client, "remaining": remaining, "status": invoice_status}
+            if filters[status](invoice):
+                results.append(invoice)
+        return results
+
+    @application.get("/api/invoices")
+    def invoices(q: str = "", status: Literal["all", "open", "overdue", "paid"] = "all"):
         with closing(connect()) as db:
-            for row in db.execute("SELECT * FROM invoices ORDER BY due_date, number"):
-                client = CLIENTS[row["client_id"]]
-                if query not in client.casefold() and query not in row["number"].casefold():
-                    continue
-                remaining = row["amount"] - row["paid"]
-                invoice_status = "Saldata" if not remaining else (
-                    "Scaduta" if row["due_date"] < today else "Da incassare"
-                )
-                invoice = dict(row) | {"client": client, "remaining": remaining, "status": invoice_status}
-                if filters[status](invoice):
-                    results.append(invoice)
+            results = list_invoices(db, q.strip().casefold(), status)
         return {"invoices": results, "total_remaining": sum(row["remaining"] for row in results)}
+
+    @application.get("/api/clients/{client_id}")
+    def client_detail(client_id: str):
+        name = CLIENTS.get(client_id)
+        if name is None:
+            raise HTTPException(404, "Cliente non trovato.")
+        with closing(connect()) as db, db:
+            db.execute("BEGIN")
+            client_invoices = list_invoices(db, client_id=client_id)
+            client_drafts = [
+                draft_data(row) for row in db.execute(
+                    "SELECT * FROM drafts WHERE client = ? ORDER BY id", (name,)
+                )
+            ]
+        return {
+            "id": client_id, "name": name, "drafts": client_drafts, "invoices": client_invoices,
+            "total_remaining": sum(row["remaining"] for row in client_invoices),
+        }
 
     @application.post("/api/invoices/{number}/demo-payments", status_code=201)
     def register_demo_payment(number: str, payment: PaymentInput):

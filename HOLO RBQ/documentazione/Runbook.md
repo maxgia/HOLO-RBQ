@@ -84,3 +84,7 @@ La barra laterale apre Assistente, Preventivi, Bozze salvate, Fatture e scadenze
 ## Incassi dimostrativi
 
 In Fatture e scadenze seleziona F-001 e registra 100 €. Su un database appena inizializzato il residuo passa da 500 € a 400 €. Al ricaricamento il nuovo residuo resta disponibile. La registrazione aggiorna il database locale dimostrativo. Il test API verifica persistenza, incassi parziali, saldo, importi non validi e ripetizione della richiesta. Il test browser verifica registrazione, riepilogo e rilettura del residuo.
+
+## Anagrafica clienti dimostrativa
+
+Apri **Clienti** e cerca Rossi. La scheda **Studio Rossi** mostra le fatture F-001, F-002 e F-004 e, su un database appena inizializzato, 950 € di residuo. La scheda **Martina Rossi** mostra F-003 e 250 €. Le bozze si aprono dalla scheda del cliente. La scheda si aggiorna dopo un salvataggio o un incasso demo. L’anagrafica usa i clienti dimostrativi esistenti e offre consultazione. Il collaudo verifica separazione degli omonimi, collegamento alle bozze e importi residui.

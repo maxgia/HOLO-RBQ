@@ -95,3 +95,20 @@ class FattureGuidaBrowserTest(unittest.TestCase):
         page.reload()
         invoice = page.locator("#invoice-rows").get_by_role("row").filter(has_text="F-001")
         expect(invoice.get_by_role("cell").nth(5)).to_have_text("400,00 €")
+
+    def test_anagrafica_clienti_e_residuo(self):
+        page = self.page
+        page.get_by_role("link", name="Clienti", exact=True).click()
+        directory = page.locator("#clienti")
+        directory.get_by_label("Nome cliente").fill("Rossi")
+        directory.get_by_role("button", name="Cerca clienti").click()
+        results = directory.locator("#client-results").get_by_role("listitem")
+        expect(results).to_have_count(2)
+        directory.get_by_role("button", name="Studio Rossi", exact=True).click()
+        expect(directory.locator("#client-remaining")).to_contain_text("950,00")
+        expect(directory.locator("#client-invoices")).to_contain_text("F-001")
+        expect(directory.locator("#client-invoices")).not_to_contain_text("F-003")
+        directory.get_by_role("button", name="Martina Rossi", exact=True).click()
+        expect(directory.locator("#client-remaining")).to_contain_text("250,00")
+        expect(directory.locator("#client-invoices")).to_contain_text("F-003")
+        expect(directory.locator("#client-invoices")).not_to_contain_text("F-001")

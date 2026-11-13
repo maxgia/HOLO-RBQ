@@ -117,6 +117,18 @@ class MVPTests(unittest.TestCase):
             self.assertEqual(restarted.post(endpoint, json={"request_id": str(uuid4()), "amount": "400"}).status_code, 201)
             self.assertEqual(restarted.get("/api/invoices?q=F-001&status=paid").json()["invoices"][0]["status"], "Saldata")
 
+    def test_client_details_keep_rossi_accounts_separate(self):
+        draft = self.confirm(self.preview()).json()
+        studio = self.client.get("/api/clients/studio-rossi").json()
+        martina = self.client.get("/api/clients/martina-rossi").json()
+        self.assertEqual([item["id"] for item in studio["drafts"]], [draft["id"]])
+        self.assertEqual({item["number"] for item in studio["invoices"]}, {"F-001", "F-002", "F-004"})
+        self.assertEqual(studio["total_remaining"], 95000)
+        self.assertEqual(martina["drafts"], [])
+        self.assertEqual([item["number"] for item in martina["invoices"]], ["F-003"])
+        self.assertEqual(martina["total_remaining"], 25000)
+        self.assertEqual(self.client.get("/api/clients/ignoto").status_code, 404)
+
     def test_guide(self):
         for question, article in [
             ("Come registro un incasso?", "incasso"),
