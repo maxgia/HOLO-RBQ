@@ -692,6 +692,7 @@ function renderFollowUpRows(list, items, status, showClientName) {
     const parts = [item.title, showClientName && item.client, documentCode,
       item.due_date.split('-').reverse().join('/'), item.completed ? 'Completata' : 'Aperta'];
     const row = addClientRow(list, parts.filter(Boolean).join(' · '));
+    renderFollowUpEmail(row, item);
     if (item.completed) continue;
     const editor = document.createElement('form');
     editor.className = 'inline-search';
@@ -725,6 +726,77 @@ function renderFollowUpRows(list, items, status, showClientName) {
     editor.addEventListener('submit', event => { event.preventDefault(); save(false); });
     complete.addEventListener('click', () => save(true));
   }
+}
+
+function renderFollowUpEmail(row, item) {
+  const labels = {
+    scheduled: 'Programmata', sending: 'In invio', sent: 'Inviata',
+    review: 'Da rivedere', cancelled: 'Annullata', uncertain: 'Esito da verificare',
+  };
+  const status = document.createElement('p');
+  status.setAttribute('role', 'status');
+  row.append(status);
+  if (item.email_status) {
+    const time = new Date(item.email_sent_at || item.email_send_at).toLocaleString('it-IT');
+    status.textContent = 'Email: ' + labels[item.email_status] + ' · ' + time +
+      (item.email_detail ? ' · ' + item.email_detail : '');
+  }
+  if (!item.test_recipient || item.completed || item.remaining === 0 ||
+      ['sending', 'sent', 'uncertain'].includes(item.email_status)) return;
+
+  const details = document.createElement('details');
+  details.innerHTML = `
+    <summary>Programma email di prova</summary>
+    <form class="inline-search">
+      <label>Destinatario di prova<input name="recipient" type="email" required readonly></label>
+      <label>Oggetto<input name="subject" maxlength="180" required></label>
+      <label>Testo<textarea name="body" rows="5" maxlength="5000" required></textarea></label>
+      <label>Data e ora invio<input name="send_at" type="datetime-local" required></label>
+      <button type="submit">Conferma invio programmato</button>
+      <button type="button" class="secondary" hidden>Annulla invio</button>
+    </form>`;
+  row.append(details);
+  const form = details.querySelector('form');
+  const fields = form.elements;
+  fields.recipient.value = item.test_recipient;
+  fields.subject.value = item.email_subject || item.title;
+  const due = item.invoice_due_date?.split('-').reverse().join('/');
+  const amount = currency.format(item.remaining / 100);
+  fields.body.value = item.email_body || (item.invoice_number
+    ? `Buongiorno,
+
+vi scrivo per la fattura ${item.invoice_number} con scadenza ${due}. Il residuo è di ${amount}.
+
+Grazie.`
+    : '');
+  fields.send_at.value = item.due_date + 'T09:00';
+  if (item.email_send_at) {
+    const saved = new Date(item.email_send_at);
+    const local = new Date(saved.getTime() - saved.getTimezoneOffset() * 60000);
+    fields.send_at.value = local.toISOString().slice(0, 16);
+  }
+  const [saveButton, cancelButton] = form.querySelectorAll('button');
+  cancelButton.hidden = !['scheduled', 'review'].includes(item.email_status);
+  const url = '/api/follow-ups/' + item.id + '/email';
+  async function save(method, data) {
+    saveButton.disabled = cancelButton.disabled = true;
+    try {
+      await request(url, method, data);
+      await Promise.all([renderFollowUps(), renderClientFollowUps()]);
+    } catch (error) {
+      status.textContent = error.message;
+    } finally {
+      saveButton.disabled = cancelButton.disabled = false;
+    }
+  }
+  form.addEventListener('submit', event => {
+    event.preventDefault();
+    save('PUT', {
+      recipient: fields.recipient.value, subject: fields.subject.value, body: fields.body.value,
+      send_at: new Date(fields.send_at.value).toISOString(), expected_remaining: item.remaining,
+    });
+  });
+  cancelButton.addEventListener('click', () => save('DELETE'));
 }
 
 async function renderFollowUps() {

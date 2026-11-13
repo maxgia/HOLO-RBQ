@@ -1,5 +1,6 @@
 from contextlib import closing
-from datetime import date, timedelta
+from datetime import date, timedelta, timezone
+import os
 from decimal import Decimal
 from pathlib import Path
 import sqlite3
@@ -12,6 +13,7 @@ from pydantic import BaseModel, Field, field_validator
 
 from customer_assistant import CustomerQuestion, answer_customer_question
 from guide import find_articles
+from follow_up_email import EMAIL_SCHEMA, ScheduledEmail, utc_now
 
 ROOT = Path(__file__).resolve().parent
 DEMO_CLIENTS = {
@@ -111,6 +113,7 @@ def create_app(database: Path = ROOT / "data" / "holo.sqlite3") -> FastAPI:
                 base_version TEXT NOT NULL, confirmed INTEGER NOT NULL DEFAULT 0
             );
         """)
+        db.executescript(EMAIL_SCHEMA)
         db.execute("BEGIN IMMEDIATE")
         db.executemany("INSERT OR IGNORE INTO clients (id, name) VALUES (?, ?)", DEMO_CLIENTS.items())
         for table in ("drafts", "previews"):
@@ -325,12 +328,18 @@ def create_app(database: Path = ROOT / "data" / "holo.sqlite3") -> FastAPI:
         }
         with closing(connect()) as db:
             rows = db.execute(
-                "SELECT f.*, c.name AS client FROM follow_ups f JOIN clients c ON c.id = f.client_id "
+                "SELECT f.*, c.name AS client, c.email AS client_email, "
+                "e.status AS email_status, e.detail AS email_detail, e.recipient AS email_recipient, "
+                "e.subject AS email_subject, e.body AS email_body, e.send_at AS email_send_at, e.sent_at AS email_sent_at, "
+                "i.amount - i.paid AS remaining, i.due_date AS invoice_due_date "
+                "FROM follow_ups f JOIN clients c ON c.id = f.client_id "
+                "LEFT JOIN follow_up_emails e ON e.follow_up_id = f.id "
+                "LEFT JOIN invoices i ON i.number = f.invoice_number "
                 "WHERE (:client_id IS NULL OR f.client_id = :client_id) AND " + filters[status]
                 + " ORDER BY f.due_date, f.title, f.id",
                 {"client_id": client_id, "today": today},
             )
-            return [dict(row) for row in rows]
+            return [dict(row) | {"test_recipient": os.getenv("HOLO_TEST_RECIPIENT", "").strip()} for row in rows]
 
     @application.post("/api/clients/{client_id}/follow-ups", status_code=201)
     def create_follow_up(client_id: str, data: FollowUpInput):
@@ -367,12 +376,61 @@ def create_app(database: Path = ROOT / "data" / "holo.sqlite3") -> FastAPI:
                 "WHERE id = ? AND completed = 0",
                 (data.due_date.isoformat() if data.due_date else None, data.completed, follow_up_id),
             )
+            if changed.rowcount:
+                status = "cancelled" if data.completed else "review"
+                detail = "Attività completata." if data.completed else "Data attività cambiata. Conferma un nuovo orario."
+                db.execute(
+                    "UPDATE follow_up_emails SET status = ?, detail = ? "
+                    "WHERE follow_up_id = ? AND status = 'scheduled'", (status, detail, follow_up_id)
+                )
             if not changed.rowcount:
                 row = db.execute("SELECT * FROM follow_ups WHERE id = ?", (follow_up_id,)).fetchone()
                 if row is None:
                     raise HTTPException(404, "Attività non trovata.")
                 if not data.completed:
                     raise HTTPException(409, "L’attività è già completata.")
+
+    @application.put("/api/follow-ups/{follow_up_id}/email", status_code=204)
+    def schedule_follow_up_email(follow_up_id: str, data: ScheduledEmail):
+        allowed = os.getenv("HOLO_TEST_RECIPIENT", "").strip()
+        if not allowed:
+            raise HTTPException(503, "Configura HOLO_TEST_RECIPIENT per abilitare la prova.")
+        if data.recipient.casefold() != allowed.casefold():
+            raise HTTPException(422, "È consentito solo il destinatario di prova configurato.")
+        send_at = data.send_at.astimezone(timezone.utc).isoformat()
+        if send_at <= utc_now() or not data.subject.strip() or not data.body.strip():
+            raise HTTPException(422, "Inserisci oggetto, testo e un orario futuro.")
+        with closing(connect()) as db, db:
+            db.execute("BEGIN IMMEDIATE")
+            item = db.execute(
+                "SELECT f.completed, i.amount - i.paid AS remaining, e.status "
+                "FROM follow_ups f LEFT JOIN invoices i ON i.number = f.invoice_number "
+                "LEFT JOIN follow_up_emails e ON e.follow_up_id = f.id WHERE f.id = ?", (follow_up_id,)
+            ).fetchone()
+            if item is None:
+                raise HTTPException(404, "Attività non trovata.")
+            if item["completed"] or item["remaining"] == 0 or item["status"] in ("sending", "sent", "uncertain"):
+                raise HTTPException(409, "L’attività o l’email non è più programmabile.")
+            if data.expected_remaining != item["remaining"]:
+                raise HTTPException(409, "Il residuo è cambiato. Ricarica e rivedi la bozza.")
+            db.execute("""
+                INSERT INTO follow_up_emails
+                    (follow_up_id, recipient, subject, body, send_at, expected_remaining)
+                VALUES (?, ?, ?, ?, ?, ?)
+                ON CONFLICT(follow_up_id) DO UPDATE SET recipient = excluded.recipient,
+                    subject = excluded.subject, body = excluded.body, send_at = excluded.send_at,
+                    expected_remaining = excluded.expected_remaining, status = 'scheduled', detail = '', sent_at = NULL
+            """, (follow_up_id, allowed, data.subject, data.body, send_at, data.expected_remaining))
+
+    @application.delete("/api/follow-ups/{follow_up_id}/email", status_code=204)
+    def cancel_follow_up_email(follow_up_id: str):
+        with closing(connect()) as db, db:
+            result = db.execute(
+                "UPDATE follow_up_emails SET status = 'cancelled', detail = '' "
+                "WHERE follow_up_id = ? AND status IN ('scheduled', 'review', 'cancelled')", (follow_up_id,)
+            )
+            if not result.rowcount:
+                raise HTTPException(409, "Non c’è un invio annullabile per questa attività.")
 
     @application.post("/api/clients/{client_id}/questions")
     def ask_customer_question(client_id: str, data: CustomerQuestion):
