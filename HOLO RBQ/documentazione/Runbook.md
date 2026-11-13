@@ -111,3 +111,11 @@ In **Clienti → Studio Rossi → Analizza cliente**, usa **Fai una domanda su q
 La regressione automatica usa un classificatore simulato e verifica che, dopo un incasso demo di 100 €, la bozza riporti 400 € per F-001. Verifica anche che la stessa fattura non sia esposta nella scheda Martina Rossi e che un nuovo cliente mostri l'assenza di storico. Il collaudo con il modello reale si esegue con le domande di esempio dopo aver installato Ollama.
 
 Per verificare la distinzione tra residuo del cliente e residuo della fattura, chiedi «Quanto resta da incassare?» e poi «Quanto resta da incassare sulla fattura F-001?». Su un archivio demo appena inizializzato, Studio Rossi mostra rispettivamente 950 € e 500 €. Dopo un incasso demo di 100 € sulla F-001, il residuo della fattura è 400 €. Il test di regressione simula il caso in cui Ollama classifichi entrambe le domande come richieste di saldo complessivo.
+
+## Attività e follow-up
+
+Dalla scheda cliente, apri **Nuovo follow-up**, inserisci titolo e data e scegli facoltativamente una fattura o una bozza del cliente. In **Studio Rossi → Analizza cliente → Pianifica follow-up**, l’app propone F-001 su un archivio demo appena inizializzato. La data è scelta dall’utente e **Salva follow-up** registra l’attività in SQLite. La funzionalità richiede soltanto il server HOLO RBQ.
+
+In **Attività**, usa i filtri **Oggi**, **Scadute**, **In programma** e **Completate**. I filtri usano la data locale del server. Per riprogrammare un’attività aperta, modifica **Nuova data** e premi **Riprogramma**. Puoi completare il follow-up sia dalla vista generale sia dalla scheda cliente.
+
+Il test browser crea un follow-up per F-001 con data passata, ricarica la pagina, verifica il filtro **Scadute**, lo sposta in **In programma** e lo chiude dalla scheda cliente. Per eseguire la suite usa i comandi del collaudo browser riportati sopra.

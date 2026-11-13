@@ -51,6 +51,23 @@ class PaymentInput(BaseModel):
     amount: Decimal = Field(gt=0, le=1_000_000, decimal_places=2)
 
 
+class FollowUpInput(BaseModel):
+    title: str = Field(min_length=1, max_length=140)
+    due_date: date
+    invoice_number: str | None = Field(default=None, max_length=40)
+    draft_id: str | None = Field(default=None, max_length=40)
+
+    @field_validator("title", mode="before")
+    @classmethod
+    def trim_title(cls, value):
+        return value.strip() if isinstance(value, str) else value
+
+
+class FollowUpUpdate(BaseModel):
+    due_date: date | None = None
+    completed: Literal[True] | None = None
+
+
 def create_app(database: Path = ROOT / "data" / "holo.sqlite3") -> FastAPI:
     database.parent.mkdir(parents=True, exist_ok=True)
 
@@ -82,6 +99,12 @@ def create_app(database: Path = ROOT / "data" / "holo.sqlite3") -> FastAPI:
                 request_id TEXT PRIMARY KEY,
                 invoice_number TEXT NOT NULL REFERENCES invoices(number),
                 amount INTEGER NOT NULL CHECK(amount > 0)
+            );
+            CREATE TABLE IF NOT EXISTS follow_ups (
+                id TEXT PRIMARY KEY, client_id TEXT NOT NULL REFERENCES clients(id),
+                title TEXT NOT NULL, due_date TEXT NOT NULL, completed INTEGER NOT NULL DEFAULT 0,
+                invoice_number TEXT REFERENCES invoices(number), draft_id TEXT,
+                CHECK (invoice_number IS NULL OR draft_id IS NULL)
             );
             CREATE TABLE IF NOT EXISTS edits (
                 preview_id TEXT PRIMARY KEY, draft_id INTEGER NOT NULL,
@@ -286,6 +309,70 @@ def create_app(database: Path = ROOT / "data" / "holo.sqlite3") -> FastAPI:
             **dict(client), "drafts": client_drafts, "invoices": client_invoices,
             "total_remaining": sum(row["remaining"] for row in client_invoices),
         }
+
+    @application.get("/api/follow-ups")
+    def list_follow_ups(
+        status: Literal["all", "today", "overdue", "upcoming", "completed"] = "all",
+        client_id: str | None = None,
+    ):
+        today = date.today().isoformat()
+        filters = {
+            "all": "1 = 1",
+            "today": "f.completed = 0 AND f.due_date = :today",
+            "overdue": "f.completed = 0 AND f.due_date < :today",
+            "upcoming": "f.completed = 0 AND f.due_date > :today",
+            "completed": "f.completed = 1",
+        }
+        with closing(connect()) as db:
+            rows = db.execute(
+                "SELECT f.*, c.name AS client FROM follow_ups f JOIN clients c ON c.id = f.client_id "
+                "WHERE (:client_id IS NULL OR f.client_id = :client_id) AND " + filters[status]
+                + " ORDER BY f.due_date, f.title, f.id",
+                {"client_id": client_id, "today": today},
+            )
+            return [dict(row) for row in rows]
+
+    @application.post("/api/clients/{client_id}/follow-ups", status_code=201)
+    def create_follow_up(client_id: str, data: FollowUpInput):
+        with closing(connect()) as db, db:
+            db.execute("BEGIN IMMEDIATE")
+            if not db.execute("SELECT 1 FROM clients WHERE id = ?", (client_id,)).fetchone():
+                raise HTTPException(404, "Cliente non trovato.")
+            if data.invoice_number is not None and data.draft_id is not None:
+                raise HTTPException(422, "Seleziona un solo documento.")
+            if data.invoice_number is not None and not db.execute(
+                "SELECT 1 FROM invoices WHERE number = ? AND client_id = ?", (data.invoice_number, client_id)
+            ).fetchone():
+                raise HTTPException(404, "Fattura non presente nella scheda cliente.")
+            record = data.model_dump(mode="json") | {"id": uuid4().hex, "client_id": client_id}
+            if data.draft_id is not None:
+                draft = find_draft(db, data.draft_id)
+                if draft["client_id"] != client_id:
+                    raise HTTPException(404, "Bozza non presente nella scheda cliente.")
+                record["draft_id"] = draft_data(draft)["id"]
+            db.execute(
+                "INSERT INTO follow_ups (id, client_id, title, due_date, invoice_number, draft_id) "
+                "VALUES (:id, :client_id, :title, :due_date, :invoice_number, :draft_id)",
+                record,
+            )
+        return record | {"completed": 0}
+
+    @application.patch("/api/follow-ups/{follow_up_id}", status_code=204)
+    def update_follow_up(follow_up_id: str, data: FollowUpUpdate):
+        if (data.due_date is None) == (data.completed is None):
+            raise HTTPException(422, "Scegli se riprogrammare o completare l’attività.")
+        with closing(connect()) as db, db:
+            changed = db.execute(
+                "UPDATE follow_ups SET due_date = COALESCE(?, due_date), completed = COALESCE(?, completed) "
+                "WHERE id = ? AND completed = 0",
+                (data.due_date.isoformat() if data.due_date else None, data.completed, follow_up_id),
+            )
+            if not changed.rowcount:
+                row = db.execute("SELECT * FROM follow_ups WHERE id = ?", (follow_up_id,)).fetchone()
+                if row is None:
+                    raise HTTPException(404, "Attività non trovata.")
+                if not data.completed:
+                    raise HTTPException(409, "L’attività è già completata.")
 
     @application.post("/api/clients/{client_id}/questions")
     def ask_customer_question(client_id: str, data: CustomerQuestion):
