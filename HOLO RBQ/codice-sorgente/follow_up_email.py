@@ -8,6 +8,7 @@ import smtplib
 import sqlite3
 import ssl
 import time
+from zoneinfo import ZoneInfo
 
 from pydantic import AwareDatetime, BaseModel, Field
 
@@ -35,8 +36,33 @@ class ScheduledEmail(BaseModel):
     expected_remaining: int | None = None
 
 
+def current_time():
+    return datetime.now(timezone.utc)
+
+
 def utc_now():
-    return datetime.now(timezone.utc).isoformat()
+    return current_time().isoformat()
+
+
+def in_send_window(value, day):
+    local = value.astimezone(ZoneInfo("Europe/Rome"))
+    return local.date().isoformat() == day and 9 <= local.hour < 20
+
+
+def flag_paid_follow_up_emails(db):
+    changed = db.execute("""
+        UPDATE follow_up_emails
+        SET status = 'paid_review', detail = 'Fattura saldata. Conferma l’annullamento del sollecito.'
+        WHERE status IN ('scheduled', 'review') AND follow_up_id IN (
+            SELECT f.id FROM follow_ups f
+            JOIN invoices i ON i.number = f.invoice_number WHERE i.paid >= i.amount
+        )
+    """)
+    return changed.rowcount
+
+
+class SendWindowClosed(Exception):
+    pass
 
 
 def send_smtp(row):
@@ -50,25 +76,33 @@ def send_smtp(row):
         timeout=20, context=ssl.create_default_context()
     ) as smtp:
         smtp.login(os.environ["HOLO_SMTP_USER"], os.environ["HOLO_SMTP_PASSWORD"])
+        if not in_send_window(current_time(), row["planned_day"]):
+            raise SendWindowClosed
         smtp.send_message(message)
 
 
 def process_one(db, send=send_smtp):
     with db:
         db.execute("BEGIN IMMEDIATE")
+        flagged = flag_paid_follow_up_emails(db)
+        now = current_time()
         row = db.execute("""
-            SELECT e.*, f.completed, i.amount - i.paid AS remaining
+            SELECT e.*, f.completed, f.due_date AS planned_day, i.amount - i.paid AS remaining
             FROM follow_up_emails e
             JOIN follow_ups f ON f.id = e.follow_up_id
             LEFT JOIN invoices i ON i.number = f.invoice_number
             WHERE e.status = 'scheduled' AND e.send_at <= ?
             ORDER BY e.send_at, e.follow_up_id LIMIT 1
-        """, (utc_now(),)).fetchone()
+        """, (now.isoformat(),)).fetchone()
         if row is None:
-            return False
+            return bool(flagged)
         status, detail = "sending", ""
-        if row["completed"] or row["remaining"] == 0:
-            status, detail = "cancelled", "Attività completata o fattura saldata."
+        if row["completed"]:
+            status, detail = "cancelled", "Attività completata."
+        elif not in_send_window(now, row["planned_day"]) or not in_send_window(
+            datetime.fromisoformat(row["send_at"]), row["planned_day"]
+        ):
+            status, detail = "review", "Finestra di invio superata o non valida. Riprogramma il sollecito."
         elif row["recipient"].casefold() != os.getenv("HOLO_TEST_RECIPIENT", "").strip().casefold():
             status, detail = "review", "Destinatario diverso dalla casella di prova configurata."
         elif row["expected_remaining"] != row["remaining"]:
@@ -78,8 +112,17 @@ def process_one(db, send=send_smtp):
 
     if status != "sending":
         return True
+    if not in_send_window(current_time(), row["planned_day"]):
+        with db:
+            db.execute(
+                "UPDATE follow_up_emails SET status = 'review', detail = ? WHERE follow_up_id = ?",
+                ("Finestra di invio superata. Riprogramma il sollecito.", row["follow_up_id"]),
+            )
+        return True
     try:
         send(row)
+    except SendWindowClosed:
+        status, detail = "review", "Finestra di invio superata. Riprogramma il sollecito."
     except (OSError, smtplib.SMTPException, ValueError):
         status, detail = "uncertain", "Invio SMTP incerto o fallito. Verifica la casella e il log del provider."
     else:

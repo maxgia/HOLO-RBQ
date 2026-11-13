@@ -13,7 +13,7 @@ from pydantic import BaseModel, Field, field_validator
 
 from customer_assistant import CustomerQuestion, answer_customer_question
 from guide import find_articles
-from follow_up_email import EMAIL_SCHEMA, ScheduledEmail, utc_now
+from follow_up_email import EMAIL_SCHEMA, ScheduledEmail, flag_paid_follow_up_emails, in_send_window, utc_now
 
 ROOT = Path(__file__).resolve().parent
 DEMO_CLIENTS = {
@@ -313,6 +313,14 @@ def create_app(database: Path = ROOT / "data" / "holo.sqlite3") -> FastAPI:
             "total_remaining": sum(row["remaining"] for row in client_invoices),
         }
 
+    @application.get("/api/follow-ups/paid-reminder-count")
+    def paid_reminder_count():
+        with closing(connect()) as db:
+            count = db.execute(
+                "SELECT COUNT(*) FROM follow_up_emails WHERE status = 'paid_review'"
+            ).fetchone()[0]
+        return {"count": count}
+
     @application.get("/api/follow-ups")
     def list_follow_ups(
         status: Literal["all", "today", "overdue", "upcoming", "completed"] = "all",
@@ -403,7 +411,7 @@ def create_app(database: Path = ROOT / "data" / "holo.sqlite3") -> FastAPI:
         with closing(connect()) as db, db:
             db.execute("BEGIN IMMEDIATE")
             item = db.execute(
-                "SELECT f.completed, i.amount - i.paid AS remaining, e.status "
+                "SELECT f.completed, f.due_date, i.amount - i.paid AS remaining, e.status "
                 "FROM follow_ups f LEFT JOIN invoices i ON i.number = f.invoice_number "
                 "LEFT JOIN follow_up_emails e ON e.follow_up_id = f.id WHERE f.id = ?", (follow_up_id,)
             ).fetchone()
@@ -411,6 +419,8 @@ def create_app(database: Path = ROOT / "data" / "holo.sqlite3") -> FastAPI:
                 raise HTTPException(404, "Attività non trovata.")
             if item["completed"] or item["remaining"] == 0 or item["status"] in ("sending", "sent", "uncertain"):
                 raise HTTPException(409, "L’attività o l’email non è più programmabile.")
+            if not in_send_window(data.send_at, item["due_date"]):
+                raise HTTPException(422, "Scegli un orario dalle 09:00 alle 19:59 (ora italiana) del giorno del follow-up.")
             if data.expected_remaining != item["remaining"]:
                 raise HTTPException(409, "Il residuo è cambiato. Ricarica e rivedi la bozza.")
             db.execute("""
@@ -427,7 +437,7 @@ def create_app(database: Path = ROOT / "data" / "holo.sqlite3") -> FastAPI:
         with closing(connect()) as db, db:
             result = db.execute(
                 "UPDATE follow_up_emails SET status = 'cancelled', detail = '' "
-                "WHERE follow_up_id = ? AND status IN ('scheduled', 'review', 'cancelled')", (follow_up_id,)
+                "WHERE follow_up_id = ? AND status IN ('scheduled', 'review', 'paid_review', 'cancelled')", (follow_up_id,)
             )
             if not result.rowcount:
                 raise HTTPException(409, "Non c’è un invio annullabile per questa attività.")
@@ -456,6 +466,7 @@ def create_app(database: Path = ROOT / "data" / "holo.sqlite3") -> FastAPI:
                     raise HTTPException(409, "L’incasso supera il residuo della fattura.")
                 db.execute("INSERT INTO demo_payments VALUES (?, ?, ?)", (request_id, number, amount))
                 db.execute("UPDATE invoices SET paid = paid + ? WHERE number = ?", (amount, number))
+                flag_paid_follow_up_emails(db)
         return {"request_id": request_id, "invoice_number": number, "amount": amount}
 
     @application.get("/api/guide")

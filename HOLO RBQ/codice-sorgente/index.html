@@ -29,6 +29,7 @@ label{display:block;font-size:12px;font-weight:600;color:#c6c7d0;margin-bottom:1
 <div class="side-foot"><i class="dot"></i>Dati dimostrativi</div></aside>
 <div class="workspace" id="inizio"><header class="topbar"><div class="crumb"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h16v16H4zM4 12h16M12 4v16"/></svg><span>HOLO RBQ /</span><strong>Area di lavoro</strong></div><span class="badge">MVP locale</span></header>
 <main class="content">
+<p id="paid-reminder-notice" role="status" hidden><a href="#attivita" id="paid-reminder-link"></a></p>
 <div class="intro"><div><h1>Preventivi e fatture</h1><p class="sub">Crea preventivi e consulta incassi e scadenze.</p></div><a href="#preventivi" class="badge">＋ Nuovo preventivo</a></div>
 <div class="metrics">
 <div class="metric"><span class="metric-label"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6a6 6 0 1 0 0 12M5 10h10M5 14h9"/></svg>Da incassare</span><strong id="metric-open">—</strong></div>
@@ -361,7 +362,7 @@ paymentForm.addEventListener('submit', async event => {
     paymentForm.reset();
     status.textContent = 'Incasso demo registrato.';
     await Promise.allSettled([
-      renderInvoices(), refreshPaymentInvoices(), activeClient && showClient(activeClient),
+      renderInvoices(), refreshPaymentInvoices(), renderFollowUps(), activeClient && showClient(activeClient),
       loadInvoiceMetric('open', 'metric-open'), loadInvoiceMetric('overdue', 'metric-overdue')
     ]);
   } catch (error) {
@@ -731,7 +732,7 @@ function renderFollowUpRows(list, items, status, showClientName) {
 function renderFollowUpEmail(row, item) {
   const labels = {
     scheduled: 'Programmata', sending: 'In invio', sent: 'Inviata',
-    review: 'Da rivedere', cancelled: 'Annullata', uncertain: 'Esito da verificare',
+    review: 'Da rivedere', paid_review: 'Sospesa · fattura saldata', cancelled: 'Annullata', uncertain: 'Esito da verificare',
   };
   const status = document.createElement('p');
   status.setAttribute('role', 'status');
@@ -740,6 +741,23 @@ function renderFollowUpEmail(row, item) {
     const time = new Date(item.email_sent_at || item.email_send_at).toLocaleString('it-IT');
     status.textContent = 'Email: ' + labels[item.email_status] + ' · ' + time +
       (item.email_detail ? ' · ' + item.email_detail : '');
+  }
+  if (item.email_status === 'paid_review') {
+    const cancel = document.createElement('button');
+    cancel.type = 'button';
+    cancel.className = 'secondary';
+    cancel.textContent = 'Annulla sollecito';
+    cancel.addEventListener('click', async () => {
+      cancel.disabled = true;
+      try {
+        await request('/api/follow-ups/' + item.id + '/email', 'DELETE');
+        await Promise.all([renderFollowUps(), renderClientFollowUps(), refreshPaidReminderNotice()]);
+      } catch (error) {
+        status.textContent = error.message;
+        cancel.disabled = false;
+      }
+    });
+    row.append(cancel);
   }
   if (!item.test_recipient || item.completed || item.remaining === 0 ||
       ['sending', 'sent', 'uncertain'].includes(item.email_status)) return;
@@ -751,7 +769,7 @@ function renderFollowUpEmail(row, item) {
       <label>Destinatario di prova<input name="recipient" type="email" required readonly></label>
       <label>Oggetto<input name="subject" maxlength="180" required></label>
       <label>Testo<textarea name="body" rows="5" maxlength="5000" required></textarea></label>
-      <label>Data e ora invio<input name="send_at" type="datetime-local" required></label>
+      <label>Data e ora invio (09:00–19:59, ora italiana)<input name="send_at" type="datetime-local" required></label>
       <button type="submit">Conferma invio programmato</button>
       <button type="button" class="secondary" hidden>Annulla invio</button>
     </form>`;
@@ -864,6 +882,22 @@ followUpForm.addEventListener('submit', async event => {
     button.disabled = false;
   }
 });
+async function refreshPaidReminderNotice() {
+  try {
+    const {count} = await request('/api/follow-ups/paid-reminder-count');
+    byId('paid-reminder-link').textContent = count
+      ? 'Fatture saldate: conferma l’annullamento dei solleciti sospesi (' + count + ').' : '';
+    byId('paid-reminder-notice').hidden = !count;
+  } catch {
+    // Activity requests surface service errors in their own status areas.
+  }
+}
+byId('paid-reminder-link').addEventListener('click', () => {
+  followUpFilter.value = 'all';
+  renderFollowUps();
+});
+refreshPaidReminderNotice();
+setInterval(refreshPaidReminderNotice, 10000);
 renderFollowUps();
 
 byId('client-question').addEventListener('submit', async event => {
