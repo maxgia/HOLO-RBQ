@@ -758,7 +758,11 @@ async function renderClientFollowUps() {
   }
 }
 
-followUpFilter.addEventListener('change', renderFollowUps);
+followUpFilter.addEventListener('change', () => {
+  byId('follow-up-list').replaceChildren();
+  byId('follow-up-status').textContent = 'Caricamento attività…';
+  renderFollowUps();
+});
 followUpForm.addEventListener('submit', async event => {
   event.preventDefault();
   if (!activeClient) return;
