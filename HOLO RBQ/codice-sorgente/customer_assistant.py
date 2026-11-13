@@ -1,5 +1,6 @@
 import json
 import os
+import re
 from typing import Literal
 from urllib.error import URLError
 from urllib.request import Request, build_opener, ProxyHandler
@@ -78,16 +79,21 @@ def answer_customer_question(client: dict, question: str) -> dict:
     total = euro(client["total_remaining"])
     if intent.action == "unsupported":
         return {"answer": "Posso consultare bozze, scadenze e incassi della scheda aperta."}
-    if intent.action == "balance":
+    # An explicit demo invoice reference takes precedence over the model's classification.
+    references = set(re.findall(r"(?<![\w-])F-\d+(?![\w-])", question.upper()))
+    if len(references) > 1:
+        return {"answer": "Indica una sola fattura per domanda."}
+    invoice_number = next(iter(references), intent.invoice_number)
+    if intent.action == "balance" and not references:
         return {"answer": f"Il residuo complessivo è di {total}."}
-    if intent.action == "summary":
+    if intent.action == "summary" and not references:
         return {
             "answer": f"Bozze: {len(client['drafts'])}. Fatture aperte: {len(opened)}, "
             f"di cui scadute: {len(overdue)}. Residuo complessivo: {total}."
         }
 
-    if intent.invoice_number:
-        number = intent.invoice_number.strip().casefold()
+    if invoice_number:
+        number = invoice_number.strip().casefold()
         invoice = next((row for row in invoices if row["number"].casefold() == number), None)
         if invoice is None:
             return {"answer": "La fattura richiesta non è presente nella scheda cliente aperta."}

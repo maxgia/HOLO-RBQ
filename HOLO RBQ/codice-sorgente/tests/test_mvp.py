@@ -31,6 +31,24 @@ class MVPTests(unittest.TestCase):
         return self.client.put("/api/drafts/" + preview["id"])
 
     @patch("customer_assistant.classify_question")
+    def test_customer_assistant_prefers_explicit_invoice_to_balance_intent(self, classify):
+        classify.return_value = QuestionIntent(action="balance", invoice_number=None, tone="formale")
+        url = "/api/clients/studio-rossi/questions"
+        question = {"question": "Quanto resta da incassare sulla fattura F-001?"}
+        answer = self.client.post(url, json=question).json()["answer"]
+        self.assertIn("F-001", answer)
+        self.assertIn("500,00 €", answer)
+        self.assertNotIn("950,00 €", answer)
+        self.assertIn("950,00 €", self.client.post(url, json={"question": "Quanto resta da incassare?"}).json()["answer"])
+        other = self.client.post("/api/clients/martina-rossi/questions", json=question).json()["answer"]
+        self.assertIn("non è presente", other)
+        payment = self.client.post(
+            "/api/invoices/F-001/demo-payments", json={"request_id": str(uuid4()), "amount": "100"}
+        )
+        self.assertEqual(payment.status_code, 201)
+        self.assertIn("400,00 €", self.client.post(url, json=question).json()["answer"])
+
+    @patch("customer_assistant.classify_question")
     def test_customer_assistant_scopes_answers_and_reads_latest_payments(self, classify):
         classify.return_value = QuestionIntent(action="reminder", invoice_number="F-001", tone="cordiale")
         url = "/api/clients/studio-rossi/questions"
