@@ -74,11 +74,12 @@ class ScheduledEmailTests(TestCase):
                 mark_due(activity_id)
                 self.assertFalse(process_one(db, send))
 
-                activity_id, _ = schedule("F-001", 50000)
+                activity_id, partial_url = schedule("F-001", 50000)
                 payment("100")
                 mark_due(activity_id)
                 self.assertTrue(process_one(db, send))
                 self.assertEqual(status(activity_id), "review")
+                self.assertEqual(client.delete(partial_url).status_code, 204)
 
                 activity_id, url = schedule("F-001", 40000)
                 payment("400")
