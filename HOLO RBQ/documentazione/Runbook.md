@@ -80,3 +80,7 @@ Esito del 12 novembre 2026: [GitHub Actions · run 43239996580](https://github.c
 ## Interfaccia MVP con navigazione laterale
 
 La barra laterale apre Assistente, Preventivi, Bozze salvate, Fatture e scadenze e Guida operativa. Il riepilogo mostra gli importi da incassare e scaduti, oltre al numero delle bozze salvate. Le API di FastAPI alimentano le schermate e le bozze restano nell’archivio SQLite. Il collaudo browser verifica anche importi del riepilogo, navigazione e avvio della guida dalla barra laterale. [Verifiche della pull request #1](https://github.com/maxgia/HOLO-RBQ/pull/1/checks)
+
+## Incassi dimostrativi
+
+In Fatture e scadenze seleziona F-001 e registra 100 €. Su un database appena inizializzato il residuo passa da 500 € a 400 €. Al ricaricamento il nuovo residuo resta disponibile. La registrazione aggiorna il database locale dimostrativo. Il test API verifica persistenza, incassi parziali, saldo, importi non validi e ripetizione della richiesta. Il test browser verifica registrazione, riepilogo e rilettura del residuo.

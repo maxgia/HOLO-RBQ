@@ -99,6 +99,24 @@ class MVPTests(unittest.TestCase):
         with TestClient(create_app(self.db)) as restarted:
             self.assertEqual(restarted.get("/api/invoices").json(), self.client.get("/api/invoices").json())
 
+    def test_demo_payment_is_persistent_and_idempotent(self):
+        from uuid import uuid4
+
+        endpoint = "/api/invoices/F-001/demo-payments"
+        payload = {"request_id": str(uuid4()), "amount": "100.00"}
+        with ThreadPoolExecutor(max_workers=2) as pool:
+            responses = list(pool.map(lambda _: self.client.post(endpoint, json=payload), range(2)))
+        self.assertEqual([r.status_code for r in responses], [201, 201])
+        self.assertEqual(self.client.post(endpoint, json=payload | {"amount": "1"}).status_code, 409)
+        self.assertEqual(self.client.post(endpoint, json={"request_id": str(uuid4()), "amount": "401"}).status_code, 409)
+        self.assertEqual(self.client.post(endpoint, json={"request_id": str(uuid4()), "amount": "0"}).status_code, 422)
+        with TestClient(create_app(self.db)) as restarted:
+            result = restarted.get("/api/invoices?q=F-001").json()
+            self.assertEqual(result["total_remaining"], 40000)
+            self.assertEqual(result["invoices"][0]["paid"], 40000)
+            self.assertEqual(restarted.post(endpoint, json={"request_id": str(uuid4()), "amount": "400"}).status_code, 201)
+            self.assertEqual(restarted.get("/api/invoices?q=F-001&status=paid").json()["invoices"][0]["status"], "Saldata")
+
     def test_guide(self):
         for question, article in [
             ("Come registro un incasso?", "incasso"),

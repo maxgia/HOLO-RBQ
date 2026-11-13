@@ -83,6 +83,12 @@ label{display:block;font-size:12px;font-weight:600;color:#c6c7d0;margin-bottom:1
 <tbody id="invoice-rows"></tbody>
 </table>
 </div>
+<form id="demo-payment" class="inline-search">
+<label>Fattura da incassare<select id="payment-invoice" required></select></label>
+<label>Importo incassato (€)<input id="payment-amount" type="number" min="0.01" step="0.01" required></label>
+<button type="submit" class="secondary">Registra incasso demo</button>
+</form>
+<p id="payment-status" class="hint" role="status"></p>
 </section>
 </main></div></div>
 <script>
@@ -231,6 +237,51 @@ byId('invoice-search').addEventListener('submit', event => {
   event.preventDefault();
   renderInvoices();
 });
+async function refreshPaymentInvoices() {
+  const select = byId('payment-invoice');
+  const selected = select.value;
+  const {invoices} = await request('/api/invoices?status=open');
+  select.replaceChildren(new Option('Seleziona una fattura', ''));
+  for (const invoice of invoices) {
+    select.add(new Option(
+      invoice.number + ' · ' + invoice.client + ' · ' + currency.format(invoice.remaining / 100),
+      invoice.number
+    ));
+  }
+  if ([...select.options].some(option => option.value === selected)) select.value = selected;
+}
+const paymentForm = byId('demo-payment');
+let pendingPayment;
+paymentForm.addEventListener('submit', async event => {
+  event.preventDefault();
+  const button = paymentForm.querySelector('button');
+  if (button.disabled) return;
+  const invoice = byId('payment-invoice');
+  const amount = byId('payment-amount');
+  const status = byId('payment-status');
+  if (!pendingPayment || pendingPayment.invoice !== invoice.value || pendingPayment.amount !== amount.value) {
+    pendingPayment = {invoice: invoice.value, amount: amount.value, request_id: crypto.randomUUID()};
+  }
+  button.disabled = invoice.disabled = amount.disabled = true;
+  status.textContent = 'Registrazione in corso…';
+  try {
+    await request('/api/invoices/' + encodeURIComponent(pendingPayment.invoice) + '/demo-payments', 'POST', {
+      amount: pendingPayment.amount, request_id: pendingPayment.request_id
+    });
+    pendingPayment = undefined;
+    paymentForm.reset();
+    status.textContent = 'Incasso demo registrato.';
+    await Promise.allSettled([
+      renderInvoices(), refreshPaymentInvoices(),
+      loadInvoiceMetric('open', 'metric-open'), loadInvoiceMetric('overdue', 'metric-overdue')
+    ]);
+  } catch (error) {
+    status.textContent = error.message;
+  } finally {
+    button.disabled = invoice.disabled = amount.disabled = false;
+  }
+});
+refreshPaymentInvoices().catch(error => { byId('payment-status').textContent = error.message; });
 async function showGuide(question) {
   try {
     const result = await request('/api/guide?q=' + encodeURIComponent(question));

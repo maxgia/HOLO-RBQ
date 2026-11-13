@@ -4,7 +4,7 @@ from decimal import Decimal
 from pathlib import Path
 import sqlite3
 from typing import Literal
-from uuid import uuid4
+from uuid import UUID, uuid4
 
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import FileResponse
@@ -34,6 +34,11 @@ class QuoteInput(BaseModel):
         return value.strip() if isinstance(value, str) else value
 
 
+class PaymentInput(BaseModel):
+    request_id: UUID
+    amount: Decimal = Field(gt=0, le=1_000_000, decimal_places=2)
+
+
 def create_app(database: Path = ROOT / "data" / "holo.sqlite3") -> FastAPI:
     database.parent.mkdir(parents=True, exist_ok=True)
 
@@ -56,6 +61,11 @@ def create_app(database: Path = ROOT / "data" / "holo.sqlite3") -> FastAPI:
             CREATE TABLE IF NOT EXISTS invoices (
                 number TEXT PRIMARY KEY, client_id TEXT NOT NULL,
                 due_date TEXT NOT NULL, amount INTEGER NOT NULL, paid INTEGER NOT NULL
+            );
+            CREATE TABLE IF NOT EXISTS demo_payments (
+                request_id TEXT PRIMARY KEY,
+                invoice_number TEXT NOT NULL REFERENCES invoices(number),
+                amount INTEGER NOT NULL CHECK(amount > 0)
             );
             CREATE TABLE IF NOT EXISTS edits (
                 preview_id TEXT PRIMARY KEY, draft_id INTEGER NOT NULL,
@@ -219,6 +229,28 @@ def create_app(database: Path = ROOT / "data" / "holo.sqlite3") -> FastAPI:
                 if filters[status](invoice):
                     results.append(invoice)
         return {"invoices": results, "total_remaining": sum(row["remaining"] for row in results)}
+
+    @application.post("/api/invoices/{number}/demo-payments", status_code=201)
+    def register_demo_payment(number: str, payment: PaymentInput):
+        amount = int(payment.amount * 100)
+        request_id = str(payment.request_id)
+        with closing(connect()) as db, db:
+            db.execute("BEGIN IMMEDIATE")
+            invoice = db.execute("SELECT amount, paid FROM invoices WHERE number = ?", (number,)).fetchone()
+            if invoice is None:
+                raise HTTPException(404, "Fattura non trovata.")
+            existing = db.execute(
+                "SELECT invoice_number, amount FROM demo_payments WHERE request_id = ?", (request_id,)
+            ).fetchone()
+            if existing is not None:
+                if (existing["invoice_number"], existing["amount"]) != (number, amount):
+                    raise HTTPException(409, "Identificativo già usato per un altro incasso.")
+            else:
+                if amount > invoice["amount"] - invoice["paid"]:
+                    raise HTTPException(409, "L’incasso supera il residuo della fattura.")
+                db.execute("INSERT INTO demo_payments VALUES (?, ?, ?)", (request_id, number, amount))
+                db.execute("UPDATE invoices SET paid = paid + ? WHERE number = ?", (amount, number))
+        return {"request_id": request_id, "invoice_number": number, "amount": amount}
 
     @application.get("/api/guide")
     def guide(q: str = ""):

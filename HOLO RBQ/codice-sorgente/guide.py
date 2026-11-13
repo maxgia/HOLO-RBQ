@@ -11,7 +11,7 @@ GUIDE = {
             "Nel gestionale che emette la fattura, apri il documento e usa la funzione di registrazione dell’incasso. Indica l’importo effettivamente ricevuto e la data del pagamento.",
             "Verifica nel gestionale che il residuo sia aggiornato. Se l’incasso è parziale, controlla che resti visibile l’importo ancora dovuto.",
         ],
-        "scope": "In HOLO RBQ le fatture dimostrative sono consultabili in sola lettura. La registrazione si esegue nel gestionale. I nomi dei menu dipendono dal prodotto.",
+        "scope": "In HOLO RBQ gli incassi demo aggiornano il residuo locale. Gli incassi reali si registrano nel gestionale. Per una prova locale usa Registra incasso demo in Fatture e scadenze.",
     },
     "preventivo": {
         "title": "Creare un preventivo in bozza",
@@ -43,7 +43,7 @@ GUIDE = {
             "Scegli Da incassare per vedere tutte le fatture con residuo oppure Scadute per quelle oltre la scadenza.",
             "Controlla per ciascuna fattura la scadenza, l’incassato e il residuo.",
         ],
-        "scope": "La sezione mostra fatture dimostrative in sola lettura.",
+        "scope": "La sezione mostra fatture e incassi dimostrativi.",
     },
 }
 
