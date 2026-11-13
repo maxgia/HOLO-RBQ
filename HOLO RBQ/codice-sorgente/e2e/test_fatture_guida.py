@@ -113,6 +113,39 @@ class FattureGuidaBrowserTest(unittest.TestCase):
         expect(directory.locator("#client-invoices")).to_contain_text("F-003")
         expect(directory.locator("#client-invoices")).not_to_contain_text("F-001")
 
+    def test_analisi_cliente_e_sollecito_dopo_incasso(self):
+        page = self.page
+        directory = page.locator("#clienti")
+        directory.get_by_label("Nome cliente").fill("Rossi")
+        directory.get_by_role("button", name="Cerca clienti").click()
+        directory.get_by_role("button", name="Studio Rossi", exact=True).click()
+        directory.get_by_text("Analizza cliente", exact=True).click()
+        analysis = directory.locator("#client-analysis")
+        expect(analysis.locator("#client-analysis-summary")).to_contain_text("950,00")
+        expect(analysis.locator("#client-analysis-priority")).to_contain_text("F-001")
+        analysis.get_by_role("button", name="Prepara sollecito").click()
+        draft = analysis.get_by_role("textbox")
+        expect(draft).to_have_value(re.compile(r"F-001.*500,00", re.S))
+        analysis.get_by_role("button", name="Apri fattura").click()
+        expect(page.locator("#invoice-F-001")).to_be_focused()
+
+        payment = page.locator("#demo-payment")
+        payment.get_by_label("Fattura da incassare").select_option("F-001")
+        payment.get_by_label("Importo incassato (€)").fill("100")
+        payment.get_by_role("button", name="Registra incasso demo").click()
+        expect(analysis.locator("#client-analysis-summary")).to_contain_text("850,00")
+        expect(analysis.locator("#client-analysis-priority")).to_contain_text("400,00")
+        expect(draft).to_be_hidden()
+        analysis.get_by_role("button", name="Prepara sollecito").click()
+        expect(draft).to_have_value(re.compile(r"F-001.*400,00", re.S))
+
+        directory.get_by_role("button", name="Martina Rossi", exact=True).click()
+        directory.get_by_text("Analizza cliente", exact=True).click()
+        expect(analysis.locator("#client-analysis-summary")).to_contain_text("250,00")
+        expect(analysis.locator("#client-analysis-priority")).to_contain_text("F-003")
+        expect(analysis.get_by_role("button", name="Prepara sollecito")).to_be_hidden()
+        expect(draft).to_be_hidden()
+
     def test_inserimento_manuale_cliente(self):
         page = self.page
         page.get_by_role("link", name="Clienti", exact=True).click()
@@ -123,4 +156,7 @@ class FattureGuidaBrowserTest(unittest.TestCase):
         directory.get_by_role("button", name="Salva cliente").click()
         expect(directory.locator("#client-name")).to_have_text("Studio Verdi")
         expect(directory.locator("#client-contact")).to_have_text("studio@example.com")
+        directory.get_by_text("Analizza cliente", exact=True).click()
+        expect(directory.locator("#client-analysis-summary")).to_contain_text("Nessuno storico")
+        expect(directory.get_by_role("button", name="Apri fattura")).to_be_hidden()
         expect(page.locator('#quote select[name="client"] option').filter(has_text="Studio Verdi")).to_have_count(1)

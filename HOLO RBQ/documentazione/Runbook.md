@@ -92,3 +92,11 @@ Apri **Clienti** e cerca Rossi. La scheda **Studio Rossi** mostra le fatture F-0
 ### Inserire un cliente
 
 In **Clienti → Nuovo cliente** inserisci il nome o la ragione sociale. Email e telefono sono facoltativi. Dopo **Salva cliente** si apre la scheda e il cliente è selezionabile nei preventivi. Usa una denominazione distinta se esiste già un cliente con lo stesso nome. I dati sono salvati nell’archivio SQLite locale. Al primo avvio l’app aggiorna il database e associa ai clienti dimostrativi le bozze già presenti.
+
+## Analizza cliente
+
+Apri **Clienti**, cerca **Studio Rossi**, apri la scheda e seleziona **Analizza cliente**. Su un archivio demo appena inizializzato il riepilogo mostra 950 € complessivi e indica la F-001, con residuo di 500 €. **Apri fattura** porta alla riga corrispondente. **Prepara sollecito** genera una bozza locale modificabile tramite un modello di testo, con numero, data e residuo. Nessun invio è previsto.
+
+Le fatture aperte sono ordinate per scadenza. La fattura scaduta da più tempo ha priorità. Se tutte le fatture aperte sono ancora nei termini, viene proposta la prossima scadenza. La sintesi usa i dati della scheda e regole locali.
+
+Il collaudo browser verifica il passaggio a 400 € sulla F-001 e 850 € complessivi dopo un incasso demo di 100 €, la separazione di Martina Rossi e il messaggio per i nuovi clienti senza bozze o fatture. Eseguire la suite browser con i comandi indicati sopra.
