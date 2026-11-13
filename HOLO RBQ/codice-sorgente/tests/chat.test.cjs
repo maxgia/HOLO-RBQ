@@ -16,7 +16,7 @@ const document = {
   }
 };
 document.getElementById('quote').elements = {};
-const context = vm.createContext({ document, URLSearchParams, fetch: () => new Promise(() => {}) });
+const context = vm.createContext({ document, URLSearchParams, setInterval() {}, fetch: () => new Promise(() => {}) });
 vm.runInContext(script, context);
 
 for (const [question, query, status] of [
