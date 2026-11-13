@@ -11,3 +11,5 @@ Data: 12 novembre 2026. Requisito RBQ-03. Il caso è concluso tecnicamente quand
 | Decisione di rilascio | [Pull request #1](https://github.com/maxgia/HOLO-RBQ/pull/1). | Rilascio autorizzato dall’utente il 12 novembre 2026 |
 
 La prova copre l’annullamento di una singola anteprima in ambiente dimostrativo. La valutazione di sicurezza del pilota rimane in A09–A10.
+
+Per la tracciabilità degli incrementi successivi, consulta il [piano generale](Piano-generale.md) e la [specifica tecnica](Specifica-tecnica-HOLO-RBQ.md).

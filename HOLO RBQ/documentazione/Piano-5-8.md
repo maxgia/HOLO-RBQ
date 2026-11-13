@@ -29,3 +29,7 @@ Per il pilota, far svolgere a utenti rappresentativi creazione, modifica, ricerc
 ## 8. Sicurezza
 
 La suite copre input non validi, annullamento, concorrenza e conferme ripetute. Prima del pilota definire il modello delle minacce e verificare autenticazione, autorizzazione, accesso tra account, tracciabilità delle azioni, ripristino, dipendenze e gestione dei segreti. Riesaminare l'applicabilità degli obblighi e il perimetro di conformità quando saranno noti soggetto, ambiente e dati. Queste attività e le relative evidenze restano da completare.
+
+## Collegamenti a requisiti e verifiche
+
+La [specifica tecnica](Specifica-tecnica-HOLO-RBQ.md) collega requisiti funzionali e tecnici. Il [piano generale](Piano-generale.md) registra stato dei rami, evidenze automatiche e prove manuali aperte. I controlli di sicurezza e la valutazione di conformità del pilota rientrano in A09–A10.

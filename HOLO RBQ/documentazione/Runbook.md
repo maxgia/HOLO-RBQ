@@ -1,5 +1,7 @@
 # Avvio locale e collaudo HOLO RBQ
 
+Per il ramo da provare e i relativi esiti, consulta il [piano generale](Piano-generale.md). Incassi e Clienti sono su main. Le sezioni Analizza cliente, Attività e follow-up ed Email descrivono incrementi disponibili sui rispettivi rami di sviluppo.
+
 ## Prima installazione Windows
 
 Apri PowerShell dentro `HOLO RBQ\codice-sorgente`, dove si trovano `app.py`, `guide.py`, `index.html` e `requirements.txt`. Usa Python 3.10 o successivo.
@@ -92,3 +94,34 @@ Apri **Clienti** e cerca Rossi. La scheda **Studio Rossi** mostra le fatture F-0
 ### Inserire un cliente
 
 In **Clienti → Nuovo cliente** inserisci il nome o la ragione sociale. Email e telefono sono facoltativi. Dopo **Salva cliente** si apre la scheda e il cliente è selezionabile nei preventivi. Usa una denominazione distinta se esiste già un cliente con lo stesso nome. I dati sono salvati nell’archivio SQLite locale. Al primo avvio l’app aggiorna il database e associa ai clienti dimostrativi le bozze già presenti.
+
+## Analizza cliente
+
+Apri **Clienti**, cerca **Studio Rossi**, apri la scheda e seleziona **Analizza cliente**. Su un archivio demo appena inizializzato la tabella **Indicatore / Valore** mostra bozze, fatture aperte e scadute, 950 € complessivi e la F-001 con scadenza, motivo della priorità e residuo di 500 €. **Apri fattura** porta alla riga corrispondente. **Prepara sollecito** genera una bozza locale modificabile tramite un modello di testo, con numero, data e residuo. Nessun invio è previsto.
+
+Le fatture aperte sono ordinate per scadenza. La fattura scaduta da più tempo ha priorità. Se tutte le fatture aperte sono ancora nei termini, viene proposta la prossima scadenza. La sintesi usa i dati della scheda e regole locali.
+
+Il collaudo browser verifica il passaggio a 400 € sulla F-001 e 850 € complessivi dopo un incasso demo di 100 €, la separazione di Martina Rossi e il messaggio per i nuovi clienti senza bozze o fatture. Eseguire la suite browser con i comandi indicati sopra.
+
+
+### Domande sulla scheda con Ollama
+
+Installa [Ollama per Windows](https://ollama.com/download/windows) e avvialo. In PowerShell scarica il modello con `ollama pull qwen2.5:3b`. Riavvia HOLO RBQ con il comando di avvio abituale. Per scegliere un altro modello locale già scaricato, imposta `$env:HOLO_OLLAMA_MODEL = "nome-modello"` prima di avviare Uvicorn.
+
+In **Clienti → Studio Rossi → Analizza cliente**, usa **Fai una domanda su questo cliente**. Esempi: «Quanto resta da incassare?», «Quale fattura devo gestire per prima?» e «Scrivi un sollecito cordiale per F-001». Il modello locale classifica soltanto la domanda. FastAPI usa i dati della scheda selezionata per comporre importi, scadenze e bozze. L'app chiama Ollama su 127.0.0.1:11434. La bozza è modificabile nella scheda.
+
+La regressione automatica usa un classificatore simulato e verifica che, dopo un incasso demo di 100 €, la bozza riporti 400 € per F-001. Verifica anche che la stessa fattura non sia esposta nella scheda Martina Rossi e che un nuovo cliente mostri l'assenza di storico. Il collaudo con il modello reale si esegue con le domande di esempio dopo aver installato Ollama.
+
+Per verificare la distinzione tra residuo del cliente e residuo della fattura, chiedi «Quanto resta da incassare?» e poi «Quanto resta da incassare sulla fattura F-001?». Su un archivio demo appena inizializzato, Studio Rossi mostra rispettivamente 950 € e 500 €. Dopo un incasso demo di 100 € sulla F-001, il residuo della fattura è 400 €. Il test di regressione simula il caso in cui Ollama classifichi entrambe le domande come richieste di saldo complessivo.
+
+## Attività e follow-up
+
+Dalla scheda cliente, apri **Nuovo follow-up**, inserisci titolo e data e scegli facoltativamente una fattura o una bozza del cliente. In **Studio Rossi → Analizza cliente → Pianifica follow-up**, l’app propone F-001 su un archivio demo appena inizializzato. La data è scelta dall’utente e **Salva follow-up** registra l’attività in SQLite. La funzionalità richiede soltanto il server HOLO RBQ.
+
+In **Attività**, usa i filtri **Oggi**, **Scadute**, **In programma** e **Completate**. I filtri usano la data locale del server. Per riprogrammare un’attività aperta, modifica **Nuova data** e premi **Riprogramma**. Puoi completare il follow-up sia dalla vista generale sia dalla scheda cliente.
+
+Il test browser crea un follow-up per F-001 con data passata, ricarica la pagina, verifica il filtro **Scadute**, lo sposta in **In programma** e lo chiude dalla scheda cliente. Per eseguire la suite usa i comandi del collaudo browser riportati sopra.
+
+## Solleciti email programmati
+
+Per casella di prova, worker SMTP e prove di sospensione e annullamento, segui il [collaudo email](Collaudo-email-follow-up.md). Per interviste e prove con prospect, usa il [protocollo demo](Collaudo-usabilita-demo.md).

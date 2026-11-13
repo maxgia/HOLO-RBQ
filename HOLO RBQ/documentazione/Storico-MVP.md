@@ -74,3 +74,18 @@ La guida è redatta per la demo. La registrazione dell'incasso avviene nel gesti
 | Requisito | Modifica | Verifica |
 |---|---|---|
 | RBQ-10 · Capire più formulazioni per le fatture | Riconoscimento di frasi equivalenti nel frontend e riuso dell’API fatture | Otto formulazioni verificate in JavaScript, totali e risultato vuoto verificati via API |
+
+## Incrementi successivi
+
+
+## Incrementi demo e verifiche
+
+| Incremento | Stato GitHub | Evidenza | Verifica manuale |
+|---|---|---|---|
+| Incassi e clienti | Integrato in main con [PR #2](https://github.com/maxgia/HOLO-RBQ/pull/2) | [CI 43398404064](https://github.com/maxgia/HOLO-RBQ/actions/runs/43398404064) | Inserimento manuale confermato. |
+| Analisi tabellare e domande con Ollama | [PR #4](https://github.com/maxgia/HOLO-RBQ/pull/4) aperta verso main | [CI 43412370009](https://github.com/maxgia/HOLO-RBQ/actions/runs/43412370009) | Tabella verificata. Correzione residuo per singola fattura verificata in CI con classificatore simulato. |
+| Attività e follow-up | [PR #5](https://github.com/maxgia/HOLO-RBQ/pull/5) aperta sul ramo della PR #4 | [CI 43414950861](https://github.com/maxgia/HOLO-RBQ/actions/runs/43414950861) | Modulo confermato dall'utente. |
+| Solleciti programmati | [PR #6](https://github.com/maxgia/HOLO-RBQ/pull/6) aperta sul ramo della PR #5 | [CI 43419536920](https://github.com/maxgia/HOLO-RBQ/actions/runs/43419536920) | Pannello email da verificare sul PC dell'utente. Consegna SMTP reale da collaudare. |
+| Usabilità demo | Protocollo nella [PR #3](https://github.com/maxgia/HOLO-RBQ/pull/3), consolidato in questa revisione documentale | [Protocollo](Collaudo-usabilita-demo.md) | Sessioni strutturate con 3–5 utenti rappresentativi da eseguire. |
+
+La stima A06–A11 resta quella della precedente pianificazione. Attese per accessi al gestionale, collaudo SMTP e consolidamento dei rami vanno registrate al prossimo aggiornamento. Il prossimo passo sulla demo è diagnosticare la visibilità del pannello tramite la guida email e completare MAIL-01, MAIL-06 e MAIL-07.
