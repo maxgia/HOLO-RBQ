@@ -759,8 +759,20 @@ function renderFollowUpEmail(row, item) {
     });
     row.append(cancel);
   }
-  if (!item.test_recipient || item.completed || item.remaining === 0 ||
+  if (item.email_status === 'paid_review' ||
       ['sending', 'sent', 'uncertain'].includes(item.email_status)) return;
+
+  const unavailable = item.completed ? 'Attività completata.'
+    : item.remaining === 0 ? 'La fattura collegata è saldata.'
+    : !item.test_recipient ? 'Imposta HOLO_TEST_RECIPIENT nella finestra del server e riavvia HOLO RBQ.'
+    : '';
+  if (unavailable) {
+    const hint = document.createElement('p');
+    hint.className = 'hint';
+    hint.textContent = 'Programma email di prova — ' + unavailable;
+    row.append(hint);
+    return;
+  }
 
   const details = document.createElement('details');
   details.innerHTML = `
