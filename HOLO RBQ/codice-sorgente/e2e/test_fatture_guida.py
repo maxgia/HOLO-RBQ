@@ -128,7 +128,7 @@ class FattureGuidaBrowserTest(unittest.TestCase):
         expect(table.get_by_role("row").filter(has_text="Fatture aperte").get_by_role("cell")).to_have_text("2")
         expect(table.get_by_role("row").filter(has_text="Fatture scadute").get_by_role("cell")).to_have_text("1")
         analysis.get_by_role("button", name="Prepara sollecito").click()
-        draft = analysis.get_by_role("textbox")
+        draft = analysis.locator("#client-analysis-text")
         expect(draft).to_have_value(re.compile(r"F-001.*500,00", re.S))
         analysis.get_by_role("button", name="Apri fattura").click()
         expect(page.locator("#invoice-F-001")).to_be_focused()
