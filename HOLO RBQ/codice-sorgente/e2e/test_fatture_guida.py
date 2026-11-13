@@ -112,3 +112,15 @@ class FattureGuidaBrowserTest(unittest.TestCase):
         expect(directory.locator("#client-remaining")).to_contain_text("250,00")
         expect(directory.locator("#client-invoices")).to_contain_text("F-003")
         expect(directory.locator("#client-invoices")).not_to_contain_text("F-001")
+
+    def test_inserimento_manuale_cliente(self):
+        page = self.page
+        page.get_by_role("link", name="Clienti", exact=True).click()
+        directory = page.locator("#clienti")
+        directory.get_by_text("Nuovo cliente", exact=True).click()
+        directory.get_by_label("Nome o ragione sociale").fill("Studio Verdi")
+        directory.get_by_label("Email (facoltativa)").fill("studio@example.com")
+        directory.get_by_role("button", name="Salva cliente").click()
+        expect(directory.locator("#client-name")).to_have_text("Studio Verdi")
+        expect(directory.locator("#client-contact")).to_have_text("studio@example.com")
+        expect(page.locator('#quote select[name="client"] option').filter(has_text="Studio Verdi")).to_have_count(1)

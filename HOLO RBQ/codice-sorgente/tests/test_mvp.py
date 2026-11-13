@@ -129,6 +129,23 @@ class MVPTests(unittest.TestCase):
         self.assertEqual(martina["total_remaining"], 25000)
         self.assertEqual(self.client.get("/api/clients/ignoto").status_code, 404)
 
+    def test_manual_client_persists_and_can_receive_a_quote(self):
+        response = self.client.post("/api/clients", json={
+            "name": " Studio Verdi ", "email": "studio@example.com", "phone": "+39 06 0000",
+        })
+        self.assertEqual(response.status_code, 201)
+        client = response.json()
+        self.assertEqual(client["name"], "Studio Verdi")
+        self.assertEqual(self.client.post("/api/clients", json={"name": "studio verdi"}).status_code, 409)
+        self.assertEqual(self.client.post("/api/clients", json={"name": "   "}).status_code, 422)
+        draft = self.confirm(self.preview(client_id=client["id"])).json()
+        with TestClient(create_app(self.db)) as restarted:
+            detail = restarted.get("/api/clients/" + client["id"]).json()
+            self.assertEqual(detail["email"], "studio@example.com")
+            self.assertEqual(detail["phone"], "+39 06 0000")
+            self.assertEqual([item["id"] for item in detail["drafts"]], [draft["id"]])
+            self.assertEqual(detail["total_remaining"], 0)
+
     def test_guide(self):
         for question, article in [
             ("Come registro un incasso?", "incasso"),

@@ -13,11 +13,22 @@ from pydantic import BaseModel, Field, field_validator
 from guide import find_articles
 
 ROOT = Path(__file__).resolve().parent
-CLIENTS = {
+DEMO_CLIENTS = {
     "studio-rossi": "Studio Rossi",
     "martina-rossi": "Martina Rossi",
     "studio-bianchi": "Studio Bianchi",
 }
+
+
+class ClientInput(BaseModel):
+    name: str = Field(min_length=1, max_length=140)
+    email: str = Field(default="", max_length=254, pattern=r"^(?:[^@\s]+@[^@\s]+\.[^@\s]+)?$")
+    phone: str = Field(default="", max_length=40)
+
+    @field_validator("name", "email", "phone", mode="before")
+    @classmethod
+    def trim_fields(cls, value):
+        return value.strip() if isinstance(value, str) else value
 
 
 class QuoteInput(BaseModel):
@@ -49,6 +60,10 @@ def create_app(database: Path = ROOT / "data" / "holo.sqlite3") -> FastAPI:
 
     with closing(connect()) as db, db:
         db.executescript("""
+            CREATE TABLE IF NOT EXISTS clients (
+                id TEXT PRIMARY KEY, name TEXT NOT NULL,
+                email TEXT NOT NULL DEFAULT '', phone TEXT NOT NULL DEFAULT ''
+            );
             CREATE TABLE IF NOT EXISTS previews (
                 id TEXT PRIMARY KEY, client TEXT NOT NULL, subject TEXT NOT NULL,
                 amount INTEGER NOT NULL, discount INTEGER NOT NULL, total INTEGER NOT NULL
@@ -73,6 +88,14 @@ def create_app(database: Path = ROOT / "data" / "holo.sqlite3") -> FastAPI:
             );
         """)
         db.execute("BEGIN IMMEDIATE")
+        db.executemany("INSERT OR IGNORE INTO clients (id, name) VALUES (?, ?)", DEMO_CLIENTS.items())
+        for table in ("drafts", "previews"):
+            columns = {row["name"] for row in db.execute(f"PRAGMA table_info({table})")}
+            if "client_id" not in columns:
+                db.execute(f"ALTER TABLE {table} ADD COLUMN client_id TEXT REFERENCES clients(id)")
+                db.executemany(
+                    f"UPDATE {table} SET client_id = ? WHERE client = ?", DEMO_CLIENTS.items()
+                )
         today = date.today()
         demo_invoices = (
             ("F-001", "studio-rossi", -12, 80000, 30000),
@@ -95,7 +118,7 @@ def create_app(database: Path = ROOT / "data" / "holo.sqlite3") -> FastAPI:
     def draft_data(row):
         return {
             "id": f"DEMO-{row['id']:03d}",
-            "client_id": next((key for key, name in CLIENTS.items() if name == row["client"]), None),
+            "client_id": row["client_id"],
             "version": row["version"],
             **{key: row[key] for key in ("client", "subject", "amount", "discount", "total")},
         }
@@ -115,24 +138,34 @@ def create_app(database: Path = ROOT / "data" / "holo.sqlite3") -> FastAPI:
     @application.get("/api/clients")
     def clients(q: str = ""):
         query = q.strip().casefold()
-        return [
-            {"id": key, "name": name}
-            for key, name in CLIENTS.items()
-            if query in name.casefold()
-        ]
+        with closing(connect()) as db:
+            return [
+                dict(row) for row in db.execute("SELECT id, name FROM clients ORDER BY name, id")
+                if query in row["name"].casefold()
+            ]
+
+    @application.post("/api/clients", status_code=201)
+    def add_client(data: ClientInput):
+        client = {"id": uuid4().hex, **data.model_dump()}
+        with closing(connect()) as db, db:
+            db.execute("BEGIN IMMEDIATE")
+            if any(row["name"].casefold() == data.name.casefold() for row in db.execute("SELECT name FROM clients")):
+                raise HTTPException(409, "Esiste già un cliente con questo nome. Usa una denominazione distinta.")
+            db.execute("INSERT INTO clients VALUES (:id, :name, :email, :phone)", client)
+        return client
 
     @application.post("/api/previews", status_code=201)
     def create_preview(quote: QuoteInput):
-        client = CLIENTS.get(quote.client_id)
-        if client is None:
-            raise HTTPException(404, "Cliente non trovato.")
         amount = int(quote.amount * 100)
         discount = int(quote.discount * 100)
         total = amount - (amount * discount + 5000) // 10000
-        preview = dict(id=uuid4().hex, client=client, subject=quote.subject,
-                       amount=amount, discount=discount, total=total)
         with closing(connect()) as db, db:
             db.execute("BEGIN IMMEDIATE")
+            client = db.execute("SELECT name FROM clients WHERE id = ?", (quote.client_id,)).fetchone()
+            if client is None:
+                raise HTTPException(404, "Cliente non trovato.")
+            preview = dict(id=uuid4().hex, client=client["name"], client_id=quote.client_id,
+                           subject=quote.subject, amount=amount, discount=discount, total=total)
             if quote.draft_id is not None:
                 draft = find_draft(db, quote.draft_id)
                 if quote.draft_version != draft["version"]:
@@ -142,8 +175,8 @@ def create_app(database: Path = ROOT / "data" / "holo.sqlite3") -> FastAPI:
                     (preview["id"], draft["id"], draft["version"]),
                 )
             db.execute("""
-                INSERT INTO previews (id, client, subject, amount, discount, total)
-                VALUES (:id, :client, :subject, :amount, :discount, :total)
+                INSERT INTO previews (id, client, subject, amount, discount, total, client_id)
+                VALUES (:id, :client, :subject, :amount, :discount, :total, :client_id)
             """, preview)
         return preview
 
@@ -164,11 +197,11 @@ def create_app(database: Path = ROOT / "data" / "holo.sqlite3") -> FastAPI:
                     if preview is None:
                         raise HTTPException(404, "Anteprima annullata o non disponibile.")
                     changed = db.execute("""
-                        UPDATE drafts SET client = ?, subject = ?, amount = ?,
+                        UPDATE drafts SET client = ?, client_id = ?, subject = ?, amount = ?,
                             discount = ?, total = ?, version = ?
                         WHERE id = ? AND version = ?
                     """, (
-                        preview["client"], preview["subject"], preview["amount"],
+                        preview["client"], preview["client_id"], preview["subject"], preview["amount"],
                         preview["discount"], preview["total"], preview_id,
                         edit["draft_id"], edit["base_version"],
                     ))
@@ -179,8 +212,8 @@ def create_app(database: Path = ROOT / "data" / "holo.sqlite3") -> FastAPI:
                 return draft_data(db.execute("SELECT * FROM drafts WHERE id = ?", (edit["draft_id"],)).fetchone())
 
             db.execute("""
-                INSERT INTO drafts (preview_id, client, subject, amount, discount, total)
-                SELECT id, client, subject, amount, discount, total
+                INSERT INTO drafts (preview_id, client, subject, amount, discount, total, client_id)
+                SELECT id, client, subject, amount, discount, total, client_id
                 FROM previews WHERE id = ?
                 ON CONFLICT(preview_id) DO NOTHING
             """, (preview_id,))
@@ -214,10 +247,10 @@ def create_app(database: Path = ROOT / "data" / "holo.sqlite3") -> FastAPI:
             "paid": lambda invoice: invoice["remaining"] == 0,
         }
         results = []
-        for row in db.execute("SELECT * FROM invoices ORDER BY due_date, number"):
+        for row in db.execute("SELECT i.*, c.name AS client FROM invoices i JOIN clients c ON c.id = i.client_id ORDER BY i.due_date, i.number"):
             if client_id is not None and row["client_id"] != client_id:
                 continue
-            client = CLIENTS[row["client_id"]]
+            client = row["client"]
             if query not in client.casefold() and query not in row["number"].casefold():
                 continue
             remaining = row["amount"] - row["paid"]
@@ -237,19 +270,19 @@ def create_app(database: Path = ROOT / "data" / "holo.sqlite3") -> FastAPI:
 
     @application.get("/api/clients/{client_id}")
     def client_detail(client_id: str):
-        name = CLIENTS.get(client_id)
-        if name is None:
-            raise HTTPException(404, "Cliente non trovato.")
         with closing(connect()) as db, db:
             db.execute("BEGIN")
+            client = db.execute("SELECT * FROM clients WHERE id = ?", (client_id,)).fetchone()
+            if client is None:
+                raise HTTPException(404, "Cliente non trovato.")
             client_invoices = list_invoices(db, client_id=client_id)
             client_drafts = [
                 draft_data(row) for row in db.execute(
-                    "SELECT * FROM drafts WHERE client = ? ORDER BY id", (name,)
+                    "SELECT * FROM drafts WHERE client_id = ? ORDER BY id", (client_id,)
                 )
             ]
         return {
-            "id": client_id, "name": name, "drafts": client_drafts, "invoices": client_invoices,
+            **dict(client), "drafts": client_drafts, "invoices": client_invoices,
             "total_remaining": sum(row["remaining"] for row in client_invoices),
         }
 
