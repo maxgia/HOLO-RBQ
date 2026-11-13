@@ -95,7 +95,7 @@ In **Clienti → Nuovo cliente** inserisci il nome o la ragione sociale. Email e
 
 ## Analizza cliente
 
-Apri **Clienti**, cerca **Studio Rossi**, apri la scheda e seleziona **Analizza cliente**. Su un archivio demo appena inizializzato il riepilogo mostra 950 € complessivi e indica la F-001, con residuo di 500 €. **Apri fattura** porta alla riga corrispondente. **Prepara sollecito** genera una bozza locale modificabile tramite un modello di testo, con numero, data e residuo. Nessun invio è previsto.
+Apri **Clienti**, cerca **Studio Rossi**, apri la scheda e seleziona **Analizza cliente**. Su un archivio demo appena inizializzato la tabella **Indicatore / Valore** mostra bozze, fatture aperte e scadute, 950 € complessivi e la F-001 con scadenza, motivo della priorità e residuo di 500 €. **Apri fattura** porta alla riga corrispondente. **Prepara sollecito** genera una bozza locale modificabile tramite un modello di testo, con numero, data e residuo. Nessun invio è previsto.
 
 Le fatture aperte sono ordinate per scadenza. La fattura scaduta da più tempo ha priorità. Se tutte le fatture aperte sono ancora nei termini, viene proposta la prossima scadenza. La sintesi usa i dati della scheda e regole locali.
 

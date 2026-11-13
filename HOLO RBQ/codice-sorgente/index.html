@@ -15,6 +15,11 @@ label{display:block;font-size:12px;font-weight:600;color:#c6c7d0;margin-bottom:1
 @media(max-width:900px){.shell{grid-template-columns:170px minmax(0,1fr)}.content,.topbar{padding-left:18px;padding-right:18px}.grid{grid-template-columns:1fr}}
 @media(max-width:600px){.shell{display:block}.sidebar{height:auto;position:relative;padding:6px 10px;display:block;border-right:0;border-bottom:1px solid var(--line)}.sidebar nav{display:flex;overflow:auto;gap:2px}.nav-link{width:auto;padding:6px}.nav-label,.side-foot{display:none}.brand{padding:4px 6px}.mark{width:25px;height:25px}.topbar{height:44px}.content{padding:20px 12px}.metrics{gap:5px}.metric{padding:8px}.metric-label{font-size:10px;gap:4px}.metric strong{font-size:17px}.inline-search{align-items:start;flex-direction:column}.inline-search .split,.inline-search label{width:100%}.intro{align-items:start;flex-direction:column;gap:8px}h1{font-size:27px}}
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+#client-analysis-summary{width:100%;border-collapse:collapse;text-align:left;margin:10px 0;font-size:13px}
+#client-analysis-summary th,#client-analysis-summary td{padding:8px 10px;border-bottom:1px solid var(--line)}
+#client-analysis-summary thead th{color:var(--muted);background:#1d1f25}
+#client-analysis-summary tbody th{font-weight:500}
+#client-analysis-summary td{font-variant-numeric:tabular-nums}
 </style>
 
 <div class="shell"><aside class="sidebar">
@@ -88,8 +93,20 @@ label{display:block;font-size:12px;font-weight:600;color:#c6c7d0;margin-bottom:1
 <details id="client-analysis">
 <summary>Analizza cliente</summary>
 <p class="hint">Riepilogo automatico dai dati demo della scheda.</p>
-<p id="client-analysis-summary"></p>
-<p id="client-analysis-priority"></p>
+<p id="client-analysis-empty" hidden>Nessuno storico disponibile: questa scheda non contiene bozze o fatture.</p>
+<table id="client-analysis-summary" aria-label="Risultato dell’analisi cliente">
+<thead><tr><th scope="col">Indicatore</th><th scope="col">Valore</th></tr></thead>
+<tbody>
+<tr><th scope="row">Preventivi in bozza</th><td id="client-analysis-quotes"></td></tr>
+<tr><th scope="row">Fatture aperte</th><td id="client-analysis-open"></td></tr>
+<tr><th scope="row">Fatture scadute</th><td id="client-analysis-overdue"></td></tr>
+<tr><th scope="row">Residuo complessivo</th><td id="client-analysis-total"></td></tr>
+<tr id="client-analysis-priority"><th scope="row">Fattura prioritaria</th><td id="client-analysis-invoice-number"></td></tr>
+<tr class="client-analysis-invoice-detail"><th scope="row">Motivo della priorità</th><td id="client-analysis-reason"></td></tr>
+<tr class="client-analysis-invoice-detail"><th scope="row">Scadenza</th><td id="client-analysis-due"></td></tr>
+<tr class="client-analysis-invoice-detail"><th scope="row">Residuo della fattura</th><td id="client-analysis-remaining"></td></tr>
+</tbody>
+</table>
 <button type="button" class="secondary" id="client-analysis-invoice" hidden>Apri fattura</button>
 <button type="button" class="secondary" id="client-analysis-reminder" hidden>Prepara sollecito</button>
 <label id="client-analysis-draft" hidden>Bozza di sollecito da rivedere
@@ -573,25 +590,29 @@ function renderClientAnalysis(client) {
   const overdue = open.filter(invoice => invoice.status === 'Scaduta');
   const invoice = overdue[0] || open[0];
   const money = amount => currency.format(amount / 100);
-  const summary = byId('client-analysis-summary');
-  summary.textContent = client.invoices.length || client.drafts.length
-    ? `Preventivi in bozza: ${client.drafts.length}. Fatture aperte: ${open.length}, di cui scadute: ${overdue.length}. Residuo complessivo: ${money(client.total_remaining)}.`
-    : 'Nessuno storico disponibile: questa scheda non contiene bozze o fatture.';
-  const priority = byId('client-analysis-priority');
+  const hasHistory = Boolean(client.invoices.length || client.drafts.length);
+  byId('client-analysis-empty').hidden = hasHistory;
+  byId('client-analysis-summary').hidden = !hasHistory;
+  byId('client-analysis-quotes').textContent = client.drafts.length;
+  byId('client-analysis-open').textContent = open.length;
+  byId('client-analysis-overdue').textContent = overdue.length;
+  byId('client-analysis-total').textContent = money(client.total_remaining);
+  for (const row of document.querySelectorAll('.client-analysis-invoice-detail')) row.hidden = !invoice;
+  byId('client-analysis-invoice-number').textContent = invoice?.number ?? 'Nessuna fattura aperta';
   const view = byId('client-analysis-invoice');
   const reminder = byId('client-analysis-reminder');
   const draft = byId('client-analysis-draft');
   draft.hidden = true;
   byId('client-analysis-text').value = '';
-  priority.textContent = '';
   view.hidden = !invoice;
   reminder.hidden = !overdue.length;
   if (!invoice) return;
 
   const due = invoice.due_date.split('-').reverse().join('/');
   const remaining = money(invoice.remaining);
-  const reason = overdue.length ? 'scaduta da più tempo' : 'con la prossima scadenza';
-  priority.textContent = `Fattura ${invoice.number} (${reason}): scadenza ${due}, residuo ${remaining}.`;
+  byId('client-analysis-reason').textContent = overdue.length ? 'Scaduta da più tempo' : 'Prossima scadenza';
+  byId('client-analysis-due').textContent = due;
+  byId('client-analysis-remaining').textContent = remaining;
   view.onclick = async () => {
     byId('invoice-query').value = invoice.number;
     byId('invoice-status').value = 'all';
