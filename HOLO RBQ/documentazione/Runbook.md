@@ -92,3 +92,7 @@ Apri **Clienti** e cerca Rossi. La scheda **Studio Rossi** mostra le fatture F-0
 ### Inserire un cliente
 
 In **Clienti → Nuovo cliente** inserisci il nome o la ragione sociale. Email e telefono sono facoltativi. Dopo **Salva cliente** si apre la scheda e il cliente è selezionabile nei preventivi. Usa una denominazione distinta se esiste già un cliente con lo stesso nome. I dati sono salvati nell’archivio SQLite locale. Al primo avvio l’app aggiorna il database e associa ai clienti dimostrativi le bozze già presenti.
+
+## Collaudo di usabilità della demo
+
+Per eseguire e registrare le sessioni con freelance e partite IVA, usa il [protocollo di collaudo](Collaudo-usabilita-demo.md).
