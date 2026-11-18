@@ -783,12 +783,15 @@ function renderFollowUpEmail(row, item, open) {
       <label>Testo<textarea name="body" rows="5" maxlength="5000" required></textarea></label>
       <label>Data e ora invio (09:00–19:59, ora italiana)<input name="send_at" type="datetime-local" required></label>
       <button type="submit">Conferma invio programmato</button>
+      <p role="status" class="hint"></p>
       <button type="button" class="secondary" hidden>Annulla invio</button>
     </form>`;
   details.open = open;
   row.append(details);
   const form = details.querySelector('form');
   const fields = form.elements;
+  form.noValidate = true;
+  const feedback = form.querySelector('[role="status"]');
   fields.recipient.value = item.test_recipient;
   fields.subject.value = item.email_subject || item.title;
   const due = item.invoice_due_date?.split('-').reverse().join('/');
@@ -811,20 +814,30 @@ Grazie.`
   const url = '/api/follow-ups/' + item.id + '/email';
   async function save(method, data) {
     saveButton.disabled = cancelButton.disabled = true;
+    feedback.textContent = 'Salvataggio in corso…';
     try {
       await request(url, method, data);
       await Promise.all([renderFollowUps(), renderClientFollowUps()]);
     } catch (error) {
-      status.textContent = error.message;
+      feedback.textContent = error.message;
     } finally {
       saveButton.disabled = cancelButton.disabled = false;
     }
   }
   form.addEventListener('submit', event => {
     event.preventDefault();
+    if (!fields.subject.value.trim() || !fields.body.value.trim()) {
+      feedback.textContent = 'Compila oggetto e testo del messaggio.';
+      return;
+    }
+    const sendAt = new Date(fields.send_at.value);
+    if (!Number.isFinite(sendAt.getTime()) || sendAt.getTime() <= Date.now()) {
+      feedback.textContent = 'Scegli una data e un orario futuri.';
+      return;
+    }
     save('PUT', {
-      recipient: fields.recipient.value, subject: fields.subject.value, body: fields.body.value,
-      send_at: new Date(fields.send_at.value).toISOString(), expected_remaining: item.remaining,
+      recipient: fields.recipient.value, subject: fields.subject.value.trim(), body: fields.body.value.trim(),
+      send_at: sendAt.toISOString(), expected_remaining: item.remaining,
     });
   });
   cancelButton.addEventListener('click', () => save('DELETE'));
