@@ -56,3 +56,7 @@ La stima A06–A11 resta quella della precedente pianificazione. Attese per acce
 2. **Consolidamento demo in attesa del collaudo.** Le PR #4–#7 sono aperte.
 3. **Valutazione clienti e fidelizzazione pianificate.** Prima versione con indicatori spiegabili e suggerimenti di azioni da confermare.
 4. **Pilota con gestionale in attesa di A06.** Restano da scegliere gestionale e azienda di prova.
+
+### Collaudo solleciti — aggiornamento
+
+Pannello e destinatario di prova confermati dall’utente. La conferma non è ancora passata a **Programmata** sul suo PC. La PR #6 mostra ora l’errore vicino al pulsante. Consegna SMTP ancora da verificare.
