@@ -686,14 +686,14 @@ const followUpFilter = byId('follow-up-filter');
 let followUpListRequest = 0;
 let clientFollowUpRequest = 0;
 
-function renderFollowUpRows(list, items, status, showClientName) {
+function renderFollowUpRows(list, items, status, showClientName, openEmailFor) {
   list.replaceChildren();
   for (const item of items) {
     const documentCode = item.invoice_number || item.draft_id;
     const parts = [item.title, showClientName && item.client, documentCode,
       item.due_date.split('-').reverse().join('/'), item.completed ? 'Completata' : 'Aperta'];
     const row = addClientRow(list, parts.filter(Boolean).join(' · '));
-    renderFollowUpEmail(row, item);
+    renderFollowUpEmail(row, item, item.id === openEmailFor);
     if (item.completed) continue;
     const editor = document.createElement('form');
     editor.className = 'inline-search';
@@ -729,7 +729,7 @@ function renderFollowUpRows(list, items, status, showClientName) {
   }
 }
 
-function renderFollowUpEmail(row, item) {
+function renderFollowUpEmail(row, item, open) {
   const labels = {
     scheduled: 'Programmata', sending: 'In invio', sent: 'Inviata',
     review: 'Da rivedere', paid_review: 'Sospesa · fattura saldata', cancelled: 'Annullata', uncertain: 'Esito da verificare',
@@ -785,6 +785,7 @@ function renderFollowUpEmail(row, item) {
       <button type="submit">Conferma invio programmato</button>
       <button type="button" class="secondary" hidden>Annulla invio</button>
     </form>`;
+  details.open = open;
   row.append(details);
   const form = details.querySelector('form');
   const fields = form.elements;
@@ -843,7 +844,7 @@ async function renderFollowUps() {
   }
 }
 
-async function renderClientFollowUps() {
+async function renderClientFollowUps(openEmailFor) {
   if (!activeClient) return;
   const sequence = ++clientFollowUpRequest;
   const clientSequence = clientRequest;
@@ -853,7 +854,7 @@ async function renderClientFollowUps() {
   try {
     const items = await request('/api/follow-ups?client_id=' + encodeURIComponent(activeClient));
     if (sequence === clientFollowUpRequest && clientSequence === clientRequest) {
-      renderFollowUpRows(list, items, status, false);
+      renderFollowUpRows(list, items, status, false, openEmailFor);
     }
   } catch (error) {
     if (sequence === clientFollowUpRequest && clientSequence === clientRequest) status.textContent = error.message;
@@ -875,7 +876,7 @@ followUpForm.addEventListener('submit', async event => {
   const status = byId('client-follow-up-status');
   button.disabled = true;
   try {
-    await request('/api/clients/' + encodeURIComponent(activeClient) + '/follow-ups', 'POST', {
+    const activity = await request('/api/clients/' + encodeURIComponent(activeClient) + '/follow-ups', 'POST', {
       title: fields.title.value,
       due_date: fields.due_date.value,
       invoice_number: kind === 'invoice' ? code : null,
@@ -884,8 +885,8 @@ followUpForm.addEventListener('submit', async event => {
     if (sequence === clientRequest) {
       followUpForm.reset();
       byId('follow-up-editor').open = false;
-      status.textContent = 'Follow-up salvato.';
-      await renderClientFollowUps();
+      status.textContent = 'Follow-up salvato. Le opzioni email sono nella nuova attività qui sotto.';
+      await renderClientFollowUps(activity.id);
     }
     await renderFollowUps();
   } catch (error) {

@@ -1,6 +1,7 @@
 import re
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 from tempfile import TemporaryDirectory
 
 from playwright.sync_api import expect, sync_playwright
@@ -195,3 +196,24 @@ class FattureGuidaBrowserTest(unittest.TestCase):
         expect(row).to_have_count(0)
         activity.get_by_label("Stato attività").select_option("completed")
         expect(row).to_contain_text("Completata")
+
+
+    @patch.dict("os.environ", {"HOLO_TEST_RECIPIENT": "collaudo@example.com"})
+    def test_pannello_email_si_apre_dopo_salvataggio(self):
+        directory = self.page.locator("#clienti")
+        directory.get_by_label("Nome cliente").fill("Studio Rossi")
+        directory.get_by_role("button", name="Cerca clienti").click()
+        directory.get_by_role("button", name="Studio Rossi", exact=True).click()
+        directory.get_by_text("Nuovo follow-up", exact=True).click()
+        directory.get_by_label("Titolo", exact=True).fill("Collaudo pannello email")
+        directory.get_by_label("Data follow-up").fill("2099-01-01")
+        directory.get_by_role("button", name="Salva follow-up").click()
+
+        activity = directory.locator("#client-follow-ups").get_by_role("listitem")
+        recipient = activity.get_by_label("Destinatario di prova")
+        expect(recipient).to_be_visible()
+        expect(recipient).to_have_value("collaudo@example.com")
+        expect(activity.get_by_label("Oggetto")).to_have_value("Collaudo pannello email")
+        activity.get_by_label("Testo", exact=True).fill("Messaggio di collaudo.")
+        activity.get_by_role("button", name="Conferma invio programmato").click()
+        expect(activity).to_contain_text("Programmata")
