@@ -89,3 +89,5 @@ La guida è redatta per la demo. La registrazione dell'incasso avviene nel gesti
 | Usabilità demo | Protocollo nella [PR #3](https://github.com/maxgia/HOLO-RBQ/pull/3), consolidato in questa revisione documentale | [Protocollo](Collaudo-usabilita-demo.md) | Sessioni strutturate con 3–5 utenti rappresentativi da eseguire. |
 
 La stima A06–A11 resta quella della precedente pianificazione. Attese per accessi al gestionale, collaudo SMTP e consolidamento dei rami vanno registrate al prossimo aggiornamento. Il prossimo passo sulla demo è diagnosticare la visibilità del pannello tramite la guida email e completare MAIL-01, MAIL-06 e MAIL-07.
+
+Il 18 novembre 2026 è stata aggiunta l’apertura del pannello email nella nuova attività della scheda cliente. Il collaudo SMTP sul PC resta aperto. [PR #6](https://github.com/maxgia/HOLO-RBQ/pull/6)

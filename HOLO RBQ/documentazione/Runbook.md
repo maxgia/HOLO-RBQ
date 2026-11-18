@@ -125,3 +125,5 @@ Il test browser crea un follow-up per F-001 con data passata, ricarica la pagina
 ## Solleciti email programmati
 
 Per casella di prova, worker SMTP e prove di sospensione e annullamento, segui il [collaudo email](Collaudo-email-follow-up.md). Per interviste e prove con prospect, usa il [protocollo demo](Collaudo-usabilita-demo.md).
+
+Dopo aver salvato un nuovo follow-up, cerca le opzioni email nella nuova attività della scheda cliente. Se il destinatario di prova è configurato e l’attività è programmabile, il pannello si apre automaticamente. [Collaudo email](Collaudo-email-follow-up.md)

@@ -71,3 +71,7 @@ Ogni incremento va collegato a requisito o attività, autore o agente, commit, P
 - **Test automatici.** API Python, riconoscimento richieste JavaScript e browser Chromium. SMTP e classificatore Ollama sono simulati nei test dedicati. Comandi e scenari nel [runbook](Runbook.md).
 - **Test manuali.** Usabilità con utenti rappresentativi, comprensione del modello locale e invio reale alla casella di prova. Il percorso email resta aperto sul PC dell'utente perché il pannello non è risultato visibile dopo il salvataggio. La versione più recente mostra la causa quando il server restituisce il relativo stato. [Collaudo email](Collaudo-email-follow-up.md)
 - **Roadmap.** Selezione ambiente e gestionale, integrazione in lettura, collaudo tecnico e di usabilità, verifiche di sicurezza, pilota e decisione di rilascio. [Piano generale](Piano-generale.md)
+
+### Apertura del pannello email
+
+Dopo il salvataggio di un follow-up programmabile, la scheda cliente apre il pannello della nuova attività con il destinatario di prova già compilato. Riferimento di implementazione ee1aea5. La consegna viene verificata separatamente con il worker SMTP. [Collaudo](Collaudo-email-follow-up.md)

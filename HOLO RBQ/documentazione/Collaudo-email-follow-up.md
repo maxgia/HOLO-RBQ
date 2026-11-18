@@ -60,9 +60,10 @@ Per verificare MAIL-05 e MAIL-06 in sequenza, annulla prima l’email rimasta **
 - **Esito da verificare** indica un errore o esito SMTP incerto. **In invio** può restare visibile se il worker viene interrotto durante la consegna. In entrambi i casi controlla casella e log del provider prima di creare un nuovo invio. Il worker evita il reinvio automatico di queste email.
 - A fine prova ferma il worker con **Ctrl+C** e chiudi la relativa finestra. I test automatici usano un trasporto fittizio e coprono l’orario, l’annullamento, il destinatario consentito, i cambi di residuo e l’esito SMTP incerto. La conferma della consegna reale si ottiene eseguendo MAIL-01 con il proprio provider.
 
+Dopo **Salva follow-up**, HOLO RBQ apre il pannello email direttamente nella nuova attività della scheda cliente se l’invio è programmabile. Il destinatario viene dalla configurazione del server. Il test browser verifica apertura, destinatario e conferma della pianificazione senza avviare il worker SMTP.
 
-## Diagnosi del pannello sul PC di collaudo
+## Verifica della versione di collaudo
 
-Il pannello compare nella singola attività salvata. Verifica il ramo locale con `git branch --show-current` e il commit con `git rev-parse --short HEAD`. La modifica diagnostica è disponibile da `a6464cd`. Apri [API attività](http://127.0.0.1:8002/api/follow-ups), individua l'attività e controlla `test_recipient`, `completed`, `remaining` ed `email_status`. L'assenza di `test_recipient` indica che il server restituisce un contratto precedente. Un valore vuoto indica che la casella non è configurata nel processo Uvicorn. Per un'attività nuova e aperta, prova anche senza documento collegato. Per segnalare l'esito ometti indirizzi e credenziali.
+La versione con apertura automatica del pannello è disponibile dal commit `ee1aea5`.
 
-La suite automatica sul commit `a6464cd` è passata. La verifica manuale del pannello e la consegna SMTP restano aperte. [GitHub Actions](https://github.com/maxgia/HOLO-RBQ/actions/runs/43419536920)
+Se il pannello non si apre, verifica il ramo e il commit con `git branch --show-current` e `git rev-parse --short HEAD`. Controlla che `HOLO_TEST_RECIPIENT` sia impostata nella finestra di Uvicorn e ricarica la pagina.
