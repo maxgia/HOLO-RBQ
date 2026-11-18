@@ -61,3 +61,7 @@ Per verificare MAIL-05 e MAIL-06 in sequenza, annulla prima l’email rimasta **
 - A fine prova ferma il worker con **Ctrl+C** e chiudi la relativa finestra. I test automatici usano un trasporto fittizio e coprono l’orario, l’annullamento, il destinatario consentito, i cambi di residuo e l’esito SMTP incerto. La conferma della consegna reale si ottiene eseguendo MAIL-01 con il proprio provider.
 
 Dopo **Salva follow-up**, HOLO RBQ apre il pannello email direttamente nella nuova attività della scheda cliente se l’invio è programmabile. Il destinatario viene dalla configurazione del server. Il test browser verifica apertura, destinatario e conferma della pianificazione senza avviare il worker SMTP.
+
+### Conferma senza cambio di stato
+
+Dal commit `ab464ab`, controlla il messaggio sotto **Conferma invio programmato**. Compila oggetto e testo e scegli un orario futuro, nello stesso giorno dell’attività, tra le 09:00 e le 19:59 italiane. La conferma funziona anche a worker spento.
