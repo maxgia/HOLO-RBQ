@@ -60,3 +60,7 @@ La stima A06–A11 resta quella della precedente pianificazione. Attese per acce
 ### Collaudo solleciti — aggiornamento
 
 Pannello e destinatario di prova confermati dall’utente. La conferma non è ancora passata a **Programmata** sul suo PC. La PR #6 mostra ora l’errore vicino al pulsante. Consegna SMTP ancora da verificare.
+
+## Esito del collaudo SMTP del 20 novembre 2026
+
+L’utente ha confermato la ricezione dell’email del follow-up «riproviamo invio», pianificata alle 18:55 italiane. La schermata mostra **Email: Inviata · 20/11/2026, 18:55:04**. Il test di consegna reale alla casella di prova è superato. L’autenticazione Gmail con la nuova password per le app era riuscita sulle porte 465 e 587. L’attività resta Aperta fino al completamento manuale. Restano da verificare manualmente sospensione per saldo prima dell’invio, annullamento e finestra oraria.
