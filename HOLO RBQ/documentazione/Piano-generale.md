@@ -68,3 +68,7 @@ L’utente ha confermato la ricezione dell’email del follow-up «riproviamo in
 ### Sospensione del sollecito per saldo — 20 novembre 2026
 
 L’utente ha confermato il corretto funzionamento del test guidato: pianificazione del sollecito su fattura con residuo, registrazione del saldo prima dell’invio, sospensione e annullamento manuale. Esito del collaudo manuale confermato in chat. Restano da registrare le prove manuali dedicate al residuo parziale e ai limiti della finestra oraria. Il consolidamento della demo resta il passo successivo del piano.
+
+## Chiusura sessione del 20 novembre 2026
+
+Confermati manualmente pannello e destinatario, pianificazione, annullamento, autenticazione Gmail, consegna reale alle 18:55:04 e sospensione per saldo con annullamento. Il [registro di collaudo](Collaudo-email-follow-up.md) descrive T01–T12 con passi, risultati attesi, osservazioni e prove aperte. Restano da eseguire manualmente pagamento parziale, limiti orari e ripartenza worker. La conservazione del testo email non ancora confermato durante la riprogrammazione resta un miglioramento aperto. Consolidamento su main e valutazione clienti sono i passi successivi.
