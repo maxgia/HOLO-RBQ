@@ -67,3 +67,35 @@ Dopo **Salva follow-up**, HOLO RBQ apre il pannello email direttamente nella nuo
 La versione con apertura automatica del pannello è disponibile dal commit `ee1aea5`.
 
 Se il pannello non si apre, verifica il ramo e il commit con `git branch --show-current` e `git rev-parse --short HEAD`. Controlla che `HOLO_TEST_RECIPIENT` sia impostata nella finestra di Uvicorn e ricarica la pagina.
+
+
+## Registro ripetibile del collaudo del 20 novembre 2026
+
+Ambiente dichiarato dall’utente: Windows, PowerShell 5.1, HOLO RBQ su 127.0.0.1:8002, SQLite locale e worker separato. La copia in uso è stata recuperata da una versione precedente. Il commit locale effettivo non è stato rilevato nella sessione. Le conferme manuali seguenti sono state fornite in chat e tramite schermate.
+
+Per ripetere ogni prova annotare data, ora italiana, commit o versione dello ZIP, titolo univoco del follow-up, eventuale numero fattura, residuo iniziale, stato osservato ed eventuale ricezione. Le operazioni di incasso modificano i dati demo. Prima di una nuova sessione conservare una copia del database con app e worker fermi.
+
+| Caso | Preparazione e passi operativi | Risultato atteso | Esito della sessione |
+|---|---|---|---|
+| T01 · Avvio e destinatario | Avviare Uvicorn nella cartella contenente app.py dopo aver impostato HOLO_TEST_RECIPIENT sulla propria casella. Aprire Clienti → Studio Rossi. Creare un follow-up aperto senza documento. | Il pannello Programma email di prova espone il destinatario configurato. | Superato. L'indirizzo di esempio iniziale è stato sostituito nella configurazione locale. |
+| T02 · Pianificazione e persistenza | Inserire oggetto e testo. Scegliere un giorno futuro per il follow-up e la stessa data alle 10:00 per l'email. Confermare, ricaricare, riaprire il pannello. | Stato Programmata. Data, oggetto e testo salvati sono rileggibili. | Confermato dall'utente. Nella schermata il follow-up del 21 novembre risultava programmato alle 09:00. |
+| T03 · Annullamento prima dell'invio | Con email Programmata e worker fermo, aprire il pannello e premere Annulla invio. Ricaricare. | Email Annullata. Il follow-up può restare Aperto. | Superato. La schermata mostra Test pannello email con Email Annullata. |
+| T04 · Modifica data con testo non confermato | Scrivere testo nel pannello e usare Riprogramma sulla data dell'attività prima di confermare l'email. Riaprire il pannello. | Rilevare se il testo provvisorio sopravvive al ricaricamento dell'attività. | Osservata perdita del testo non salvato. Dopo il reinserimento e la conferma il flusso ha funzionato. Conservazione automatica del testo provvisorio ancora da implementare e collaudare. |
+| T05 · Diagnosi autenticazione SMTP | Nella finestra worker configurare mittente e credenziale locale. Eseguire una prova di connessione e login su 465 con TLS implicito e su 587 con STARTTLS. Registrare solo la fase e l'esito. | Connessione protetta e autenticazione riuscite. | Prima prova interrotta durante il login su entrambe le porte. Dopo l'inserimento della nuova password per le app Google, autenticazione riuscita su entrambe. La causa iniziale non è stata determinata oltre questa evidenza. |
+| T06 · Nuovo invio dopo esito incerto | Lasciare l'email con esito incerto come evidenza storica. Dopo la verifica delle credenziali, creare un nuovo follow-up e programmare un nuovo messaggio con oggetto distinto. | La nuova pianificazione viene salvata. Il precedente invio incerto resta riconoscibile. | Superato. Il precedente prova invio mail restava con Esito da verificare. |
+| T07 · Consegna SMTP reale | Avviare il worker nella stessa finestra in cui sono configurate le credenziali corrette. Pianificare oggi un nuovo messaggio almeno 5 minuti nel futuro, entro le 19:59. Lasciare il PC e il worker attivi. Dopo l'orario ricaricare e controllare Gmail. | Email Inviata e messaggio ricevuto nella casella di prova. | Superato. riproviamo invio programmata alle 18:55 del 20 novembre. La schermata mostra Inviata alle 18:55:04. Ricezione confermata dall'utente. |
+| T08 · Saldo prima dell'invio | Scegliere una fattura demo con residuo positivo e creare un follow-up collegato. Programmare almeno 10 minuti nel futuro, dentro la finestra consentita. Registrare un incasso pari all'intero residuo prima dell'orario. Aprire Attività, verificare Sospesa · fattura saldata, poi premere Annulla sollecito. Controllare l'assenza del messaggio dopo l'orario previsto. | Sospensione, richiesta di annullamento, stato Annullata e mancato invio. | L'utente ha confermato che il test guidato funziona. Numero fattura, residuo e orari della prova non sono stati registrati. |
+| T09 · Pagamento parziale | Programmare su fattura aperta, poi registrare una quota inferiore al residuo. Attendere il controllo del worker. | Da rivedere. Prima di riprogrammare, verificare e aggiornare il testo con il residuo corrente. | Da eseguire manualmente. Copertura automatica con trasporto simulato già disponibile. |
+| T10 · Limiti orari e giorno | Provare un orario futuro alle 08:59, alle 20:00 e una data diversa da quella del follow-up. | Rifiuto della pianificazione con spiegazione. | Da eseguire manualmente. Finestra implementata 09:00 inclusa–20:00 esclusa, Europe/Rome. |
+| T11 · Arresto e ripartenza worker | Pianificare un'email, fermare il worker e riavviarlo dopo l'orario nello stesso giorno dentro la finestra. Ripetere separatamente con ripartenza fuori finestra. | Dentro finestra il worker elabora la coda. Fuori finestra richiede revisione. Un invio già concluso non riparte. | Da eseguire manualmente. |
+| T12 · Completamento del follow-up | Dopo Email Inviata, osservare il follow-up Aperto e premere Completa. Ricaricare. | Email Inviata e attività Completata rappresentano i due esiti separati. | Stato Aperto dopo invio osservato. Completamento manuale già collaudato nel modulo attività, da rilevare nuovamente su questo messaggio se necessario. |
+
+### Procedura di chiusura della sessione
+
+1. Controllare gli invii ancora Programmati. Per sospendere definitivamente una prova usare Annulla invio. L'arresto del worker conserva la coda.
+2. Nella finestra di follow_up_email.py premere Ctrl+C e attendere Worker fermato e il ritorno del prompt PowerShell. Se un invio è in corso, attendere l'esito prima di arrestare il processo.
+3. Nella finestra Uvicorn premere Ctrl+C e attendere la chiusura del server.
+4. Chiudere le finestre PowerShell. Le credenziali impostate con $env: in quelle sessioni terminano con il processo.
+5. Per il prossimo collaudo riavviare app e worker con la configurazione prevista. Il worker può elaborare una pianificazione già scaduta se è ancora nel giorno e nella finestra consentiti.
+
+A fine sessione risulta ancora visibile una prova programmata per il 21 novembre alle 09:00. Se non si vuole eseguirla alla prossima accensione del worker, annullarla nell'app prima della chiusura.
