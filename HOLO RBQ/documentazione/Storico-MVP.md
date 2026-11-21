@@ -1,5 +1,9 @@
 # HOLO RBQ · MVP locale
 
+## 21 novembre 2026 — PostgreSQL
+
+Aggiunta fase D10 prima di D09 UX/UI: PostgreSQL come runtime, backup SQLite e copia integrale verificata delle otto tabelle; nessuna sovrascrittura di archivi esistenti. CI 44936628150: 36 Python, 11 Node, 15 Chromium e preflight Windows superati. Migrazione dati effettivi ancora da eseguire sul PC, PG-01–05 aperti. A06 gestionale rimane aperta. [Procedura](Migrazione-PostgreSQL.md).
+
 ## Consegna consolidata 0.2.0-demo — 21 novembre 2026
 
 La PR #8 riunisce su main le funzioni della demo e la documentazione. Aggiunto avvio guidato con Avvia-HOLO.cmd / Avvia-HOLO.ps1 e start_local.py: preparazione .venv, dipendenze solo se cambiano, percorso database esplicito, porta occupata rifiutata e browser a server pronto. Il worker email non viene avviato.

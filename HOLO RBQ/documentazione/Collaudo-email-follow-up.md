@@ -1,5 +1,9 @@
 # Collaudo dell’invio programmato dei follow-up
 
+## Avviso versione PostgreSQL 0.3.0
+
+La migrazione conserva tutti gli stati e gli orari delle email. Durante PG-01–05 lasciare il worker fermo; nessun invio reale e' stato eseguito per questo incremento. Prima di riavviarlo riesaminare le pianificazioni trasferite. Il worker ora usa la stessa configurazione PostgreSQL dell'applicazione, senza --database SQLite. [Migrazione](Migrazione-PostgreSQL.md). Le prove sottostanti sono storiche.
+
 **Aggiornamento del 21 novembre 2026:** le procedure sotto conservano il collaudo storico. Nessun nuovo invio o sviluppo di integrazioni esterne è stato eseguito oggi. Per i test interni lasciare spento il worker. Il [registro generale](Registro-collaudo-2026-11-21.md) e l'[Excel](HOLO-RBQ-Registro-test-2026-11-21.xlsx) distinguono conferme T01–T12, difetto T04 e nuove prove. La regressione con trasporto simulato resta verde nella PR #8.
 
 La prova usa due finestre PowerShell, una per HOLO RBQ e una per il worker. Usa una tua casella come destinatario e una casella mittente con autenticazione SMTP su TLS implicito. Recupera dal provider host, porta, nome utente e credenziale SMTP. Il worker usa la porta 465 di default. La configurazione richiede un provider compatibile con autenticazione SMTP tramite nome utente e password.

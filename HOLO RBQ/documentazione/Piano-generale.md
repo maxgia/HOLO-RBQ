@@ -1,5 +1,15 @@
 # Piano generale HOLO RBQ
 
+## Nuova priorita': D10 PostgreSQL, poi D09 UX/UI
+
+Su richiesta del 21 novembre, prima del ridisegno si passa a PostgreSQL e si trasferisce l'archivio attuale. Backend e procedura della versione 0.3.0-postgres sono preparati e verificati su PostgreSQL 17 reale. **Il trasferimento dei dati effettivi dell'utente e' ancora da eseguire sul suo PC**: servono server/database PostgreSQL e il file SQLite della copia operativa. A06 resta APERTA, distinta da questo cambio di database.
+
+La [PR #9](https://github.com/maxgia/HOLO-RBQ/pull/9) contiene runtime PostgreSQL, configurazione guidata, backup e copia delle otto tabelle con digest, tutela della destinazione non vuota e riallineamento progressivi. Nessuna nuova email inviata. [Procedura](Migrazione-PostgreSQL.md).
+
+[CI 44936628150](https://github.com/maxgia/HOLO-RBQ/actions/runs/44936628150), codice `569ec22`: **36 Python (9 specifici PostgreSQL), 11 Node e 15 Chromium (uno specifico PostgreSQL) superati**. Preflight Windows superato per dipendenze e configurazione assente senza fallback SQLite. L'avvio completo sul PC utente viene collaudato dopo la migrazione.
+
+Registro Excel esteso a **43 casi**. Le sette conferme utente precedenti rimangono evidenze sulla versione SQLite 0.2; PG-01–PG-05 sono tutti pendenti. D09 riparte dopo verifica dei dati PostgreSQL. D10 non e' compreso automaticamente nelle vecchie stime del pilota.
+
 Aggiornato il 21 novembre 2026 dopo il collaudo utente e la preparazione della demo consolidata 0.2.0-demo. Il punto di rilascio e' la [PR #8](https://github.com/maxgia/HOLO-RBQ/pull/8), indirizzata a main per riunire le funzioni e i documenti dei rami precedenti. Il materiale precedente e' conservato nel [piano storico](Piano-generale-storico-20261121.md).
 
 **A06 resta aperta:** l'utente sta cercando un gestionale reale. TeamSystem e Buffetti restano ipotesi; prodotto, azienda/partita IVA di prova, accessi API e tempi non sono definiti. Nessuna nuova integrazione esterna viene sviluppata in questa fase.
@@ -32,7 +42,8 @@ Aggiornato il 21 novembre 2026 dopo il collaudo utente e la preparazione della d
 | D06 | Conservazione testo email non confermato | Da sviluppare, difetto T04 aperto | Correggere e testare riprogrammazione senza invii reali. |
 | D07 | Consolidamento della demo | Incluso nel rilascio della PR #8 su main | Verificare esito merge e conservare riferimento al rilascio. |
 | D08 | Avvio locale semplificato | Implementato; verificato su Windows in CI | Collaudo utente AC-11 del doppio clic e dell'apertura browser. |
-| D09 | Revisione UX/UI | PIANIFICATA, fase successiva | Analisi dei flussi, campione di interfaccia, revisione e test. |
+| D09 | Revisione UX/UI | PIANIFICATA, dopo D10 | Analisi dei flussi, campione di interfaccia, revisione e test dopo copia e verifica dei dati. |
+| D10 | PostgreSQL e trasferimento archivio | Codice verificato; migrazione reale APERTA | Configurazione sul PC, PG-01–PG-05 e accettazione dei dati copiati. |
 
 ## Prossima fase: UX/UI senza attendere A06
 

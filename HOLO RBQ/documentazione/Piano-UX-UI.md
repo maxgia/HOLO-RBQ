@@ -1,5 +1,7 @@
 # Revisione UX/UI della demo — D09
 
+**Dipendenza aggiornata:** su richiesta successiva dell'utente, prima di D09 viene D10, sostituzione SQLite con PostgreSQL e migrazione verificata dei dati. La revisione riparte dopo il collaudo PG-01–PG-05 sul PC. A06 rimane comunque aperta: la scelta del gestionale e' distinta dal database di HOLO. [Migrazione](Migrazione-PostgreSQL.md).
+
 Richiesta dell'utente del 21 novembre 2026. Fase successiva al consolidamento D07 e all'avvio semplificato D08; può partire mentre A06 (scelta del gestionale reale e azienda di prova) resta aperta. In questa consegna si pianifica la revisione: il layout non è stato ridisegnato.
 
 ## Obiettivo

@@ -1,5 +1,15 @@
 # Specifica tecnica HOLO RBQ
 
+## Versione PostgreSQL 0.3.0 — stato corrente
+
+La [PR #9](https://github.com/maxgia/HOLO-RBQ/pull/9) sostituisce il database runtime con PostgreSQL tramite SQLAlchemy 2.0 e psycopg 3. SQLite rimane solo come sorgente di migrazione e fixture esplicita di test. Nessun fallback automatico. [Procedura, schema, credenziali e limiti](Migrazione-PostgreSQL.md).
+
+Tutte le otto tabelle applicative sono copiate e confrontate per contenuto, con backup e transazione PostgreSQL. Date ISO, stati, importi in centesimi e identificativi sono preservati. Le letture aggregate usano snapshot ripetibile; per la scala MVP le scritture sono serializzate da un advisory lock di progetto. La configurazione viene attivata soltanto dopo la verifica. Schema versione 1 tracciato in _holo_migrations.
+
+Trasferimento effettivo dell'archivio utente: **da eseguire sul suo PC**, non completato dalle prove CI. Nuovo requisito RF-22: PostgreSQL e migrazione completa prima di UX/UI, senza invii, senza omettere tabelle e senza sovrascrivere una destinazione popolata. Test PG-01–PG-05 nell'Excel di 43 casi. A06 resta aperta.
+
+Evidenza `569ec22`, CI 44936628150: 36 Python, 11 Node, 15 Chromium e preflight Windows superati; nove test Python e un test browser su PostgreSQL reale. I paragrafi della 0.2 sottostanti restano cronologia.
+
 ## Consegna consolidata 0.2.0-demo — 21 novembre 2026
 
 La PR #8 riunisce su main le funzioni della demo e la documentazione. Aggiunto avvio guidato con Avvia-HOLO.cmd / Avvia-HOLO.ps1 e start_local.py: preparazione .venv, dipendenze solo se cambiano, percorso database esplicito, porta occupata rifiutata e browser a server pronto. Il worker email non viene avviato.

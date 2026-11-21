@@ -1,5 +1,23 @@
 # Registro di collaudo — 21 novembre 2026
 
+## D10 — PostgreSQL prima della UX/UI
+
+Codice `569ec22985a403c99c99895b937d18c7e4b6832b`, [CI 44936628150](https://github.com/maxgia/HOLO-RBQ/actions/runs/44936628150) verde: 36 Python, 11 Node, 15 Chromium e preflight PowerShell Windows. Il job PostgreSQL reale esegue tutti i 36 test Python senza saltare i nove casi PostgreSQL; il browser comprende un nuovo caso sul database migrato. Nel job senza PostgreSQL i casi dedicati vengono esplicitamente saltati, non considerati superati.
+
+Verificati: copia di tutte le tabelle con contenuti Unicode e bozze in modifica; digest e sorgente invariata; sequenza della nuova bozza; parita' API e analisi; incassi concorrenti idempotenti; conferme concorrenti e conflitti di modifica; rifiuto destinazione gia' modificata; rifiuto schema sorgente ignoto; rollback di schema/righe su errore; worker su PostgreSQL con email futura e trasporto fittizio non invocato; salvataggio della configurazione locale dopo copia riuscita. Il browser verifica dati migrati, cliente senza storico e ricalcolo dopo saldo.
+
+**Nessun dato reale dell'utente e' stato ancora migrato.** Registro a 43 casi: sette conferme storiche restano sulla 0.2 SQLite; cinque nuovi casi PG sono da eseguire sul suo PC. La CI prova la procedura con un archivio completo di collaudo, non con la sua copia privata. Nessuna email inviata.
+
+| ID | Prova manuale da eseguire | Stato |
+|---|---|---|
+| PG-01 | Server/database dedicato e sorgente corretta, app e worker fermi | Da eseguire |
+| PG-02 | Configurazione guidata, backup, report otto tabelle e attivazione | Da eseguire |
+| PG-03 | Confronto clienti, bozze, fatture, incassi, attivita' e stati | Da eseguire |
+| PG-04 | Nuove operazioni, progressivi e persistenza dopo riavvio | Da eseguire |
+| PG-05 | Riesecuzione senza duplicati e rifiuto sovrascrittura dopo modifiche | Da eseguire |
+
+[Procedura dettagliata](Migrazione-PostgreSQL.md). A06 resta aperta e UX/UI attende il completamento di D10.
+
 ## Consegna consolidata 0.2.0-demo — 21 novembre 2026
 
 La PR #8 riunisce su main le funzioni della demo e la documentazione. Aggiunto avvio guidato con Avvia-HOLO.cmd / Avvia-HOLO.ps1 e start_local.py: preparazione .venv, dipendenze solo se cambiano, percorso database esplicito, porta occupata rifiutata e browser a server pronto. Il worker email non viene avviato.
