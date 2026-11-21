@@ -6,7 +6,7 @@ const vm = require('node:vm');
 
 const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
 const script = html.match(/<script>([\s\S]*?)<\/script>/)[1];
-const element = () => ({ value: '', addEventListener() {}, append() {}, scrollIntoView() {} });
+const element = () => ({ value: '', addEventListener() {}, append() {}, replaceChildren() {}, scrollIntoView() {} });
 const elements = new Map();
 const document = {
   createElement: element,

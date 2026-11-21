@@ -25,12 +25,7 @@ class QuestionIntent(BaseModel):
 
 
 def classify_question(question: str) -> QuestionIntent:
-    model = os.getenv("HOLO_OLLAMA_MODEL", "qwen2.5:3b")
     payload = {
-        "model": model,
-        "stream": False,
-        "format": QuestionIntent.model_json_schema(),
-        "options": {"temperature": 0, "num_predict": 128},
         "messages": [
             {
                 "role": "system",
@@ -47,6 +42,17 @@ def classify_question(question: str) -> QuestionIntent:
             {"role": "user", "content": question},
         ],
     }
+    return local_structured_response(QuestionIntent, payload["messages"])
+
+
+def local_structured_response(schema, messages):
+    payload = {
+        "model": os.getenv("HOLO_OLLAMA_MODEL", "qwen2.5:3b"),
+        "stream": False,
+        "format": schema.model_json_schema(),
+        "options": {"temperature": 0, "num_predict": 128},
+        "messages": messages,
+    }
     request = Request(
         "http://127.0.0.1:11434/api/chat",
         data=json.dumps(payload).encode("utf-8"),
@@ -55,7 +61,7 @@ def classify_question(question: str) -> QuestionIntent:
     try:
         with build_opener(ProxyHandler({})).open(request, timeout=30) as response:
             content = json.load(response)["message"]["content"]
-        return QuestionIntent.model_validate_json(content)
+        return schema.model_validate_json(content)
     except (URLError, TimeoutError) as error:
         raise HTTPException(
             503, "Ollama non disponibile. Verifica che sia avviato e che il modello sia installato."

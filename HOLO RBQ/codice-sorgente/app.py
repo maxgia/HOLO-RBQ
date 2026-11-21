@@ -13,6 +13,7 @@ from pydantic import BaseModel, Field, field_validator
 
 from customer_assistant import CustomerQuestion, answer_customer_question
 from guide import find_articles
+from customer_analysis import analyse_customers, local_customer_advice
 from follow_up_email import EMAIL_SCHEMA, ScheduledEmail, flag_paid_follow_up_emails, in_send_window, utc_now
 
 ROOT = Path(__file__).resolve().parent
@@ -161,6 +162,46 @@ def create_app(database: Path = ROOT / "data" / "holo.sqlite3") -> FastAPI:
     @application.get("/", include_in_schema=False)
     def home():
         return FileResponse(ROOT / "index.html")
+
+    @application.get("/api/customer-analysis")
+    def customer_analysis(
+        sort: Literal["value", "risk"] = "value", q: str = ""
+    ):
+        with closing(connect()) as db, db:
+            db.execute("BEGIN")
+            results = analyse_customers(db)
+        key = "value_score" if sort == "value" else "risk_score"
+        results.sort(key=lambda item: (
+            item[key] is None, -(item[key] or 0),
+            -item["overdue_remaining"] if sort == "risk" else -item["paid"],
+            item["name"].casefold(), item["id"]
+        ))
+        # Rank before filtering so a search does not silently change portfolio positions.
+        rank = 0
+        previous = None
+        for position, item in enumerate(results, 1):
+            score = item[key]
+            if score is not None:
+                if score != previous:
+                    rank = position
+                item["rank"] = rank
+                previous = score
+            else:
+                item["rank"] = None
+        query = q.strip().casefold()
+        return {
+            "as_of": date.today().isoformat(), "method": "RBQ-CLIENTI-1",
+            "customers": [item for item in results if query in item["name"].casefold()],
+        }
+
+    @application.post("/api/customer-analysis/{client_id}/advice")
+    def customer_analysis_advice(client_id: str):
+        with closing(connect()) as db, db:
+            db.execute("BEGIN")
+            item = next((item for item in analyse_customers(db) if item["id"] == client_id), None)
+        if item is None:
+            raise HTTPException(404, "Cliente non trovato.")
+        return local_customer_advice(item)
 
     @application.get("/api/clients")
     def clients(q: str = ""):
