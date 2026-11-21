@@ -125,10 +125,12 @@ def main():
         report_path.write_text(json.dumps(report, indent=2, ensure_ascii=False), encoding='utf-8')
         if args.configure:
             temp = CONFIG.with_suffix('.json.tmp')
-            with temp.open('w', encoding='utf-8', opener=lambda path, flags: os.open(path, flags, 0o600)) as stream:
+            with open(temp, 'w', encoding='utf-8', opener=lambda path, flags: os.open(path, flags, 0o600)) as stream:
                 json.dump({'url': target.render_as_string(hide_password=False)}, stream)
             os.replace(temp, CONFIG)
         print('Migrazione verificata. Report: ' + str(report_path))
+        for table, item in report['tables'].items():
+            print(f"{table}: {item['rows']} righe verificate")
         print('Il vecchio SQLite e il backup restano disponibili. Nessuna email inviata.')
         return 0
     except Exception as error:

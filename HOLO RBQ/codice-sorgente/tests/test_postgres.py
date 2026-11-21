@@ -4,6 +4,9 @@ import hashlib
 import os
 import sqlite3
 import unittest
+from io import StringIO
+from contextlib import redirect_stdout
+from unittest.mock import patch
 from uuid import uuid4
 
 from fastapi.testclient import TestClient
@@ -13,6 +16,7 @@ from app import create_app
 from database import engine_for, TABLE_COLUMNS, postgres_url
 from follow_up_email import process_one
 from migrate_to_postgres import migrate
+import migrate_to_postgres
 from postgres_support import postgres_case
 
 
@@ -107,3 +111,15 @@ class PostgreSQLTests(unittest.TestCase):
             calls = []
             self.assertFalse(process_one(db, lambda row: calls.append(row)))
             self.assertEqual(calls, [])
+
+    def test_configuration_is_written_only_after_verified_copy(self):
+        root = self.source.parent / 'config locale'
+        config = root / 'data' / 'postgres.json'
+        with patch('sys.argv', ['migrate_to_postgres.py', '--configure', '--sqlite', str(self.source)]), \
+             patch('migrate_to_postgres.configure_target', return_value=self.target), \
+             patch('builtins.input', return_value='MIGRA'), \
+             patch('migrate_to_postgres.ROOT', root), patch('migrate_to_postgres.CONFIG', config), \
+             redirect_stdout(StringIO()) as output:
+            self.assertEqual(migrate_to_postgres.main(), 0)
+        self.assertTrue(config.is_file())
+        self.assertNotIn('holo-ci-only', output.getvalue())

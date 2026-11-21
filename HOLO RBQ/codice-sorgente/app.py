@@ -1,4 +1,4 @@
-from contextlib import closing
+from contextlib import closing, asynccontextmanager
 from datetime import date, timedelta, timezone
 import os
 import re
@@ -148,7 +148,15 @@ def create_app(database: Path | str | None = None) -> FastAPI:
         store = PostgresStore(postgres_url(database))
         connect = store.connect
 
-    application = FastAPI(title="HOLO RBQ · Preventivi locali")
+    @asynccontextmanager
+    async def lifespan(_):
+        try:
+            yield
+        finally:
+            if store is not None:
+                store.engine.dispose()
+
+    application = FastAPI(title="HOLO RBQ · Preventivi locali", lifespan=lifespan)
     application.state.store = store
 
     def draft_data(row):
