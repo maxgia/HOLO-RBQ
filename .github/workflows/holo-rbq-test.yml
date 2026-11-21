@@ -27,3 +27,15 @@ jobs:
       - run: node --test tests/chat.test.cjs
       - run: python -m playwright install --with-deps chromium
       - run: python -m unittest discover -s e2e -v
+
+  avvio-windows:
+    runs-on: windows-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Collaudo avvio PowerShell 5.1
+        shell: powershell
+        run: python "HOLO RBQ/codice-sorgente/tests/windows_launcher_smoke.py"
