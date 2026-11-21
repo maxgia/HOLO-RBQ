@@ -978,7 +978,7 @@ async function renderPortfolio() {
     for (const item of result.customers) {
       const row = document.createElement('tr');
       const money = value => currency.format(value / 100);
-      const values = [item.rank ?? '—', item.name,
+      const values = [item.rank ?? 'Non classificato', item.name,
         'Valore ' + (item.value_score ?? '—') + ' · Criticità ' + (item.risk_score ?? '—') +
           ' · ' + item.evidence,
         money(item.invoiced), money(item.paid), money(item.remaining), money(item.overdue_remaining)];

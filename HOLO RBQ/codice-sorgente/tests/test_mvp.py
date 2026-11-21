@@ -74,6 +74,20 @@ class MVPTests(unittest.TestCase):
         clients = self.client.get("/api/clients", params={"q": "ROSSI"}).json()
         self.assertEqual(len(clients), 2)
 
+    def test_home_is_not_cached_and_reads_updated_page_after_restart(self):
+        with TemporaryDirectory() as folder, patch("app.ROOT", Path(folder)):
+            page = Path(folder) / "index.html"
+            page.write_text("<h1>Versione precedente</h1>", encoding="utf-8")
+            before = self.client.get("/")
+            self.assertEqual(before.headers["cache-control"], "no-store")
+            page.write_text("<h1>Analisi clienti aggiornata</h1>", encoding="utf-8")
+            with TestClient(create_app(self.db)) as restarted:
+                after = restarted.get("/", headers={"If-None-Match": before.headers["etag"]})
+                self.assertEqual(after.status_code, 200)
+                self.assertEqual(after.headers["cache-control"], "no-store")
+                self.assertIn("Analisi clienti aggiornata", after.text)
+                self.assertNotIn("Versione precedente", after.text)
+
     def test_validation_and_cancel(self):
         base = dict(client_id="studio-rossi", subject="Consulenza", amount="800", discount="10")
         for override, expected in [

@@ -260,6 +260,14 @@ class FattureGuidaBrowserTest(unittest.TestCase):
         directory.get_by_role("button", name="Salva cliente").click()
         new_row = section.get_by_role("row").filter(has_text="<Studio Nuovo>")
         expect(new_row).to_contain_text("Nessuna fattura")
+        expect(new_row.get_by_role("cell").first).to_have_text("Non classificato")
         new_row.get_by_role("button", name="Analizza <Studio Nuovo>", exact=True).click()
         section.get_by_role("button", name="Suggerisci azione con AI locale").click()
         expect(section.locator("#portfolio-advice")).to_contain_text("storico insufficiente")
+
+    def test_standard_reload_keeps_customer_analysis_available(self):
+        response = self.page.reload()
+        self.assertEqual(response.headers["cache-control"], "no-store")
+        self.page.get_by_role("link", name="Analisi clienti", exact=True).click()
+        expect(self.page.get_by_role("table", name="Confronto clienti")).to_be_visible()
+        expect(self.page.locator("#portfolio-rows").get_by_role("row")).to_have_count(3)

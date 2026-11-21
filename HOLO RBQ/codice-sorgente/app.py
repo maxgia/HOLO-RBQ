@@ -161,7 +161,7 @@ def create_app(database: Path = ROOT / "data" / "holo.sqlite3") -> FastAPI:
 
     @application.get("/", include_in_schema=False)
     def home():
-        return FileResponse(ROOT / "index.html")
+        return FileResponse(ROOT / "index.html", headers={"Cache-Control": "no-store"})
 
     @application.get("/api/customer-analysis")
     def customer_analysis(
