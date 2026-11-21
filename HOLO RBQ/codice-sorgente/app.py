@@ -1,6 +1,7 @@
 from contextlib import closing
 from datetime import date, timedelta, timezone
 import os
+import re
 from decimal import Decimal
 from pathlib import Path
 import sqlite3
@@ -14,6 +15,7 @@ from pydantic import BaseModel, Field, field_validator
 from customer_assistant import CustomerQuestion, answer_customer_question
 from guide import find_articles
 from customer_analysis import analyse_customers, local_customer_advice
+from database import PostgresStore, postgres_url
 from follow_up_email import EMAIL_SCHEMA, ScheduledEmail, flag_paid_follow_up_emails, in_send_window, utc_now
 
 ROOT = Path(__file__).resolve().parent
@@ -71,77 +73,83 @@ class FollowUpUpdate(BaseModel):
     completed: Literal[True] | None = None
 
 
-def create_app(database: Path = ROOT / "data" / "holo.sqlite3") -> FastAPI:
-    database.parent.mkdir(parents=True, exist_ok=True)
-
-    def connect():
-        connection = sqlite3.connect(database)
-        connection.row_factory = sqlite3.Row
-        return connection
-
-    with closing(connect()) as db, db:
-        db.executescript("""
-            CREATE TABLE IF NOT EXISTS clients (
-                id TEXT PRIMARY KEY, name TEXT NOT NULL,
-                email TEXT NOT NULL DEFAULT '', phone TEXT NOT NULL DEFAULT ''
-            );
-            CREATE TABLE IF NOT EXISTS previews (
-                id TEXT PRIMARY KEY, client TEXT NOT NULL, subject TEXT NOT NULL,
-                amount INTEGER NOT NULL, discount INTEGER NOT NULL, total INTEGER NOT NULL
-            );
-            CREATE TABLE IF NOT EXISTS drafts (
-                id INTEGER PRIMARY KEY, preview_id TEXT NOT NULL UNIQUE,
-                client TEXT NOT NULL, subject TEXT NOT NULL,
-                amount INTEGER NOT NULL, discount INTEGER NOT NULL, total INTEGER NOT NULL
-            );
-            CREATE TABLE IF NOT EXISTS invoices (
-                number TEXT PRIMARY KEY, client_id TEXT NOT NULL,
-                due_date TEXT NOT NULL, amount INTEGER NOT NULL, paid INTEGER NOT NULL
-            );
-            CREATE TABLE IF NOT EXISTS demo_payments (
-                request_id TEXT PRIMARY KEY,
-                invoice_number TEXT NOT NULL REFERENCES invoices(number),
-                amount INTEGER NOT NULL CHECK(amount > 0)
-            );
-            CREATE TABLE IF NOT EXISTS follow_ups (
-                id TEXT PRIMARY KEY, client_id TEXT NOT NULL REFERENCES clients(id),
-                title TEXT NOT NULL, due_date TEXT NOT NULL, completed INTEGER NOT NULL DEFAULT 0,
-                invoice_number TEXT REFERENCES invoices(number), draft_id TEXT,
-                CHECK (invoice_number IS NULL OR draft_id IS NULL)
-            );
-            CREATE TABLE IF NOT EXISTS edits (
-                preview_id TEXT PRIMARY KEY, draft_id INTEGER NOT NULL,
-                base_version TEXT NOT NULL, confirmed INTEGER NOT NULL DEFAULT 0
-            );
-        """)
-        db.executescript(EMAIL_SCHEMA)
-        db.execute("BEGIN IMMEDIATE")
-        db.executemany("INSERT OR IGNORE INTO clients (id, name) VALUES (?, ?)", DEMO_CLIENTS.items())
-        for table in ("drafts", "previews"):
-            columns = {row["name"] for row in db.execute(f"PRAGMA table_info({table})")}
-            if "client_id" not in columns:
-                db.execute(f"ALTER TABLE {table} ADD COLUMN client_id TEXT REFERENCES clients(id)")
-                db.executemany(
-                    f"UPDATE {table} SET client_id = ? WHERE client = ?", DEMO_CLIENTS.items()
-                )
-        today = date.today()
-        demo_invoices = (
-            ("F-001", "studio-rossi", -12, 80000, 30000),
-            ("F-002", "studio-rossi", 15, 45000, 0),
-            ("F-003", "martina-rossi", 7, 25000, 0),
-            ("F-004", "studio-rossi", -20, 60000, 60000),
-            ("F-005", "studio-bianchi", 21, 35000, 0),
-        )
-        db.executemany(
-            "INSERT OR IGNORE INTO invoices VALUES (?, ?, ?, ?, ?)",
-            [(number, client, (today + timedelta(days=days)).isoformat(), amount, paid)
-             for number, client, days, amount, paid in demo_invoices],
-        )
-        columns = {row["name"] for row in db.execute("PRAGMA table_info(drafts)")}
-        if "version" not in columns:
-            db.execute("ALTER TABLE drafts ADD COLUMN version TEXT NOT NULL DEFAULT ''")
+def create_app(database: Path | str | None = None) -> FastAPI:
+    store = None
+    if isinstance(database, Path):
+        database.parent.mkdir(parents=True, exist_ok=True)
+    
+        def connect():
+            connection = sqlite3.connect(database)
+            connection.row_factory = sqlite3.Row
+            return connection
+    
+        with closing(connect()) as db, db:
+            db.executescript("""
+                CREATE TABLE IF NOT EXISTS clients (
+                    id TEXT PRIMARY KEY, name TEXT NOT NULL,
+                    email TEXT NOT NULL DEFAULT '', phone TEXT NOT NULL DEFAULT ''
+                );
+                CREATE TABLE IF NOT EXISTS previews (
+                    id TEXT PRIMARY KEY, client TEXT NOT NULL, subject TEXT NOT NULL,
+                    amount INTEGER NOT NULL, discount INTEGER NOT NULL, total INTEGER NOT NULL
+                );
+                CREATE TABLE IF NOT EXISTS drafts (
+                    id INTEGER PRIMARY KEY, preview_id TEXT NOT NULL UNIQUE,
+                    client TEXT NOT NULL, subject TEXT NOT NULL,
+                    amount INTEGER NOT NULL, discount INTEGER NOT NULL, total INTEGER NOT NULL
+                );
+                CREATE TABLE IF NOT EXISTS invoices (
+                    number TEXT PRIMARY KEY, client_id TEXT NOT NULL,
+                    due_date TEXT NOT NULL, amount INTEGER NOT NULL, paid INTEGER NOT NULL
+                );
+                CREATE TABLE IF NOT EXISTS demo_payments (
+                    request_id TEXT PRIMARY KEY,
+                    invoice_number TEXT NOT NULL REFERENCES invoices(number),
+                    amount INTEGER NOT NULL CHECK(amount > 0)
+                );
+                CREATE TABLE IF NOT EXISTS follow_ups (
+                    id TEXT PRIMARY KEY, client_id TEXT NOT NULL REFERENCES clients(id),
+                    title TEXT NOT NULL, due_date TEXT NOT NULL, completed INTEGER NOT NULL DEFAULT 0,
+                    invoice_number TEXT REFERENCES invoices(number), draft_id TEXT,
+                    CHECK (invoice_number IS NULL OR draft_id IS NULL)
+                );
+                CREATE TABLE IF NOT EXISTS edits (
+                    preview_id TEXT PRIMARY KEY, draft_id INTEGER NOT NULL,
+                    base_version TEXT NOT NULL, confirmed INTEGER NOT NULL DEFAULT 0
+                );
+            """)
+            db.executescript(EMAIL_SCHEMA)
+            db.execute("BEGIN IMMEDIATE")
+            db.executemany("INSERT OR IGNORE INTO clients (id, name) VALUES (?, ?)", DEMO_CLIENTS.items())
+            for table in ("drafts", "previews"):
+                columns = {row["name"] for row in db.execute(f"PRAGMA table_info({table})")}
+                if "client_id" not in columns:
+                    db.execute(f"ALTER TABLE {table} ADD COLUMN client_id TEXT REFERENCES clients(id)")
+                    db.executemany(
+                        f"UPDATE {table} SET client_id = ? WHERE client = ?", DEMO_CLIENTS.items()
+                    )
+            today = date.today()
+            demo_invoices = (
+                ("F-001", "studio-rossi", -12, 80000, 30000),
+                ("F-002", "studio-rossi", 15, 45000, 0),
+                ("F-003", "martina-rossi", 7, 25000, 0),
+                ("F-004", "studio-rossi", -20, 60000, 60000),
+                ("F-005", "studio-bianchi", 21, 35000, 0),
+            )
+            db.executemany(
+                "INSERT OR IGNORE INTO invoices VALUES (?, ?, ?, ?, ?)",
+                [(number, client, (today + timedelta(days=days)).isoformat(), amount, paid)
+                 for number, client, days, amount, paid in demo_invoices],
+            )
+            columns = {row["name"] for row in db.execute("PRAGMA table_info(drafts)")}
+            if "version" not in columns:
+                db.execute("ALTER TABLE drafts ADD COLUMN version TEXT NOT NULL DEFAULT ''")
+    else:
+        store = PostgresStore(postgres_url(database))
+        connect = store.connect
 
     application = FastAPI(title="HOLO RBQ · Preventivi locali")
+    application.state.store = store
 
     def draft_data(row):
         return {
@@ -152,8 +160,12 @@ def create_app(database: Path = ROOT / "data" / "holo.sqlite3") -> FastAPI:
         }
 
     def find_draft(db, code):
+        match = re.fullmatch(r'DEMO-(\d{3,})', code.upper())
+        number = int(match[1]) if match else -1
+        if code.upper() != f'DEMO-{number:03d}':
+            number = -1
         row = db.execute(
-            "SELECT * FROM drafts WHERE printf('DEMO-%03d', id) = ?", (code.upper(),)
+            "SELECT * FROM drafts WHERE id = ?", (number,)
         ).fetchone()
         if row is None:
             raise HTTPException(404, "Bozza non trovata.")
@@ -384,7 +396,7 @@ def create_app(database: Path = ROOT / "data" / "holo.sqlite3") -> FastAPI:
                 "FROM follow_ups f JOIN clients c ON c.id = f.client_id "
                 "LEFT JOIN follow_up_emails e ON e.follow_up_id = f.id "
                 "LEFT JOIN invoices i ON i.number = f.invoice_number "
-                "WHERE (:client_id IS NULL OR f.client_id = :client_id) AND " + filters[status]
+                "WHERE (CAST(:client_id AS TEXT) IS NULL OR f.client_id = :client_id) AND " + filters[status]
                 + " ORDER BY f.due_date, f.title, f.id",
                 {"client_id": client_id, "today": today},
             )

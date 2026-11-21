@@ -1,6 +1,7 @@
 param(
     [ValidateRange(1, 65535)][int]$Port = 8002,
-    [switch]$NoBrowser
+    [switch]$NoBrowser,
+    [switch]$ConfigureDatabase
 )
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
@@ -36,6 +37,10 @@ try {
         & $python -m pip install -r $requirements
         if ($LASTEXITCODE -ne 0) { throw 'Installazione non riuscita. Verificare la connessione e riprovare.' }
         Set-Content -Path $stamp -Value $digest -Encoding ASCII
+    }
+    if ($ConfigureDatabase) {
+        & $python (Join-Path $source 'migrate_to_postgres.py') --configure
+        exit $LASTEXITCODE
     }
     $launcherArgs = @((Join-Path $source 'start_local.py'), '--port', "$Port")
     if ($NoBrowser) { $launcherArgs += '--no-browser' }
