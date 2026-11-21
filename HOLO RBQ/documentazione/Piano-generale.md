@@ -1,38 +1,57 @@
 # Piano generale HOLO RBQ
 
-Aggiornato al 12 novembre 2026. Il target qui assunto è un **pilota a perimetro limitato con un gestionale reale e utenti rappresentativi**, seguito da una decisione sul rilascio. Il gestionale, l'azienda di test e la data di avvio del pilota restano da concordare. Le stime sono giorni-persona, a partire dal completamento della demo. Includono implementazione, revisione, test e aggiornamento della documentazione.
+Aggiornato il 21 novembre 2026 dopo il collaudo utente e la preparazione della demo consolidata 0.2.0-demo. Il punto di rilascio e' la [PR #8](https://github.com/maxgia/HOLO-RBQ/pull/8), indirizzata a main per riunire le funzioni e i documenti dei rami precedenti. Il materiale precedente e' conservato nel [piano storico](Piano-generale-storico-20261121.md).
 
-## Attività e avanzamento
+**A06 resta aperta:** l'utente sta cercando un gestionale reale. TeamSystem e Buffetti restano ipotesi; prodotto, azienda/partita IVA di prova, accessi API e tempi non sono definiti. Nessuna nuova integrazione esterna viene sviluppata in questa fase.
 
-| ID | Attività | Stato | Stima | Dipende da | Criterio di completamento |
-|---|---|---|---|---|---|
-| A01 | MVP locale, repository e runbook | Completata | Consuntivo non rilevato | — | Avvio dal codice GitHub verificato dall'utente. Preventivi, fatture demo e guida disponibili. |
-| A02 | Regressione API e riconoscimento delle richieste | Completata | Consuntivo non rilevato | A01 | 7 test Python e 11 test Node superati. |
-| A03 | Collaudo browser preventivi e automazione CI | Completata | Consuntivo non rilevato | A01, A02 | E2E verde su GitHub Actions o su una copia pulita. Bozza a 720 €, modifica a 640 €, stesso codice dopo il riavvio. |
-| A04 | Estendere il collaudo browser a fatture e guida | Completata | Consuntivo non rilevato | A03 | Filtri e residui corretti, guida con fonte e risposta fuori copertura. Suite ripetibile e documentata. |
-| A05 | Sperimentare il flusso di sviluppo multiagente | Completata | Consuntivo non rilevato | A03 | Un'attività con implementazione, revisione, QA, controllo sicurezza, evidenze collegate e approvazione registrata. |
-| A06 | Definire il pilota e selezionare il gestionale | Rinviata | 2–4 gg | Disponibilità del referente | Gestionale e operazioni concordati, azienda di test, accesso API, utenti e criteri di accettazione identificati. |
-| A07 | Integrare il gestionale in sola lettura | In attesa | 4–7 gg | A06 | Test contrattuali e confronto su anagrafiche, fatture, scadenze, incassato e residui rispetto al gestionale. |
-| A08 | Validare qualità dell'assistente e usabilità | Da fare | 3–5 gg | A04, A07 | Utenti rappresentativi completano i flussi concordati. Registrati tempi, errori, casi ambigui e correzioni. |
-| A09 | Definire sicurezza e conformità per il pilota | Da fare | 3–5 gg | A06 | Modello delle minacce, ruoli, dati trattati, misure, prove e responsabilità approvati. Valutazioni NIS2 e ISO/IEC 27001 documentate per il perimetro applicabile. |
-| A10 | Implementare e verificare i controlli del pilota | In attesa | 4–8 gg | A07, A09 | Verifiche di accesso tra utenti, segreti, audit, dipendenze e ripristino completate. Rischi residui assegnati. |
-| A11 | Rilascio pilota e collaudo di accettazione | In attesa | 2–4 gg | A05, A08, A10 | Configurazione riproducibile, suite verde, accettazione utenti e decisione di rilascio registrate. |
+## Avanzamento rispetto al piano originario
 
-**Stima residua di pianificazione: 18–33 giorni-persona** per A06–A11. Con una persona a tempo pieno e attività in sequenza equivale a circa 4–7 settimane lavorative. Sono escluse le attese per scelta del gestionale, accessi, feedback e approvazioni. Mentre A06 è rinviata, la prova A05 è stata eseguita con i dati demo. La scrittura nel gestionale, un'eventuale certificazione e il rollout di produzione richiedono un perimetro e una stima dedicati.
+| ID | Attivita' | Stato attuale | Condizione per chiuderla |
+|---|---|---|---|
+| A01 | MVP locale, repository e runbook | Realizzata | Conservare avvio riproducibile e documentazione a ogni rilascio. |
+| A02 | Regressione API e riconoscimento | Realizzata, estesa | Suite corrente 25 Python e 11 Node. |
+| A03 | Collaudo browser preventivi e CI | Realizzata | Regressione mantenuta sul rilascio. |
+| A04 | Browser fatture e guida | Realizzata, estesa | Suite corrente 14 Chromium e collaudo avvio Windows. |
+| A05 | Prima prova di sviluppo multiagente | Prova storica eseguita | Non equivale a orchestrazione continuativa: questa resta da progettare e sviluppare. |
+| A06 | Gestionale reale e definizione pilota | APERTA, ricerca in corso | Identificare prodotto, referente, azienda di prova, accessi e criteri di accettazione. |
+| A07 | Integrazione gestionale in lettura | In attesa di A06 | Confronto anagrafiche, fatture, scadenze e incassi con dati reali. |
+| A08 | Qualita' assistente e usabilita' | Collaudo demo parziale | Completare casi mancanti e prove con utenti rappresentativi; estendere al gestionale dopo A07. |
+| A09 | Sicurezza e applicabilita' conformita' | Da definire per pilota | Perimetro, minacce, ruoli, dati e responsabilita' approvati. |
+| A10 | Controlli e verifiche del pilota | In attesa del perimetro | Accessi, isolamento, segreti, audit, dipendenze e ripristino verificati. |
+| A11 | Pilota e decisione rilascio | In attesa | Accettazione funzionale, usabilita' e rischi residui registrati. |
 
-## Traguardi e modalità di aggiornamento
+## Incrementi aggiunti durante la demo
 
-| Traguardo | Evidenza di chiusura |
-|---|---|
-| Demo riproducibile | A01–A04 completate. Runbook aggiornato e regressione registrata su un commit. |
-| Sviluppo tracciabile | A05 completata. Ticket, modifiche, revisione, test e decisione collegati. |
-| Integrazione verificata | A06–A07 completate con confronto su azienda di test. |
-| Pilota accettato | A08–A11 completate. Esiti funzionali, usabilità e sicurezza disponibili per la decisione di rilascio. |
+| ID | Incremento | Stato | Passo residuo |
+|---|---|---|---|
+| D01 | Clienti manuali e incassi demo | Implementato, confermato utente | Mantenere regressione. |
+| D02 | Analisi scheda, domande e attivita' | Implementato, confermato nei flussi provati | Valutare qualita' su piu' casi. |
+| D03 | Email programmate e verifica saldo | Implementato; collaudo storico parziale | Prove esterne rinviate; worker non avviato da D08. |
+| D04 | Classifiche clienti e azioni AI locali | Implementato; AC-01–06 e AC-10 confermati | AC-07 e usabilita' AC-08 ancora aperti; AC-09 coperto automaticamente. |
+| D05 | Tracciabilita' e registro Excel | Aggiornato, 38 casi | Registrare ogni nuova prova con data, versione e osservato. |
+| D06 | Conservazione testo email non confermato | Da sviluppare, difetto T04 aperto | Correggere e testare riprogrammazione senza invii reali. |
+| D07 | Consolidamento della demo | Incluso nel rilascio della PR #8 su main | Verificare esito merge e conservare riferimento al rilascio. |
+| D08 | Avvio locale semplificato | Implementato; verificato su Windows in CI | Collaudo utente AC-11 del doppio clic e dell'apertura browser. |
+| D09 | Revisione UX/UI | PIANIFICATA, fase successiva | Analisi dei flussi, campione di interfaccia, revisione e test. |
 
-A ogni aggiornamento registrare stato, giorni spesi e residui, blocchi, prossimo passo e collegamenti a PR, commit ed esecuzione dei test. Un'attività passa a **Completata** quando il criterio è verificato. Avanzamento: **5 attività completate su 11**. Il conteggio misura la chiusura delle attività, che hanno durate diverse. Per i comandi e i casi di collaudo consultare il [runbook](Runbook.md).
+## Prossima fase: UX/UI senza attendere A06
 
-Evidenza A03: [GitHub Actions · run 43237001468](https://github.com/maxgia/HOLO-RBQ/actions/runs/43237001468) sul commit `97c0cfa`. Suite API, JavaScript e browser superate.
+La [fase D09](Piano-UX-UI.md) affronta navigazione, gerarchia delle informazioni, leggibilita' delle tabelle, distinzione tra regole e AI, stati di caricamento/errore/assenza dati, tastiera e finestre strette. Prima si verifica un campione con l'utente, poi si estende il disegno. Il riferimento grafico precedente resta Linear.
 
-Evidenza A04: [GitHub Actions · run 43239189016](https://github.com/maxgia/HOLO-RBQ/actions/runs/43239189016) sul commit `c0d5e88`. Superati 7 test API, 11 test JavaScript e 3 test browser Chromium.
+La revisione demo puo' procedere mentre la ricerca del gestionale e' aperta. Dopo A06–A07 si adatteranno i flussi alle operazioni e ai dati reali. Non sono ancora state applicate modifiche grafiche della fase D09.
 
-Evidenza A05: [prova multiagente e decisione](./Prova-A05.md). Implementazione, revisione e QA completati. Rilascio autorizzato dall’utente il 12 novembre 2026 tramite richiesta di pubblicazione su GitHub.
+## Evidenze della consegna
+
+- Codice di avvio: `10a57d80f787b6d7d0deaf1f20ebf58319c1665d`.
+- [CI 44903612254](https://github.com/maxgia/HOLO-RBQ/actions/runs/44903612254): **25 Python + 11 Node + 14 Chromium superati**, oltre al collaudo Windows PowerShell 5.1.
+- Windows: creazione .venv da copia pulita con spazi nel percorso, avvio da altra directory, porta occupata rifiutata, persistenza al riavvio e nessuna reinstallazione con requisiti invariati.
+- Utente: sette casi AC-01–AC-06 e AC-10 superati. AC-10 confermato dopo aggiornamento dei file nella cartella effettiva; include F5 normale dopo riavvio e Non classificato.
+- Nessun nuovo invio SMTP o collegamento a gestionale reale. Test automatici dell'AI con simulazioni; due scenari Ollama reali verificati dall'utente.
+- [Registro Excel](HOLO-RBQ-Registro-test-2026-11-21.xlsx), [registro delle prove](Registro-collaudo-2026-11-21.md), [avvio](Runbook.md).
+
+## Tempi e dipendenze
+
+La precedente stima A06–A11 di **18–33 giorni-persona** resta una previsione da rivedere quando sara' definito il pilota; non e' una data di consegna e non include automaticamente tutti gli ampliamenti. La stima precedente D06 era 0,5–1 giorno-persona, da verificare all'avvio. D09 verra' stimata dopo analisi dei flussi e scelta del campione.
+
+La disponibilita' del gestionale condiziona integrazione e pilota, non il perfezionamento interno della demo. Nessuna percentuale complessiva viene ricavata contando attivita' di dimensioni diverse.
+

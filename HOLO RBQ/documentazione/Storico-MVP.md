@@ -1,5 +1,19 @@
 # HOLO RBQ · MVP locale
 
+## Consegna consolidata 0.2.0-demo — 21 novembre 2026
+
+La PR #8 riunisce su main le funzioni della demo e la documentazione. Aggiunto avvio guidato con Avvia-HOLO.cmd / Avvia-HOLO.ps1 e start_local.py: preparazione .venv, dipendenze solo se cambiano, percorso database esplicito, porta occupata rifiutata e browser a server pronto. Il worker email non viene avviato.
+
+[CI 44903612254](https://github.com/maxgia/HOLO-RBQ/actions/runs/44903612254), codice `10a57d8`: 25 Python, 11 Node e 14 Chromium superati; collaudo Windows PowerShell 5.1 superato per prima installazione, percorsi con spazi, avvio da altra cartella, porta occupata, riavvio e persistenza. Apertura browser e arresto interattivo sul desktop dell'utente da collaudare in AC-11. Le dipendenze richiedono Internet solo durante la preparazione.
+
+Sette casi utente AC-01–AC-06 e AC-10 confermati. Registro Excel esteso a 38 casi; AC-11 nuovo e pendente. A06 rimane APERTA per la ricerca del gestionale e dell'azienda di prova. La revisione UX/UI e' pianificata in D09 dopo il consolidamento, senza attendere A06: [piano UX/UI](Piano-UX-UI.md), [piano corrente](Piano-generale.md), [avvio](Runbook.md). Non e' stato ancora eseguito il ridisegno grafico. Le sezioni seguenti mantengono gli stati delle consegne precedenti.
+
+
+### Aggiornamento cache ed etichetta — collaudo utente
+
+AC-01–AC-06 sono stati confermati dall'utente il 21 novembre, inclusi Ollama reale su due scenari e persistenza dopo saldo e riavvio. Il fix `59b8907` aggiunge Cache-Control no-store alla pagina e Non classificato nella Posizione senza punteggio. [CI 44900599652](https://github.com/maxgia/HOLO-RBQ/actions/runs/44900599652): 20 Python, 11 Node, 14 Chromium superati. Registro Excel aggiornato a 37 casi; AC-10 resta da ricontrollare sul PC. La vecchia copia HTML può richiedere Ctrl+F5 una volta dopo l'aggiornamento.
+
+
 Demo per freelance e partite IVA con anagrafiche fittizie. L’assistente interpreta richieste di esempio con regole predefinite. FastAPI valida e calcola il preventivo. SQLite conserva le bozze in `data/holo.sqlite3`.
 
 ## Avvio su Windows
@@ -74,3 +88,27 @@ La guida è redatta per la demo. La registrazione dell'incasso avviene nel gesti
 | Requisito | Modifica | Verifica |
 |---|---|---|
 | RBQ-10 · Capire più formulazioni per le fatture | Riconoscimento di frasi equivalenti nel frontend e riuso dell’API fatture | Otto formulazioni verificate in JavaScript, totali e risultato vuoto verificati via API |
+
+## Incrementi successivi
+
+
+## Incrementi demo e verifiche
+
+| Incremento | Stato GitHub | Evidenza | Verifica manuale |
+|---|---|---|---|
+| Incassi e clienti | Integrato in main con [PR #2](https://github.com/maxgia/HOLO-RBQ/pull/2) | [CI 43398404064](https://github.com/maxgia/HOLO-RBQ/actions/runs/43398404064) | Inserimento manuale confermato. |
+| Analisi tabellare e domande con Ollama | [PR #4](https://github.com/maxgia/HOLO-RBQ/pull/4) aperta verso main | [CI 43412370009](https://github.com/maxgia/HOLO-RBQ/actions/runs/43412370009) | Tabella verificata. Correzione residuo per singola fattura verificata in CI con classificatore simulato. |
+| Attività e follow-up | [PR #5](https://github.com/maxgia/HOLO-RBQ/pull/5) aperta sul ramo della PR #4 | [CI 43414950861](https://github.com/maxgia/HOLO-RBQ/actions/runs/43414950861) | Modulo confermato dall'utente. |
+| Solleciti programmati | [PR #6](https://github.com/maxgia/HOLO-RBQ/pull/6) aperta sul ramo della PR #5 | [CI 43419536920](https://github.com/maxgia/HOLO-RBQ/actions/runs/43419536920) | Pannello email da verificare sul PC dell'utente. Consegna SMTP reale da collaudare. |
+| Usabilità demo | Protocollo nella [PR #3](https://github.com/maxgia/HOLO-RBQ/pull/3), consolidato in questa revisione documentale | [Protocollo](Collaudo-usabilita-demo.md) | Sessioni strutturate con 3–5 utenti rappresentativi da eseguire. |
+
+La stima A06–A11 resta quella della precedente pianificazione. Attese per accessi al gestionale, collaudo SMTP e consolidamento dei rami vanno registrate al prossimo aggiornamento. Il prossimo passo sulla demo è diagnosticare la visibilità del pannello tramite la guida email e completare MAIL-01, MAIL-06 e MAIL-07.
+
+Il 18 novembre 2026 è stata aggiunta l’apertura del pannello email nella nuova attività della scheda cliente. Il collaudo SMTP sul PC resta aperto. [PR #6](https://github.com/maxgia/HOLO-RBQ/pull/6)
+
+## Aggiornamento del 21 novembre 2026
+
+Le procedure e gli stati precedenti sono cronologia. Il 20 novembre l'utente ha confermato consegna reale programmata e sospensione per saldo con annullamento; restano aperti i casi indicati nel registro email, incluso T04. Oggi sono state sviluppate soltanto funzioni interne: confronto portafoglio per valore e criticità, dettaglio e azioni di gestione con regole e AI locale facoltativa, senza invii o nuove integrazioni.
+
+[PR #8](https://github.com/maxgia/HOLO-RBQ/pull/8), codice `c40639f`: [CI 44881200826](https://github.com/maxgia/HOLO-RBQ/actions/runs/44881200826) verde, 19 Python, 11 Node e 13 Chromium. AI e trasporto email simulati. [Specifica del confronto](Analisi-portafoglio-clienti.md), [registro del giorno](Registro-collaudo-2026-11-21.md), [Excel con 36 casi](HOLO-RBQ-Registro-test-2026-11-21.xlsx). Il nuovo collaudo utente e l'integrazione dei rami in main sono pendenti; A06 resta rinviata.
+

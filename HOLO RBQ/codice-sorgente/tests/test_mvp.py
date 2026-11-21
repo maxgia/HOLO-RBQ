@@ -1,5 +1,7 @@
 import sqlite3
 import unittest
+from unittest.mock import patch
+from uuid import uuid4
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -7,6 +9,7 @@ from tempfile import TemporaryDirectory
 from fastapi.testclient import TestClient
 
 from app import create_app
+from customer_assistant import QuestionIntent
 
 
 class MVPTests(unittest.TestCase):
@@ -27,10 +30,63 @@ class MVPTests(unittest.TestCase):
     def confirm(self, preview):
         return self.client.put("/api/drafts/" + preview["id"])
 
+    @patch("customer_assistant.classify_question")
+    def test_customer_assistant_prefers_explicit_invoice_to_balance_intent(self, classify):
+        classify.return_value = QuestionIntent(action="balance", invoice_number=None, tone="formale")
+        url = "/api/clients/studio-rossi/questions"
+        question = {"question": "Quanto resta da incassare sulla fattura F-001?"}
+        answer = self.client.post(url, json=question).json()["answer"]
+        self.assertIn("F-001", answer)
+        self.assertIn("500,00 €", answer)
+        self.assertNotIn("950,00 €", answer)
+        self.assertIn("950,00 €", self.client.post(url, json={"question": "Quanto resta da incassare?"}).json()["answer"])
+        other = self.client.post("/api/clients/martina-rossi/questions", json=question).json()["answer"]
+        self.assertIn("non è presente", other)
+        payment = self.client.post(
+            "/api/invoices/F-001/demo-payments", json={"request_id": str(uuid4()), "amount": "100"}
+        )
+        self.assertEqual(payment.status_code, 201)
+        self.assertIn("400,00 €", self.client.post(url, json=question).json()["answer"])
+
+    @patch("customer_assistant.classify_question")
+    def test_customer_assistant_scopes_answers_and_reads_latest_payments(self, classify):
+        classify.return_value = QuestionIntent(action="reminder", invoice_number="F-001", tone="cordiale")
+        url = "/api/clients/studio-rossi/questions"
+        question = {"question": "Scrivi un sollecito cordiale per F-001"}
+        self.assertIn("500,00 €", self.client.post(url, json=question).json()["draft"])
+        payment = self.client.post(
+            "/api/invoices/F-001/demo-payments", json={"request_id": str(uuid4()), "amount": "100"}
+        )
+        self.assertEqual(payment.status_code, 201)
+        self.assertIn("400,00 €", self.client.post(url, json=question).json()["draft"])
+        other = self.client.post("/api/clients/martina-rossi/questions", json=question).json()
+        self.assertIn("non è presente", other["answer"])
+        self.assertNotIn("draft", other)
+
+        client = self.client.post("/api/clients", json={"name": "Studio Verdi"}).json()
+        classify.reset_mock()
+        empty = self.client.post(f"/api/clients/{client['id']}/questions", json=question)
+        self.assertIn("Nessuno storico", empty.json()["answer"])
+        classify.assert_not_called()
+
     def test_home_and_client_search(self):
         self.assertIn("Fatture e scadenze", self.client.get("/").text)
         clients = self.client.get("/api/clients", params={"q": "ROSSI"}).json()
         self.assertEqual(len(clients), 2)
+
+    def test_home_is_not_cached_and_reads_updated_page_after_restart(self):
+        with TemporaryDirectory() as folder, patch("app.ROOT", Path(folder)):
+            page = Path(folder) / "index.html"
+            page.write_text("<h1>Versione precedente</h1>", encoding="utf-8")
+            before = self.client.get("/")
+            self.assertEqual(before.headers["cache-control"], "no-store")
+            page.write_text("<h1>Analisi clienti aggiornata</h1>", encoding="utf-8")
+            with TestClient(create_app(self.db)) as restarted:
+                after = restarted.get("/", headers={"If-None-Match": before.headers["etag"]})
+                self.assertEqual(after.status_code, 200)
+                self.assertEqual(after.headers["cache-control"], "no-store")
+                self.assertIn("Analisi clienti aggiornata", after.text)
+                self.assertNotIn("Versione precedente", after.text)
 
     def test_validation_and_cancel(self):
         base = dict(client_id="studio-rossi", subject="Consulenza", amount="800", discount="10")

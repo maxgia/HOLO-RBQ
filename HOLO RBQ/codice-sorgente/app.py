@@ -1,5 +1,6 @@
 from contextlib import closing
-from datetime import date, timedelta
+from datetime import date, timedelta, timezone
+import os
 from decimal import Decimal
 from pathlib import Path
 import sqlite3
@@ -10,7 +11,10 @@ from fastapi import FastAPI, HTTPException
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field, field_validator
 
+from customer_assistant import CustomerQuestion, answer_customer_question
 from guide import find_articles
+from customer_analysis import analyse_customers, local_customer_advice
+from follow_up_email import EMAIL_SCHEMA, ScheduledEmail, flag_paid_follow_up_emails, in_send_window, utc_now
 
 ROOT = Path(__file__).resolve().parent
 DEMO_CLIENTS = {
@@ -50,6 +54,23 @@ class PaymentInput(BaseModel):
     amount: Decimal = Field(gt=0, le=1_000_000, decimal_places=2)
 
 
+class FollowUpInput(BaseModel):
+    title: str = Field(min_length=1, max_length=140)
+    due_date: date
+    invoice_number: str | None = Field(default=None, max_length=40)
+    draft_id: str | None = Field(default=None, max_length=40)
+
+    @field_validator("title", mode="before")
+    @classmethod
+    def trim_title(cls, value):
+        return value.strip() if isinstance(value, str) else value
+
+
+class FollowUpUpdate(BaseModel):
+    due_date: date | None = None
+    completed: Literal[True] | None = None
+
+
 def create_app(database: Path = ROOT / "data" / "holo.sqlite3") -> FastAPI:
     database.parent.mkdir(parents=True, exist_ok=True)
 
@@ -82,11 +103,18 @@ def create_app(database: Path = ROOT / "data" / "holo.sqlite3") -> FastAPI:
                 invoice_number TEXT NOT NULL REFERENCES invoices(number),
                 amount INTEGER NOT NULL CHECK(amount > 0)
             );
+            CREATE TABLE IF NOT EXISTS follow_ups (
+                id TEXT PRIMARY KEY, client_id TEXT NOT NULL REFERENCES clients(id),
+                title TEXT NOT NULL, due_date TEXT NOT NULL, completed INTEGER NOT NULL DEFAULT 0,
+                invoice_number TEXT REFERENCES invoices(number), draft_id TEXT,
+                CHECK (invoice_number IS NULL OR draft_id IS NULL)
+            );
             CREATE TABLE IF NOT EXISTS edits (
                 preview_id TEXT PRIMARY KEY, draft_id INTEGER NOT NULL,
                 base_version TEXT NOT NULL, confirmed INTEGER NOT NULL DEFAULT 0
             );
         """)
+        db.executescript(EMAIL_SCHEMA)
         db.execute("BEGIN IMMEDIATE")
         db.executemany("INSERT OR IGNORE INTO clients (id, name) VALUES (?, ?)", DEMO_CLIENTS.items())
         for table in ("drafts", "previews"):
@@ -133,7 +161,47 @@ def create_app(database: Path = ROOT / "data" / "holo.sqlite3") -> FastAPI:
 
     @application.get("/", include_in_schema=False)
     def home():
-        return FileResponse(ROOT / "index.html")
+        return FileResponse(ROOT / "index.html", headers={"Cache-Control": "no-store"})
+
+    @application.get("/api/customer-analysis")
+    def customer_analysis(
+        sort: Literal["value", "risk"] = "value", q: str = ""
+    ):
+        with closing(connect()) as db, db:
+            db.execute("BEGIN")
+            results = analyse_customers(db)
+        key = "value_score" if sort == "value" else "risk_score"
+        results.sort(key=lambda item: (
+            item[key] is None, -(item[key] or 0),
+            -item["overdue_remaining"] if sort == "risk" else -item["paid"],
+            item["name"].casefold(), item["id"]
+        ))
+        # Rank before filtering so a search does not silently change portfolio positions.
+        rank = 0
+        previous = None
+        for position, item in enumerate(results, 1):
+            score = item[key]
+            if score is not None:
+                if score != previous:
+                    rank = position
+                item["rank"] = rank
+                previous = score
+            else:
+                item["rank"] = None
+        query = q.strip().casefold()
+        return {
+            "as_of": date.today().isoformat(), "method": "RBQ-CLIENTI-1",
+            "customers": [item for item in results if query in item["name"].casefold()],
+        }
+
+    @application.post("/api/customer-analysis/{client_id}/advice")
+    def customer_analysis_advice(client_id: str):
+        with closing(connect()) as db, db:
+            db.execute("BEGIN")
+            item = next((item for item in analyse_customers(db) if item["id"] == client_id), None)
+        if item is None:
+            raise HTTPException(404, "Cliente non trovato.")
+        return local_customer_advice(item)
 
     @application.get("/api/clients")
     def clients(q: str = ""):
@@ -286,6 +354,139 @@ def create_app(database: Path = ROOT / "data" / "holo.sqlite3") -> FastAPI:
             "total_remaining": sum(row["remaining"] for row in client_invoices),
         }
 
+    @application.get("/api/follow-ups/paid-reminder-count")
+    def paid_reminder_count():
+        with closing(connect()) as db:
+            count = db.execute(
+                "SELECT COUNT(*) FROM follow_up_emails WHERE status = 'paid_review'"
+            ).fetchone()[0]
+        return {"count": count}
+
+    @application.get("/api/follow-ups")
+    def list_follow_ups(
+        status: Literal["all", "today", "overdue", "upcoming", "completed"] = "all",
+        client_id: str | None = None,
+    ):
+        today = date.today().isoformat()
+        filters = {
+            "all": "1 = 1",
+            "today": "f.completed = 0 AND f.due_date = :today",
+            "overdue": "f.completed = 0 AND f.due_date < :today",
+            "upcoming": "f.completed = 0 AND f.due_date > :today",
+            "completed": "f.completed = 1",
+        }
+        with closing(connect()) as db:
+            rows = db.execute(
+                "SELECT f.*, c.name AS client, c.email AS client_email, "
+                "e.status AS email_status, e.detail AS email_detail, e.recipient AS email_recipient, "
+                "e.subject AS email_subject, e.body AS email_body, e.send_at AS email_send_at, e.sent_at AS email_sent_at, "
+                "i.amount - i.paid AS remaining, i.due_date AS invoice_due_date "
+                "FROM follow_ups f JOIN clients c ON c.id = f.client_id "
+                "LEFT JOIN follow_up_emails e ON e.follow_up_id = f.id "
+                "LEFT JOIN invoices i ON i.number = f.invoice_number "
+                "WHERE (:client_id IS NULL OR f.client_id = :client_id) AND " + filters[status]
+                + " ORDER BY f.due_date, f.title, f.id",
+                {"client_id": client_id, "today": today},
+            )
+            return [dict(row) | {"test_recipient": os.getenv("HOLO_TEST_RECIPIENT", "").strip()} for row in rows]
+
+    @application.post("/api/clients/{client_id}/follow-ups", status_code=201)
+    def create_follow_up(client_id: str, data: FollowUpInput):
+        with closing(connect()) as db, db:
+            db.execute("BEGIN IMMEDIATE")
+            if not db.execute("SELECT 1 FROM clients WHERE id = ?", (client_id,)).fetchone():
+                raise HTTPException(404, "Cliente non trovato.")
+            if data.invoice_number is not None and data.draft_id is not None:
+                raise HTTPException(422, "Seleziona un solo documento.")
+            if data.invoice_number is not None and not db.execute(
+                "SELECT 1 FROM invoices WHERE number = ? AND client_id = ?", (data.invoice_number, client_id)
+            ).fetchone():
+                raise HTTPException(404, "Fattura non presente nella scheda cliente.")
+            record = data.model_dump(mode="json") | {"id": uuid4().hex, "client_id": client_id}
+            if data.draft_id is not None:
+                draft = find_draft(db, data.draft_id)
+                if draft["client_id"] != client_id:
+                    raise HTTPException(404, "Bozza non presente nella scheda cliente.")
+                record["draft_id"] = draft_data(draft)["id"]
+            db.execute(
+                "INSERT INTO follow_ups (id, client_id, title, due_date, invoice_number, draft_id) "
+                "VALUES (:id, :client_id, :title, :due_date, :invoice_number, :draft_id)",
+                record,
+            )
+        return record | {"completed": 0}
+
+    @application.patch("/api/follow-ups/{follow_up_id}", status_code=204)
+    def update_follow_up(follow_up_id: str, data: FollowUpUpdate):
+        if (data.due_date is None) == (data.completed is None):
+            raise HTTPException(422, "Scegli se riprogrammare o completare l’attività.")
+        with closing(connect()) as db, db:
+            changed = db.execute(
+                "UPDATE follow_ups SET due_date = COALESCE(?, due_date), completed = COALESCE(?, completed) "
+                "WHERE id = ? AND completed = 0",
+                (data.due_date.isoformat() if data.due_date else None, data.completed, follow_up_id),
+            )
+            if changed.rowcount:
+                status = "cancelled" if data.completed else "review"
+                detail = "Attività completata." if data.completed else "Data attività cambiata. Conferma un nuovo orario."
+                db.execute(
+                    "UPDATE follow_up_emails SET status = ?, detail = ? "
+                    "WHERE follow_up_id = ? AND status = 'scheduled'", (status, detail, follow_up_id)
+                )
+            if not changed.rowcount:
+                row = db.execute("SELECT * FROM follow_ups WHERE id = ?", (follow_up_id,)).fetchone()
+                if row is None:
+                    raise HTTPException(404, "Attività non trovata.")
+                if not data.completed:
+                    raise HTTPException(409, "L’attività è già completata.")
+
+    @application.put("/api/follow-ups/{follow_up_id}/email", status_code=204)
+    def schedule_follow_up_email(follow_up_id: str, data: ScheduledEmail):
+        allowed = os.getenv("HOLO_TEST_RECIPIENT", "").strip()
+        if not allowed:
+            raise HTTPException(503, "Configura HOLO_TEST_RECIPIENT per abilitare la prova.")
+        if data.recipient.casefold() != allowed.casefold():
+            raise HTTPException(422, "È consentito solo il destinatario di prova configurato.")
+        send_at = data.send_at.astimezone(timezone.utc).isoformat()
+        if send_at <= utc_now() or not data.subject.strip() or not data.body.strip():
+            raise HTTPException(422, "Inserisci oggetto, testo e un orario futuro.")
+        with closing(connect()) as db, db:
+            db.execute("BEGIN IMMEDIATE")
+            item = db.execute(
+                "SELECT f.completed, f.due_date, i.amount - i.paid AS remaining, e.status "
+                "FROM follow_ups f LEFT JOIN invoices i ON i.number = f.invoice_number "
+                "LEFT JOIN follow_up_emails e ON e.follow_up_id = f.id WHERE f.id = ?", (follow_up_id,)
+            ).fetchone()
+            if item is None:
+                raise HTTPException(404, "Attività non trovata.")
+            if item["completed"] or item["remaining"] == 0 or item["status"] in ("sending", "sent", "uncertain"):
+                raise HTTPException(409, "L’attività o l’email non è più programmabile.")
+            if not in_send_window(data.send_at, item["due_date"]):
+                raise HTTPException(422, "Scegli un orario dalle 09:00 alle 19:59 (ora italiana) del giorno del follow-up.")
+            if data.expected_remaining != item["remaining"]:
+                raise HTTPException(409, "Il residuo è cambiato. Ricarica e rivedi la bozza.")
+            db.execute("""
+                INSERT INTO follow_up_emails
+                    (follow_up_id, recipient, subject, body, send_at, expected_remaining)
+                VALUES (?, ?, ?, ?, ?, ?)
+                ON CONFLICT(follow_up_id) DO UPDATE SET recipient = excluded.recipient,
+                    subject = excluded.subject, body = excluded.body, send_at = excluded.send_at,
+                    expected_remaining = excluded.expected_remaining, status = 'scheduled', detail = '', sent_at = NULL
+            """, (follow_up_id, allowed, data.subject, data.body, send_at, data.expected_remaining))
+
+    @application.delete("/api/follow-ups/{follow_up_id}/email", status_code=204)
+    def cancel_follow_up_email(follow_up_id: str):
+        with closing(connect()) as db, db:
+            result = db.execute(
+                "UPDATE follow_up_emails SET status = 'cancelled', detail = '' "
+                "WHERE follow_up_id = ? AND status IN ('scheduled', 'review', 'paid_review', 'cancelled')", (follow_up_id,)
+            )
+            if not result.rowcount:
+                raise HTTPException(409, "Non c’è un invio annullabile per questa attività.")
+
+    @application.post("/api/clients/{client_id}/questions")
+    def ask_customer_question(client_id: str, data: CustomerQuestion):
+        return answer_customer_question(client_detail(client_id), data.question)
+
     @application.post("/api/invoices/{number}/demo-payments", status_code=201)
     def register_demo_payment(number: str, payment: PaymentInput):
         amount = int(payment.amount * 100)
@@ -306,6 +507,7 @@ def create_app(database: Path = ROOT / "data" / "holo.sqlite3") -> FastAPI:
                     raise HTTPException(409, "L’incasso supera il residuo della fattura.")
                 db.execute("INSERT INTO demo_payments VALUES (?, ?, ?)", (request_id, number, amount))
                 db.execute("UPDATE invoices SET paid = paid + ? WHERE number = ?", (amount, number))
+                flag_paid_follow_up_emails(db)
         return {"request_id": request_id, "invoice_number": number, "amount": amount}
 
     @application.get("/api/guide")

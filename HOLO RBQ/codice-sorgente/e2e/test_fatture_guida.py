@@ -1,6 +1,7 @@
 import re
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 from tempfile import TemporaryDirectory
 
 from playwright.sync_api import expect, sync_playwright
@@ -113,6 +114,43 @@ class FattureGuidaBrowserTest(unittest.TestCase):
         expect(directory.locator("#client-invoices")).to_contain_text("F-003")
         expect(directory.locator("#client-invoices")).not_to_contain_text("F-001")
 
+    def test_analisi_cliente_e_sollecito_dopo_incasso(self):
+        page = self.page
+        directory = page.locator("#clienti")
+        directory.get_by_label("Nome cliente").fill("Rossi")
+        directory.get_by_role("button", name="Cerca clienti").click()
+        directory.get_by_role("button", name="Studio Rossi", exact=True).click()
+        directory.get_by_text("Analizza cliente", exact=True).click()
+        analysis = directory.locator("#client-analysis")
+        table = analysis.get_by_role("table", name="Risultato dell’analisi cliente")
+        expect(table.get_by_role("columnheader")).to_have_text(["Indicatore", "Valore"])
+        expect(table.get_by_role("row").filter(has_text="Residuo complessivo")).to_contain_text("950,00")
+        expect(table.get_by_role("row").filter(has_text="Fattura prioritaria")).to_contain_text("F-001")
+        expect(table.get_by_role("row").filter(has_text="Fatture aperte").get_by_role("cell")).to_have_text("2")
+        expect(table.get_by_role("row").filter(has_text="Fatture scadute").get_by_role("cell")).to_have_text("1")
+        analysis.get_by_role("button", name="Prepara sollecito").click()
+        draft = analysis.locator("#client-analysis-text")
+        expect(draft).to_have_value(re.compile(r"F-001.*500,00", re.S))
+        analysis.get_by_role("button", name="Apri fattura").click()
+        expect(page.locator("#invoice-F-001")).to_be_focused()
+
+        payment = page.locator("#demo-payment")
+        payment.get_by_label("Fattura da incassare").select_option("F-001")
+        payment.get_by_label("Importo incassato (€)").fill("100")
+        payment.get_by_role("button", name="Registra incasso demo").click()
+        expect(analysis.locator("#client-analysis-summary")).to_contain_text("850,00")
+        expect(table.get_by_role("row").filter(has_text="Residuo della fattura")).to_contain_text("400,00")
+        expect(draft).to_be_hidden()
+        analysis.get_by_role("button", name="Prepara sollecito").click()
+        expect(draft).to_have_value(re.compile(r"F-001.*400,00", re.S))
+
+        directory.get_by_role("button", name="Martina Rossi", exact=True).click()
+        directory.get_by_text("Analizza cliente", exact=True).click()
+        expect(analysis.locator("#client-analysis-summary")).to_contain_text("250,00")
+        expect(analysis.locator("#client-analysis-priority")).to_contain_text("F-003")
+        expect(analysis.get_by_role("button", name="Prepara sollecito")).to_be_hidden()
+        expect(draft).to_be_hidden()
+
     def test_inserimento_manuale_cliente(self):
         page = self.page
         page.get_by_role("link", name="Clienti", exact=True).click()
@@ -123,4 +161,113 @@ class FattureGuidaBrowserTest(unittest.TestCase):
         directory.get_by_role("button", name="Salva cliente").click()
         expect(directory.locator("#client-name")).to_have_text("Studio Verdi")
         expect(directory.locator("#client-contact")).to_have_text("studio@example.com")
+        directory.get_by_text("Analizza cliente", exact=True).click()
+        expect(directory.locator("#client-analysis-empty")).to_be_visible()
+        expect(directory.get_by_role("table", name="Risultato dell’analisi cliente")).to_be_hidden()
+        expect(directory.get_by_role("button", name="Apri fattura")).to_be_hidden()
         expect(page.locator('#quote select[name="client"] option').filter(has_text="Studio Verdi")).to_have_count(1)
+
+    def test_follow_up_da_fattura_e_completamento(self):
+        page = self.page
+        directory = page.locator("#clienti")
+        directory.get_by_label("Nome cliente").fill("Studio Rossi")
+        directory.get_by_role("button", name="Cerca clienti").click()
+        directory.get_by_role("button", name="Studio Rossi", exact=True).click()
+        directory.get_by_text("Analizza cliente", exact=True).click()
+        directory.get_by_role("button", name="Pianifica follow-up").click()
+        expect(directory.get_by_label("Documento collegato")).to_have_value("invoice:F-001")
+        directory.get_by_label("Data follow-up").fill("2000-01-01")
+        directory.get_by_role("button", name="Salva follow-up").click()
+        expect(directory.locator("#client-follow-ups")).to_contain_text("F-001")
+        page.reload()
+        activity = page.locator("#attivita")
+        activity.get_by_label("Stato attività").select_option("overdue")
+        row = activity.get_by_role("listitem").filter(has_text="F-001")
+        expect(row).to_contain_text("Studio Rossi")
+        row.get_by_label("Nuova data").fill("2099-01-01")
+        row.get_by_role("button", name="Riprogramma").click()
+        expect(row).to_have_count(0)
+        activity.get_by_label("Stato attività").select_option("upcoming")
+        expect(row).to_contain_text("01/01/2099")
+        directory.get_by_label("Nome cliente").fill("Studio Rossi")
+        directory.get_by_role("button", name="Cerca clienti").click()
+        directory.get_by_role("button", name="Studio Rossi", exact=True).click()
+        directory.get_by_role("button", name="Completa", exact=True).click()
+        expect(row).to_have_count(0)
+        activity.get_by_label("Stato attività").select_option("completed")
+        expect(row).to_contain_text("Completata")
+
+
+    @patch.dict("os.environ", {"HOLO_TEST_RECIPIENT": "collaudo@example.com"})
+    def test_pannello_email_si_apre_dopo_salvataggio(self):
+        directory = self.page.locator("#clienti")
+        directory.get_by_label("Nome cliente").fill("Studio Rossi")
+        directory.get_by_role("button", name="Cerca clienti").click()
+        directory.get_by_role("button", name="Studio Rossi", exact=True).click()
+        directory.get_by_text("Nuovo follow-up", exact=True).click()
+        directory.get_by_label("Titolo", exact=True).fill("Collaudo pannello email")
+        directory.get_by_label("Data follow-up").fill("2099-01-01")
+        directory.get_by_role("button", name="Salva follow-up").click()
+
+        activity = directory.locator("#client-follow-ups").get_by_role("listitem")
+        recipient = activity.get_by_label("Destinatario di prova")
+        expect(recipient).to_be_visible()
+        expect(recipient).to_have_value("collaudo@example.com")
+        expect(activity.get_by_label("Oggetto")).to_have_value("Collaudo pannello email")
+        activity.get_by_label("Testo", exact=True).fill("Messaggio di collaudo.")
+        activity.get_by_role("button", name="Conferma invio programmato").click()
+        expect(activity).to_contain_text("Programmata")
+
+    def test_portfolio_ranking_detail_and_internal_ai(self):
+        page = self.page
+        page.get_by_role("link", name="Analisi clienti", exact=True).click()
+        section = page.locator("#analisi-portafoglio")
+        table = section.get_by_role("table", name="Confronto clienti")
+        expect(table).to_be_visible()
+        expect(table.locator("tbody tr").first).to_contain_text("Studio Rossi")
+        section.get_by_label("Ordina clienti").select_option("risk")
+        section.get_by_role("button", name="Analizza Studio Rossi", exact=True).click()
+        expect(section.locator("#portfolio-facts")).to_contain_text("F-001")
+        expect(section.locator("#portfolio-action")).to_contain_text("Verifica internamente")
+        page.route("**/api/customer-analysis/studio-rossi/advice", lambda route: route.fulfill(
+            json={"action": "Verifica internamente la fattura scaduta.", "source": "Modello simulato"}
+        ))
+        section.get_by_role("button", name="Suggerisci azione con AI locale").click()
+        expect(section.locator("#portfolio-advice")).to_contain_text("Modello simulato")
+        section.get_by_role("button", name="Apri scheda cliente", exact=True).click()
+        expect(page.locator("#client-name")).to_have_text("Studio Rossi")
+        section.get_by_label("Cerca nel portafoglio").fill("Martina")
+        section.get_by_role("button", name="Aggiorna analisi").click()
+        expect(table.locator("tbody tr")).to_have_count(1)
+        expect(table).to_contain_text("250,00")
+        expect(table).not_to_contain_text("Studio Rossi")
+
+    def test_portfolio_updates_after_payment_and_new_client(self):
+        page = self.page
+        section = page.locator("#analisi-portafoglio")
+        row = section.get_by_role("row").filter(has_text="Studio Rossi")
+        expect(row).to_contain_text("500,00")
+        payment = page.locator("#demo-payment")
+        payment.get_by_label("Fattura da incassare").select_option("F-001")
+        payment.get_by_label("Importo incassato (€)").fill("500")
+        payment.get_by_role("button", name="Registra incasso demo").click()
+        expect(row.get_by_role("cell").nth(6)).to_have_text("0,00 €")
+        page.reload()
+        expect(row.get_by_role("cell").nth(6)).to_have_text("0,00 €")
+        directory = page.locator("#clienti")
+        directory.get_by_text("Nuovo cliente", exact=True).click()
+        directory.get_by_label("Nome o ragione sociale").fill("<Studio Nuovo>")
+        directory.get_by_role("button", name="Salva cliente").click()
+        new_row = section.get_by_role("row").filter(has_text="<Studio Nuovo>")
+        expect(new_row).to_contain_text("Nessuna fattura")
+        expect(new_row.get_by_role("cell").first).to_have_text("Non classificato")
+        new_row.get_by_role("button", name="Analizza <Studio Nuovo>", exact=True).click()
+        section.get_by_role("button", name="Suggerisci azione con AI locale").click()
+        expect(section.locator("#portfolio-advice")).to_contain_text("storico insufficiente")
+
+    def test_standard_reload_keeps_customer_analysis_available(self):
+        response = self.page.reload()
+        self.assertEqual(response.headers["cache-control"], "no-store")
+        self.page.get_by_role("link", name="Analisi clienti", exact=True).click()
+        expect(self.page.get_by_role("table", name="Confronto clienti")).to_be_visible()
+        expect(self.page.locator("#portfolio-rows").get_by_role("row")).to_have_count(3)

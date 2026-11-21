@@ -1,94 +1,69 @@
-# Avvio locale e collaudo HOLO RBQ
+# Avvio e aggiornamento HOLO RBQ
 
-## Prima installazione Windows
+Riferimento: demo consolidata **0.2.0-demo**, ramo di consegna **main** dopo il merge della [PR #8](https://github.com/maxgia/HOLO-RBQ/pull/8). I comandi storici sono conservati nel [runbook precedente](Runbook-storico-20261121.md).
 
-Apri PowerShell dentro `HOLO RBQ\codice-sorgente`, dove si trovano `app.py`, `guide.py`, `index.html` e `requirements.txt`. Usa Python 3.10 o successivo.
+## Una cartella di lavoro riconoscibile
 
-```powershell
-py -m venv .venv
-.\.venv\Scripts\python.exe -m pip install -r requirements.txt
-.\.venv\Scripts\python.exe -m uvicorn app:create_app --factory --host 127.0.0.1 --port 8001
-```
+Usare una sola cartella operativa contenente `HOLO RBQ/codice-sorgente`. Conservare le altre copie come backup, senza avviare contemporaneamente server da copie diverse. Il launcher mostra versione, percorso dei sorgenti, database e indirizzo del browser.
 
-Se `py` non è disponibile, usa `python -m venv .venv`. Apri [HOLO RBQ](http://127.0.0.1:8001/) dopo il messaggio di avvio di Uvicorn. Per fermare premi Ctrl+C. Per riavviare ripeti l'ultimo comando dalla stessa cartella. [Swagger UI](http://127.0.0.1:8001/docs) permette di provare le API.
+## Aggiornare una copia gia' funzionante
 
-## Aggiornamento e conservazione dati
+1. Fermare Uvicorn e l'eventuale worker email con Ctrl+C. Conservare una copia della cartella `data`.
+2. Scaricare **Code → Download ZIP** da [main](https://github.com/maxgia/HOLO-RBQ/tree/main), poi estrarre completamente lo ZIP in una cartella separata.
+3. Copiare il contenuto aggiornato di `HOLO RBQ/codice-sorgente` nella cartella operativa, sostituendo i sorgenti. Conservare `data` e `.venv` della copia operativa. Non avviare il programma direttamente dentro lo ZIP.
+4. Fare doppio clic su **Avvia-HOLO.cmd**, dentro `codice-sorgente`.
 
-Ferma il server. Se provieni dallo ZIP precedente, puoi copiare i sorgenti aggiornati nella cartella che contiene già `app.py`, oppure copiare la tua cartella `data` nella nuova cartella dei sorgenti mentre il server è fermo. Conserva una copia del database `data\holo.sqlite3`. Riavvia e ricarica il browser con Ctrl+F5. Un nuovo percorso senza `data` inizializza un nuovo archivio. Un 404 di `favicon.ico` riguarda l'icona del browser. Se mancano le bozze, consulta [l'API delle bozze](http://127.0.0.1:8001/api/drafts) e verifica il percorso del database.
+Per una nuova installazione estrarre l'intero ZIP. Se si vogliono ritrovare i dati precedenti, copiare prima la vecchia cartella `data` nei nuovi sorgenti con i processi fermi. Senza quei dati viene inizializzato un nuovo archivio demo.
 
-## Collaudi funzionali
+## Cosa fa il doppio clic
 
-| ID | Passi e risultato atteso | Evidenza storica |
-|---|---|---|
-| RBQ-01–04 | Usa la richiesta di esempio. Seleziona uno dei due Rossi. Anteprima di 800 € con sconto 10% produce 720 €. Annulla e verifica che l'archivio non cambi. Rigenera, conferma e riavvia. La bozza resta visibile. | API e prova locale sul PC dell'utente |
-| RBQ-05–06 | Cerca Rossi in Bozze salvate o chiedi «Mostrami i preventivi di Studio Rossi». Apri la bozza da 800 €, applica 20%, conferma e riavvia. Stesso codice, 640 €. | API e prova locale sul PC dell'utente |
-| RBQ-07–08 | Chiedi «Quali fatture di Rossi sono ancora da incassare?». Attese tre fatture e 1.200 € di residuo. F-001 ha 300 € incassati e 500 € residui. Controlla filtri scadute e saldate. | API e prova locale sul PC dell'utente |
-| RBQ-09 | Premi Prova la guida e invia «Come registro un incasso?». Verifica passaggi, indicazione del gestionale e fonte Guida dimostrativa HOLO RBQ · v1. Prova anche creazione e modifica bozza, scadenze e una richiesta fuori copertura. | Quattro procedure e richieste fuori copertura via API. L'utente ha confermato il funzionamento della guida |
-| RBQ-10 | «Cosa deve ancora pagare Rossi?» dà tre fatture e 1.200 €. «Quanto resta da incassare da Studio Rossi?» dà due fatture e 950 €. Un cliente assente restituisce un elenco vuoto. | Otto formulazioni in JavaScript e importi via API. Collaudo browser delle formulazioni equivalenti superato |
+- Cerca o crea l'ambiente `.venv` nella stessa cartella dei sorgenti. Richiede Python 3.10 o successivo.
+- Installa le dipendenze al primo avvio o se cambia requirements.txt; questa preparazione richiede accesso Internet. Se il file non cambia non reinstalla.
+- Usa esclusivamente il database `data/holo.sqlite3` accanto ai sorgenti. Non cancella o sposta gli archivi esistenti.
+- Avvia il server su `127.0.0.1:8002` e apre il browser quando il server e' pronto.
+- Non avvia il worker email e non esegue integrazioni esterne.
+- Se la porta e' occupata, mostra un errore e non apre una diversa copia dell'applicazione.
 
-## Verifiche tecniche svolte
+Lasciare aperta la finestra del server. Per fermarlo premere **Ctrl+C**. Per ripartire fare nuovamente doppio clic. Una scheda gia' aperta va ricaricata con F5; per eliminare un vecchio HTML precedente alla correzione cache puo' servire Ctrl+F5 una prima volta.
 
-- Demo HTML iniziale. Verificati in JavaScript disambiguazione, calcolo, annullamento e salvataggio singolo. La demo usa il browser per la persistenza. L'utente ha confermato l'avvio locale.
-- Backend. Verificati ricerca clienti, dati non validi, anteprima annullata, 16 conferme concorrenti, retry e persistenza SQLite dopo riavvio. Verificato l'avvio HTTP su porta 8001 con risposta 200 per pagina iniziale e API clienti.
-- Modifica. Verificati migrazione di un archivio della prima versione, ricerca, dettaglio, annullamento, retry, conflitto tra aggiornamenti, conservazione del codice e nuova lettura dopo riavvio.
-- Fatture. Verificati filtri aperte, scadute e saldate, cliente assente, filtro invalido, residuo e stabilità dei dati al riavvio.
-- Guida. Verificate quattro procedure, una formulazione alternativa, indicazione della fonte e domande fuori perimetro.
-- Chat fatture. Verificate otto formulazioni in JavaScript, tre comandi esistenti esclusi dal riconoscimento fatture e risultati API per Rossi, Studio Rossi e cliente sconosciuto.
+## Porta diversa o apertura manuale del browser
 
-Fatture e anagrafiche sono dimostrative. Lo stato delle scadenze dipende dalla data del server. Il materiale operativo e i dettagli dei singoli incrementi sono in [Storico-MVP.md](Storico-MVP.md).
-
-## Regressione automatizzata
-
-Da PowerShell in `HOLO RBQ\codice-sorgente`, con l'ambiente virtuale già creato, esegui:
+Da PowerShell nella cartella dei sorgenti:
 
 ```powershell
-.\.venv\Scripts\python.exe -m pip install -r requirements-test.txt
-.\.venv\Scripts\python.exe -m unittest discover -s tests -v
-node --test tests/chat.test.cjs
+.\Avvia-HOLO.cmd -Port 8003
+.\Avvia-HOLO.cmd -NoBrowser
 ```
 
-Per la suite JavaScript serve Node.js 18 o successivo. Il server locale può essere spento durante i test. Risultato atteso: 7 test Python e 11 test Node superati. I test Node verificano il riconoscimento delle frasi in un ambiente simulato. Per le prove dell'interfaccia usa i passi del collaudo funzionale.
+Eseguire un comando alla volta. Con -NoBrowser aprire manualmente http://127.0.0.1:8002/. Non terminare processi sconosciuti per liberare la porta: chiudere la precedente finestra del server o scegliere una porta diversa.
 
-## Test end-to-end dei preventivi nel browser
+L'avvio manuale precedente resta disponibile:
 
-Requisiti RBQ-01–06. Il test avvia Uvicorn su una porta libera con un database temporaneo. Verifica richiesta di esempio, scelta cliente, creazione a 720 €, ricerca, modifica a 640 €, mantenimento del codice e rilettura dopo arresto e nuovo avvio del server.
+```powershell
+.\.venv\Scripts\python.exe -m uvicorn app:create_app --factory --host 127.0.0.1 --port 8002
+```
 
-Da PowerShell, nella cartella dei sorgenti:
+## Collaudo AC-11 da eseguire sul PC dell'utente
+
+1. Dopo l'aggiornamento fare doppio clic su Avvia-HOLO.cmd e attendere l'apertura del browser.
+2. Verificare che il percorso stampato sia quello operativo e che siano presenti Cliente Test Analisi e gli importi salvati.
+3. Chiudere il server con Ctrl+C, riavviare dal file e verificare persistenza e reload normale.
+4. Con il primo server attivo, provare una seconda apertura: deve segnalare porta occupata senza avviare un'altra copia.
+5. Registrare risultato, data, versione 0.2.0-demo e percorso usato nell'Excel. L'apertura automatica del browser e l'arresto interattivo restano da verificare manualmente sul PC.
+
+La CI Windows ha gia' verificato preparazione, avvio da un'altra cartella con spazi, porta occupata, riavvio e persistenza senza browser o email. Non sostituisce il collaudo del doppio clic sul desktop dell'utente.
+
+## Ripetere i test automatici
 
 ```powershell
 .\.venv\Scripts\python.exe -m pip install -r requirements-e2e.txt
+.\.venv\Scripts\python.exe -m unittest discover -s tests -v
+node --test tests/chat.test.cjs
 .\.venv\Scripts\python.exe -m playwright install chromium
 .\.venv\Scripts\python.exe -m unittest discover -s e2e -v
 ```
 
-La suite è configurata anche in GitHub Actions, con i test Python e Node. Per registrare un esito, annotare commit, ambiente e risultato o link al run. Per dipendenze e traguardi consultare il [piano generale](Piano-generale.md).
+Attesi **25 Python, 11 Node e 14 Chromium**. Il test Windows aggiuntivo viene eseguito dalla CI con `python tests/windows_launcher_smoke.py`; lavora su una copia temporanea e non sul database dell'utente.
 
-Esito del 12 novembre 2026: [GitHub Actions · run 43237001468](https://github.com/maxgia/HOLO-RBQ/actions/runs/43237001468) sul commit `97c0cfa`. Passati 7 test Python, 11 test Node e il test browser Chromium.
+Per casi funzionali e storico consultare il [registro](Registro-collaudo-2026-11-21.md), l'[Excel](HOLO-RBQ-Registro-test-2026-11-21.xlsx) e le [specifiche](Specifica-tecnica-HOLO-RBQ.md). Il [protocollo di usabilita'](Collaudo-usabilita-demo.md) alimentera' la [revisione UX/UI](Piano-UX-UI.md). A06 rimane aperta per la ricerca del gestionale reale.
 
-## Test end-to-end di fatture e guida operativa
-
-Lo stesso comando della suite browser esegue anche i test RBQ-07–10. Per le fatture verifica richieste equivalenti in chat, filtro per cliente, scadute, saldate, importo residuo e ricerca senza risultati. Per la guida verifica i passaggi per registrare un incasso, la fonte e la risposta a una domanda fuori copertura.
-
-Esito del 12 novembre 2026: [GitHub Actions · run 43239189016](https://github.com/maxgia/HOLO-RBQ/actions/runs/43239189016) sul commit `c0d5e88`. Superati 7 test API, 11 test JavaScript e 3 test browser Chromium.
-
-## Annullamento dell’anteprima nel browser
-
-Il test RBQ-03 genera un’anteprima con dati dimostrativi, la annulla e verifica che il pulsante di salvataggio sia disabilitato. Controlla la risposta HTTP 204 alla cancellazione, il rifiuto HTTP 404 di un successivo tentativo di salvare la stessa anteprima e l’archivio vuoto dopo il ricaricamento. Si esegue con lo stesso comando della suite browser e usa un database temporaneo.
-
-Esito del 12 novembre 2026: [GitHub Actions · run 43239996580](https://github.com/maxgia/HOLO-RBQ/actions/runs/43239996580) sul commit `2c4773f`. Superati 7 test API, 11 test JavaScript e 4 test browser Chromium.
-
-## Interfaccia MVP con navigazione laterale
-
-La barra laterale apre Assistente, Preventivi, Bozze salvate, Fatture e scadenze e Guida operativa. Il riepilogo mostra gli importi da incassare e scaduti, oltre al numero delle bozze salvate. Le API di FastAPI alimentano le schermate e le bozze restano nell’archivio SQLite. Il collaudo browser verifica anche importi del riepilogo, navigazione e avvio della guida dalla barra laterale. [Verifiche della pull request #1](https://github.com/maxgia/HOLO-RBQ/pull/1/checks)
-
-## Incassi dimostrativi
-
-In Fatture e scadenze seleziona F-001 e registra 100 €. Su un database appena inizializzato il residuo passa da 500 € a 400 €. Al ricaricamento il nuovo residuo resta disponibile. La registrazione aggiorna il database locale dimostrativo. Il test API verifica persistenza, incassi parziali, saldo, importi non validi e ripetizione della richiesta. Il test browser verifica registrazione, riepilogo e rilettura del residuo.
-
-## Anagrafica clienti dimostrativa
-
-Apri **Clienti** e cerca Rossi. La scheda **Studio Rossi** mostra le fatture F-001, F-002 e F-004 e, su un database appena inizializzato, 950 € di residuo. La scheda **Martina Rossi** mostra F-003 e 250 €. Le bozze si aprono dalla scheda del cliente. La scheda si aggiorna dopo un salvataggio o un incasso demo. L’anagrafica usa i clienti dimostrativi esistenti e consente di inserire nuovi clienti. Il collaudo verifica separazione degli omonimi, collegamento alle bozze e importi residui.
-
-### Inserire un cliente
-
-In **Clienti → Nuovo cliente** inserisci il nome o la ragione sociale. Email e telefono sono facoltativi. Dopo **Salva cliente** si apre la scheda e il cliente è selezionabile nei preventivi. Usa una denominazione distinta se esiste già un cliente con lo stesso nome. I dati sono salvati nell’archivio SQLite locale. Al primo avvio l’app aggiorna il database e associa ai clienti dimostrativi le bozze già presenti.
