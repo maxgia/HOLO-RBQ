@@ -1,5 +1,37 @@
 # Avvio locale e collaudo HOLO RBQ
 
+## Ripresa del 21 novembre 2026 — sole funzioni interne
+
+Il nuovo modulo **Analisi clienti** si trova sul ramo `feat/analisi-portafoglio-clienti`, [PR #8](https://github.com/maxgia/HOLO-RBQ/pull/8); non è ancora su main. La suite su codice `c40639f` è verde: [19 Python, 11 Node, 13 Chromium](https://github.com/maxgia/HOLO-RBQ/actions/runs/44881200826). Leggere [specifica e limiti del confronto](Analisi-portafoglio-clienti.md) e compilare l'[Excel di ripresa](HOLO-RBQ-Registro-test-2026-11-21.xlsx).
+
+Con server e worker fermi, conservare una copia della cartella `data`. Da una copia Git già installata, senza modifiche locali da preservare, nella cartella `HOLO RBQ\codice-sorgente`:
+
+```powershell
+git fetch origin
+git switch feat/analisi-portafoglio-clienti
+git pull --ff-only origin feat/analisi-portafoglio-clienti
+.\.venv\Scripts\python.exe -m pip install -r requirements.txt
+.\.venv\Scripts\python.exe -m uvicorn app:create_app --factory --host 127.0.0.1 --port 8002
+```
+
+Se Git segnala modifiche locali, conservarle prima di cambiare ramo. Non usare reset o eliminazione della cartella dati per aggiornare. Per una prima installazione creare l'ambiente come descritto sotto. Per una copia ZIP scaricare il ramo corretto da GitHub e conservare separatamente i dati già usati.
+
+Aprire [l'app locale](http://127.0.0.1:8002/) e premere Ctrl+F5. Nel menu **Analisi clienti**, provare valore, criticità, ricerca, **Analizza** e **Apri scheda cliente**. La classifica e l'azione da regole funzionano senza Ollama. Il pulsante AI usa soltanto il modello locale già installato e mostra un errore gestito se assente. Non avviare `follow_up_email.py`: i nuovi test non richiedono SMTP.
+
+### Archivio di collaudo separato
+
+Per verificare gli importi attesi senza modificare il database di lavoro, usare una seconda copia di collaudo sulla porta 8003. Dalla stessa cartella, questo comando crea un nuovo database distinto se il percorso non esiste:
+
+```powershell
+.\.venv\Scripts\python.exe -c "from pathlib import Path; from app import create_app; import uvicorn; uvicorn.run(create_app(Path('data-collaudo/analisi-20261121.sqlite3')), host='127.0.0.1', port=8003)"
+```
+
+Aprire [la copia di collaudo](http://127.0.0.1:8003/). Su un archivio nuovo Studio Rossi ha fatturato 1.850 euro, incassato 900, residuo 950, scaduto 500; valore 100 e criticità 43. Seguire AC-01–03 prima del saldo AC-04. Riutilizzare lo stesso percorso per verificare persistenza; usare un nome distinto per una nuova inizializzazione, senza cancellare archivi esistenti.
+
+Nel foglio **Test** filtrare Ambito = Interno e compilare G:J per ogni nuova prova; il foglio **Passi** contiene il caso con lo stesso ID. Le conferme storiche non cambiano automaticamente in base ai nuovi test automatici. La prova reale Ollama e la valutazione di usabilità restano aperte; T04 è un difetto noto ancora da correggere.
+
+Per il ramo da provare e i relativi esiti, consulta il [piano generale](Piano-generale.md). Incassi e Clienti sono su main. Le sezioni Analizza cliente, Attività e follow-up ed Email descrivono incrementi disponibili sui rispettivi rami di sviluppo.
+
 ## Prima installazione Windows
 
 Apri PowerShell dentro `HOLO RBQ\codice-sorgente`, dove si trovano `app.py`, `guide.py`, `index.html` e `requirements.txt`. Usa Python 3.10 o successivo.
@@ -47,7 +79,7 @@ Da PowerShell in `HOLO RBQ\codice-sorgente`, con l'ambiente virtuale già creato
 node --test tests/chat.test.cjs
 ```
 
-Per la suite JavaScript serve Node.js 18 o successivo. Il server locale può essere spento durante i test. Risultato atteso: 7 test Python e 11 test Node superati. I test Node verificano il riconoscimento delle frasi in un ambiente simulato. Per le prove dell'interfaccia usa i passi del collaudo funzionale.
+Per la suite JavaScript serve Node.js 18 o successivo. Il server locale può essere spento durante i test. Sul ramo `feat/analisi-portafoglio-clienti` il risultato atteso è 19 test Python e 11 test Node superati; la suite browser completa esegue 13 test. I test Node verificano il riconoscimento delle frasi in un ambiente simulato. Per le prove dell'interfaccia usa i passi del collaudo funzionale.
 
 ## Test end-to-end dei preventivi nel browser
 
@@ -119,3 +151,10 @@ Dalla scheda cliente, apri **Nuovo follow-up**, inserisci titolo e data e scegli
 In **Attività**, usa i filtri **Oggi**, **Scadute**, **In programma** e **Completate**. I filtri usano la data locale del server. Per riprogrammare un’attività aperta, modifica **Nuova data** e premi **Riprogramma**. Puoi completare il follow-up sia dalla vista generale sia dalla scheda cliente.
 
 Il test browser crea un follow-up per F-001 con data passata, ricarica la pagina, verifica il filtro **Scadute**, lo sposta in **In programma** e lo chiude dalla scheda cliente. Per eseguire la suite usa i comandi del collaudo browser riportati sopra.
+
+## Solleciti email programmati
+
+Per casella di prova, worker SMTP e prove di sospensione e annullamento, segui il [collaudo email](Collaudo-email-follow-up.md). Per interviste e prove con prospect, usa il [protocollo demo](Collaudo-usabilita-demo.md).
+
+Dopo aver salvato un nuovo follow-up, cerca le opzioni email nella nuova attività della scheda cliente. Se il destinatario di prova è configurato e l’attività è programmabile, il pannello si apre automaticamente. [Collaudo email](Collaudo-email-follow-up.md)
+

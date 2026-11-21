@@ -1,5 +1,7 @@
 # Collaudo dell’invio programmato dei follow-up
 
+**Aggiornamento del 21 novembre 2026:** le procedure sotto conservano il collaudo storico. Nessun nuovo invio o sviluppo di integrazioni esterne è stato eseguito oggi. Per i test interni lasciare spento il worker. Il [registro generale](Registro-collaudo-2026-11-21.md) e l'[Excel](HOLO-RBQ-Registro-test-2026-11-21.xlsx) distinguono conferme T01–T12, difetto T04 e nuove prove. La regressione con trasporto simulato resta verde nella PR #8.
+
 La prova usa due finestre PowerShell, una per HOLO RBQ e una per il worker. Usa una tua casella come destinatario e una casella mittente con autenticazione SMTP su TLS implicito. Recupera dal provider host, porta, nome utente e credenziale SMTP. Il worker usa la porta 465 di default. La configurazione richiede un provider compatibile con autenticazione SMTP tramite nome utente e password.
 
 ## 1. Aggiorna e avvia HOLO RBQ
@@ -105,3 +107,4 @@ Per ripetere ogni prova annotare data, ora italiana, commit o versione dello ZIP
 5. Per il prossimo collaudo riavviare app e worker con la configurazione prevista. Il worker può elaborare una pianificazione già scaduta se è ancora nel giorno e nella finestra consentiti.
 
 A fine sessione risulta ancora visibile una prova programmata per il 21 novembre alle 09:00. Se non si vuole eseguirla alla prossima accensione del worker, annullarla nell'app prima della chiusura.
+
