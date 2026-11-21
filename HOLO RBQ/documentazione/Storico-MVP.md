@@ -1,5 +1,10 @@
 # HOLO RBQ · MVP locale
 
+### Aggiornamento cache ed etichetta — collaudo utente
+
+AC-01–AC-06 sono stati confermati dall'utente il 21 novembre, inclusi Ollama reale su due scenari e persistenza dopo saldo e riavvio. Il fix `59b8907` aggiunge Cache-Control no-store alla pagina e Non classificato nella Posizione senza punteggio. [CI 44900599652](https://github.com/maxgia/HOLO-RBQ/actions/runs/44900599652): 20 Python, 11 Node, 14 Chromium superati. Registro Excel aggiornato a 37 casi; AC-10 resta da ricontrollare sul PC. La vecchia copia HTML può richiedere Ctrl+F5 una volta dopo l'aggiornamento.
+
+
 Demo per freelance e partite IVA con anagrafiche fittizie. L’assistente interpreta richieste di esempio con regole predefinite. FastAPI valida e calcola il preventivo. SQLite conserva le bozze in `data/holo.sqlite3`.
 
 ## Avvio su Windows

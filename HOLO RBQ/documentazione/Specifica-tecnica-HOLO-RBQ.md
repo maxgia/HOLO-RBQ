@@ -1,5 +1,18 @@
 # Specifica tecnica HOLO RBQ
 
+## Aggiornamento dopo il collaudo utente del 21 novembre 2026
+
+**Esiti manuali confermati: AC-01–AC-06.** Verificati valore (Studio Rossi 100), criticità (Martina 71 con F-003 scaduta da 2 giorni), ricerca e omonimi, saldo F-001 di 500 euro con residuo Studio Rossi a 450 euro e scaduto/criticità zero, persistenza anche dopo riavvio e nuovo cliente senza storico. Le prove Ollama reali sul PC dell'utente hanno prodotto verifica incassi per Martina e continuità del rapporto per Studio Bianchi. Modello e SHA della copia ZIP non rilevati; queste prove non certificano la qualità su altri casi. AC-08 è parziale: navigazione verificata, tastiera e finestra stretta ancora da provare.
+
+Il segnale osservato (Analisi clienti ricompare dopo Ctrl+F5) è compatibile con cache HTML, ma la causa sul browser dell'utente non è stata dimostrata. Il nuovo `app.py` serve `/` con **Cache-Control: no-store**. Questo evita nuove copie in cache; non ricarica automaticamente le schede aperte né elimina retroattivamente copie già conservate. Dopo il primo aggiornamento può servire Ctrl+F5 una volta, poi basta un normale F5. La pagina deve essere comunque ricaricata dopo un riavvio se già aperta.
+
+La colonna **Posizione** ora mostra **Non classificato** solo in assenza di punteggio. Nessuna nuova colonna; punteggi non disponibili restano “—”, classifiche e parità rimangono invariate. Requisiti di affinamento RF-18 (cache HTML) e RF-19 (etichetta senza storico).
+
+Codice fix `59b8907ef35629b3e963785ef3795dd245315df5`, [CI 44900599652](https://github.com/maxgia/HOLO-RBQ/actions/runs/44900599652): **20 Python, 11 Node e 14 Chromium superati**. Il test API verifica file HTML aggiornato dopo nuova istanza e richiesta condizionale; Chromium verifica reload normale e dicitura del nuovo cliente. Nessun invio SMTP reale. I test simulati del modello restano distinti dalle prove reali dell'utente.
+
+L'[Excel aggiornato](HOLO-RBQ-Registro-test-2026-11-21.xlsx) contiene **37 casi**, con sei nuovi esiti umani Superato e un caso In corso. **AC-10** registra il collaudo pendente del fix cache e dell'etichetta Non classificato. AC-07 (modello assente), parte di AC-08 e controlli tecnici AC-09 restano aperti nel registro umano; AC-09 è già coperto automaticamente. Le sezioni con la prima consegna sotto sono evidenze storiche.
+
+
 ## Stato corrente — 21 novembre 2026
 
 Requisiti aggiunti oggi: RF-14 confronto portafoglio, RF-15 azioni AI interne, RF-16 registro dei collaudi e RF-17 esclusione di nuove interazioni esterne. [Specifica di dettaglio del modulo](Analisi-portafoglio-clienti.md), [piano aggiornato](Piano-generale.md), [Excel con 36 casi](HOLO-RBQ-Registro-test-2026-11-21.xlsx). Il ramo della PR #8 include i sorgenti e la documentazione consolidata, mentre l'integrazione in main resta aperta.
@@ -33,6 +46,8 @@ HOLO RBQ supporta freelance e titolari di partita IVA nella preparazione dei pre
 | RF-15 | Ottenere suggerimenti AI di azioni interne di gestione e fidelizzazione. | PR #8. Regole sempre disponibili, Ollama locale facoltativo con scelta vincolata e nessun invio. AC-05–07. |
 | RF-16 | Riprendere il collaudo senza confondere test automatici e conferme personali. | Excel con 36 casi, storico, passi, attesi, copertura automatica e campi modificabili per nuovo esito, data, versione, osservazioni. |
 | RF-17 | Avanzare soltanto su funzionalità interne. | Nessuna nuova integrazione esterna o invio reale; worker non necessario. Test SMTP simulati e prove esterne rinviate. |
+| RF-18 | Evitare la riproposizione di HTML vecchio dopo aggiornamento e riavvio. | Risposta `/` con Cache-Control no-store, test API di nuova pagina e browser con reload normale. Una scheda aperta richiede ricaricamento; vecchia cache può richiedere Ctrl+F5 una volta. AC-10. |
+| RF-19 | Mantenere le colonne e indicare Non classificato nella posizione del cliente senza storico. | Solo etichetta frontend, nessuna modifica ai punteggi o alle parità. Test Chromium e ricontrollo utente AC-10. |
 
 La modifica dei clienti esistenti, l'analisi predittiva dello storico e la ricerca prospect sono state discusse come possibili evoluzioni.
 

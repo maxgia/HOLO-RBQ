@@ -1,5 +1,10 @@
 # HOLO RBQ
 
+### Aggiornamento cache ed etichetta — collaudo utente
+
+AC-01–AC-06 sono stati confermati dall'utente il 21 novembre, inclusi Ollama reale su due scenari e persistenza dopo saldo e riavvio. Il fix `59b8907` aggiunge Cache-Control no-store alla pagina e Non classificato nella Posizione senza punteggio. [CI 44900599652](https://github.com/maxgia/HOLO-RBQ/actions/runs/44900599652): 20 Python, 11 Node, 14 Chromium superati. Registro Excel aggiornato a 37 casi; AC-10 resta da ricontrollare sul PC. La vecchia copia HTML può richiedere Ctrl+F5 una volta dopo l'aggiornamento.
+
+
 MVP locale per freelance e partite IVA: preventivi, clienti, fatture e incassi dimostrativi, attività e analisi del portafoglio.
 
 ## Aggiornamento del 21 novembre 2026
@@ -8,7 +13,7 @@ Il modulo **Analisi clienti** confronta valore registrato e criticità degli inc
 
 - [Avvio, aggiornamento e database di collaudo separato](HOLO%20RBQ/documentazione/Runbook.md)
 - [Analisi portafoglio: formule, API e limiti](HOLO%20RBQ/documentazione/Analisi-portafoglio-clienti.md)
-- [Registro Excel con 36 casi e campi per il nuovo collaudo](HOLO%20RBQ/documentazione/HOLO-RBQ-Registro-test-2026-11-21.xlsx)
+- [Registro Excel con 37 casi e campi per il nuovo collaudo](HOLO%20RBQ/documentazione/HOLO-RBQ-Registro-test-2026-11-21.xlsx)
 - [Esecuzioni del 21 novembre e prove ancora aperte](HOLO%20RBQ/documentazione/Registro-collaudo-2026-11-21.md)
 - [Sorgenti](HOLO%20RBQ/codice-sorgente/)
 - [Storico MVP](HOLO%20RBQ/documentazione/Storico-MVP.md)
