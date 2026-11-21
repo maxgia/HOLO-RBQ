@@ -1,5 +1,9 @@
 # Piano operativo per i punti 5–8
 
+## Aggiornamento PostgreSQL — 0.3.0
+
+D10 anticipa la revisione UX/UI D09. Runtime PostgreSQL e migrazione verificata delle otto tabelle implementati; trasferimento dei dati effettivi e collaudo sul PC ancora aperti. CI reale 44936628150: 36 Python, 11 Node e 15 Chromium superati; Windows preflight superato. Registro Excel 43 casi, PG-01–05 da eseguire. A06 resta aperta. [Procedura](Migrazione-PostgreSQL.md). Le consegne successive in questo documento sono storiche.
+
 ## Consegna consolidata 0.2.0-demo — 21 novembre 2026
 
 La PR #8 riunisce su main le funzioni della demo e la documentazione. Aggiunto avvio guidato con Avvia-HOLO.cmd / Avvia-HOLO.ps1 e start_local.py: preparazione .venv, dipendenze solo se cambiano, percorso database esplicito, porta occupata rifiutata e browser a server pronto. Il worker email non viene avviato.

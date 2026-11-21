@@ -11,6 +11,7 @@ import time
 from zoneinfo import ZoneInfo
 
 from pydantic import AwareDatetime, BaseModel, Field
+from database import PostgresStore, postgres_url
 
 
 EMAIL_SCHEMA = """
@@ -137,18 +138,15 @@ def process_one(db, send=send_smtp):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--database", type=Path, default=Path(__file__).resolve().parent / "data" / "holo.sqlite3")
     parser.add_argument("--once", action="store_true")
     args = parser.parse_args()
     names = ("HOLO_TEST_RECIPIENT", "HOLO_SMTP_HOST", "HOLO_SMTP_FROM", "HOLO_SMTP_USER", "HOLO_SMTP_PASSWORD")
     missing = [name for name in names if not os.getenv(name)]
     if missing:
         parser.error("Variabili mancanti: " + ", ".join(missing))
-    if not args.database.is_file():
-        parser.error("Archivio assente. Avvia prima HOLO RBQ.")
+    store = PostgresStore(postgres_url())
     try:
-        with closing(sqlite3.connect(args.database)) as db:
-            db.row_factory = sqlite3.Row
+        with closing(store.connect()) as db:
             print("Worker email di prova attivo.", flush=True)
             while True:
                 while process_one(db):

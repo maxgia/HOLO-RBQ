@@ -1,5 +1,14 @@
 # Avvio e aggiornamento HOLO RBQ
 
+## Passaggio PostgreSQL — versione 0.3.0
+
+Prima di usare questa versione completare la [migrazione guidata](Migrazione-PostgreSQL.md) con **Configura-Postgres.cmd**, a server e worker fermi. Serve un database PostgreSQL vuoto e dedicato; l'assistente prepara le dipendenze e chiede i parametri localmente. Il file sorgente e' data/holo.sqlite3 della cartella operativa corrente.
+
+Avvia-HOLO.cmd ora richiede PostgreSQL configurato e una migrazione verificata: non crea un SQLite di ripiego. La password resta nella configurazione locale esclusa da Git. Il trasferimento dei dati effettivi dell'utente non e' ancora stato eseguito in questa sessione; le prove CI usano archivi di collaudo completi. Verificare PG-01–PG-05 prima di riprendere la UX/UI; A06 rimane aperta.
+
+Il codice comprende nuovi moduli e dipendenze: aggiornare l'intera cartella dei sorgenti, conservando data e .venv; la precedente correzione di due file non basta. Per un eventuale ritorno conservare la 0.2 e il backup, ricordando che le nuove scritture PostgreSQL non sono riportate nel vecchio SQLite. Le sezioni seguenti descrivono la consegna 0.2 precedente.
+
+
 Riferimento: demo consolidata **0.2.0-demo**, ramo di consegna **main** dopo il merge della [PR #8](https://github.com/maxgia/HOLO-RBQ/pull/8). I comandi storici sono conservati nel [runbook precedente](Runbook-storico-20261121.md).
 
 ## Una cartella di lavoro riconoscibile

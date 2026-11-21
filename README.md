@@ -1,36 +1,33 @@
-# HOLO RBQ
+# HOLO RBQ — PostgreSQL
 
-Demo locale per freelance e partite IVA, versione **0.2.0-demo**. Preventivi, anagrafica clienti, fatture e incassi demo, attivita', follow-up e analisi del portafoglio con suggerimenti AI locali.
+Versione **0.3.0-postgres** per freelance e partite IVA. Backend Python/FastAPI, frontend HTML/CSS/JavaScript, database PostgreSQL con SQLAlchemy e psycopg. Le funzionalita' di clienti, preventivi, incassi, attivita' e analisi sono mantenute.
 
-## Avvio semplice su Windows
+## Prima dell'avvio: migrare l'archivio corrente
 
-1. Scarica **Code → Download ZIP** da [main](https://github.com/maxgia/HOLO-RBQ/tree/main) ed estrai l'archivio.
-2. Per aggiornare una copia esistente segui il [runbook](HOLO%20RBQ/documentazione/Runbook.md), conservando `data` e `.venv`.
-3. Apri `HOLO RBQ/codice-sorgente` e fai doppio clic su **Avvia-HOLO.cmd**.
-4. Attendi l'apertura del browser. Per fermare il server premi Ctrl+C nella sua finestra.
+1. Conservare la copia funzionante 0.2 e il suo file `data/holo.sqlite3`. Fermare server e worker email.
+2. Preparare un database PostgreSQL **vuoto e dedicato**, con accessi locali disponibili.
+3. Aggiornare l'intera cartella dei sorgenti, conservando data e .venv.
+4. Fare doppio clic su **Configura-Postgres.cmd** e seguire la [procedura di migrazione](HOLO%20RBQ/documentazione/Migrazione-PostgreSQL.md). La password si inserisce sul PC, non in chat.
+5. Dopo **Migrazione verificata**, usare **Avvia-HOLO.cmd**.
 
-Serve Python 3.10 o successivo. Il launcher prepara le dipendenze al primo avvio o quando cambiano; questa operazione richiede Internet. Mostra cartella e database in uso e rifiuta una porta occupata. Non avvia il worker email.
+La procedura conserva un backup, copia tutte le otto tabelle, confronta contenuti e conteggi, riallinea i progressivi e attiva PostgreSQL solo dopo la verifica. Non invia email. Una destinazione gia' popolata non viene sovrascritta. Non esiste fallback automatico su SQLite.
 
-## Stato del progetto
+**I dati effettivi dell'utente non sono ancora trasferiti:** la copia va eseguita sul PC con il database sorgente corretto e il server PostgreSQL scelto. La CI verifica archivi completi di collaudo, non una copia privata del suo database.
 
-- Consegna consolidata nella [PR #8](https://github.com/maxgia/HOLO-RBQ/pull/8), con main come riferimento per i prossimi aggiornamenti.
-- **A06 aperta:** ricerca del gestionale reale e dell'azienda di prova ancora in corso; TeamSystem e Buffetti restano ipotesi.
-- **D09 pianificata:** revisione UX/UI dopo il consolidamento, con audit dei flussi, campione di schermata e test. Puo' procedere senza attendere il gestionale.
-- AC-01–AC-06 e AC-10 confermati dall'utente; avvio guidato AC-11 da verificare sul suo desktop.
-- [CI 44903612254](https://github.com/maxgia/HOLO-RBQ/actions/runs/44903612254): 25 Python, 11 Node, 14 Chromium e collaudo PowerShell Windows superati.
+## Stato e verifiche
+
+[PR #9](https://github.com/maxgia/HOLO-RBQ/pull/9), [CI 44936628150](https://github.com/maxgia/HOLO-RBQ/actions/runs/44936628150), codice `569ec22`: 36 Python, 11 Node, 15 Chromium superati, con nove test Python e un browser specifici su PostgreSQL reale. Preflight PowerShell Windows superato; migrazione e avvio completi sul PC utente ancora da collaudare.
+
+A06 resta aperta per la ricerca del gestionale reale. D10 PostgreSQL precede la revisione UX/UI D09. Sette conferme utente sulla precedente versione restano evidenze storiche; PG-01–PG-05 sono nuove prove aperte.
 
 ## Documentazione
 
+- [Migrazione, backup e ritorno alla versione precedente](HOLO%20RBQ/documentazione/Migrazione-PostgreSQL.md)
 - [Avvio e aggiornamento](HOLO%20RBQ/documentazione/Runbook.md)
-- [Piano generale corrente](HOLO%20RBQ/documentazione/Piano-generale.md)
+- [Piano generale](HOLO%20RBQ/documentazione/Piano-generale.md)
+- [Specifica tecnica](HOLO%20RBQ/documentazione/Specifica-tecnica-HOLO-RBQ.md)
+- [Registro Excel, 43 casi](HOLO%20RBQ/documentazione/HOLO-RBQ-Registro-test-2026-11-21.xlsx)
+- [Evidenze dei test](HOLO%20RBQ/documentazione/Registro-collaudo-2026-11-21.md)
 - [Piano UX/UI](HOLO%20RBQ/documentazione/Piano-UX-UI.md)
-- [Registro Excel, 38 casi](HOLO%20RBQ/documentazione/HOLO-RBQ-Registro-test-2026-11-21.xlsx)
-- [Esecuzioni e risultati](HOLO%20RBQ/documentazione/Registro-collaudo-2026-11-21.md)
-- [Specifica tecnica e requisiti](HOLO%20RBQ/documentazione/Specifica-tecnica-HOLO-RBQ.md)
-- [Analisi portafoglio e formule](HOLO%20RBQ/documentazione/Analisi-portafoglio-clienti.md)
-- [Tracciabilita' e test](HOLO%20RBQ/documentazione/Piano-5-8.md)
-- [Protocollo di usabilita'](HOLO%20RBQ/documentazione/Collaudo-usabilita-demo.md)
-- [Collaudo email storico](HOLO%20RBQ/documentazione/Collaudo-email-follow-up.md)
-- [Storico MVP](HOLO%20RBQ/documentazione/Storico-MVP.md)
 
-L'archivio resta locale e dimostrativo. Pilota, controlli di sicurezza e integrazione gestionale hanno le attivita' aperte indicate nel piano.
+Il file SQLite rimane soltanto per migrazione, backup e fixture esplicite di test. Il runtime normale e il worker usano PostgreSQL. Non avviare il worker finche' non siano state riesaminate le pianificazioni trasferite.

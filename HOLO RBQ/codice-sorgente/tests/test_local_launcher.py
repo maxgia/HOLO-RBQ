@@ -7,9 +7,14 @@ import unittest
 from unittest.mock import MagicMock, patch
 
 import start_local
+from sqlalchemy.engine import make_url
 
 
 class LocalLauncherTests(unittest.TestCase):
+    def setUp(self):
+        config = patch('start_local.postgres_url', return_value=make_url('postgresql+psycopg://user:hidden@127.0.0.1/holo_test'))
+        config.start()
+        self.addCleanup(config.stop)
     @patch('start_local.webbrowser.open')
     def test_browser_opens_only_when_server_is_ready(self, browser):
         start_local.open_when_ready(SimpleNamespace(started=True, should_exit=False), 'http://127.0.0.1:8002/', Event())
@@ -34,11 +39,11 @@ class LocalLauncherTests(unittest.TestCase):
     @patch('start_local.uvicorn.Server')
     @patch('start_local.create_app')
     @patch('start_local.socket.socket')
-    def test_no_browser_uses_database_next_to_sources(self, sock, factory, server, thread):
+    def test_no_browser_uses_configured_postgres(self, sock, factory, server, thread):
         with patch('start_local.ROOT', Path('/folder with spaces')), redirect_stdout(StringIO()):
             server.return_value.started = True
             self.assertEqual(start_local.main(['--port', '8003', '--no-browser']), 0)
-        factory.assert_called_once_with(Path('/folder with spaces/data/holo.sqlite3'))
+        self.assertEqual(factory.call_args.args[0].get_backend_name(), 'postgresql')
         sock.return_value.__enter__.return_value.bind.assert_called_once_with(('127.0.0.1', 8003))
         thread.assert_not_called()
         server.return_value.run.assert_called_once()

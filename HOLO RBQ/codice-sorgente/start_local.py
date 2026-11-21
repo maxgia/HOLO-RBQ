@@ -8,9 +8,10 @@ import webbrowser
 
 import uvicorn
 from app import create_app
+from database import postgres_url
 
 ROOT = Path(__file__).resolve().parent
-VERSION = "0.2.0-demo"
+VERSION = "0.3.0-postgres"
 
 
 def open_when_ready(server, url, stopped):
@@ -35,8 +36,12 @@ def main(argv=None):
     if not 1 <= args.port <= 65535:
         parser.error("La porta deve essere tra 1 e 65535.")
     url = f"http://127.0.0.1:{args.port}/"
-    database = ROOT / "data" / "holo.sqlite3"
-    print(f"HOLO RBQ {VERSION}\nCartella: {ROOT}\nDatabase: {database}\nBrowser: {url}")
+    try:
+        database = postgres_url(config=ROOT / 'data' / 'postgres.json')
+    except (ValueError, KeyError) as error:
+        print(str(error), file=sys.stderr)
+        return 1
+    print(f"HOLO RBQ {VERSION}\nCartella: {ROOT}\nDatabase: {database.render_as_string(hide_password=True)}\nBrowser: {url}")
     print("Per fermare il server premi Ctrl+C. Il worker email resta spento.")
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as listener:
         try:
@@ -48,7 +53,12 @@ def main(argv=None):
             print(f"Porta {args.port} non disponibile: {error}. Chiudi il server precedente "
                   "o scegli una porta diversa con -Port nel comando PowerShell.", file=sys.stderr)
             return 2
-        server = uvicorn.Server(uvicorn.Config(create_app(database), host="127.0.0.1", port=args.port))
+        try:
+            application = create_app(database)
+        except Exception:
+            print('Avvio interrotto: PostgreSQL non disponibile o migrazione non verificata. Controlla la configurazione; SQLite non viene usato come ripiego.', file=sys.stderr)
+            return 1
+        server = uvicorn.Server(uvicorn.Config(application, host="127.0.0.1", port=args.port))
         stopped = Event()
         if not args.no_browser:
             Thread(target=open_when_ready, args=(server, url, stopped), daemon=True).start()
