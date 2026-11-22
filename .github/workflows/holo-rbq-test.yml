@@ -81,3 +81,11 @@ jobs:
           name: postgres-regression-results
           path: HOLO RBQ/codice-sorgente/postgres-regression-results.json
           if-no-files-found: error
+
+      - name: Anteprime interfaccia
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ux-screenshots
+          path: HOLO RBQ/codice-sorgente/ux-screenshots
+          if-no-files-found: warn

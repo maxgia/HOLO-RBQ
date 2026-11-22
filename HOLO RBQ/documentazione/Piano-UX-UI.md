@@ -1,31 +1,17 @@
-# Revisione UX/UI della demo — D09
+# Revisione UX/UI — D09
 
-**Dipendenza aggiornata:** su richiesta successiva dell'utente, prima di D09 viene D10, sostituzione SQLite con PostgreSQL e migrazione verificata dei dati. La revisione riparte dopo il collaudo PG-01–PG-05 sul PC. A06 rimane comunque aperta: la scelta del gestionale e' distinta dal database di HOLO. [Migrazione](Migrazione-PostgreSQL.md).
+Aggiornamento del 22 novembre 2026, successivo alla migrazione e al primo avvio PostgreSQL confermati dall’utente. La realizzazione è descritta in [UX-UI-D09.md](UX-UI-D09.md). Nessuna dipendenza dalla scelta A06 del gestionale reale.
 
-Richiesta dell'utente del 21 novembre 2026. Fase successiva al consolidamento D07 e all'avvio semplificato D08; può partire mentre A06 (scelta del gestionale reale e azienda di prova) resta aperta. In questa consegna si pianifica la revisione: il layout non è stato ridisegnato.
-
-## Obiettivo
-
-Rendere la demo leggibile e utilizzabile da freelance e partite IVA durante presentazioni ai prospect. Conservare le funzioni e i calcoli già verificati. L'ispirazione grafica precedente è Linear; la revisione parte dai flussi e dalle difficoltà osservate, poi definisce i dettagli visivi.
-
-| Passo | Attività | Risultato da verificare |
+| Caso Excel | Verifica utente | Stato |
 |---|---|---|
-| UX-01 | Esaminare navigazione tra clienti, fatture, attività e analisi. Valutare viste dedicate invece di scorrere un'unica pagina. | Selezione nel menu coerente con il contenuto aperto; ritorno al cliente senza perdita del contesto. |
-| UX-02 | Definire gerarchia di riepiloghi, tabelle, dettagli e azioni. | Separazione comprensibile tra valore, criticità, posizione e progressivo; nessuna colonna aggiunta senza necessità concordata. |
-| UX-03 | Proporre una schermata e un flusso rappresentativi prima di estendere il disegno. | Verifica con l'utente su cliente, fattura prioritaria, incasso e suggerimento AI. |
-| UX-04 | Applicare tipografia, spaziatura, contrasto, focus e comportamento delle tabelle su finestre strette. | Test tastiera, etichette, leggibilità, scorrimento e assenza di azioni irraggiungibili. |
-| UX-05 | Uniformare caricamento, errore, conferma e assenza dati. Distinguere regole e AI. | Utente capisce cosa e' stato salvato, cosa e' soltanto suggerito e cosa richiede un'azione. Nessun invio implicito. |
-| UX-06 | Ripetere regressione e protocollo US-01–US-08 con utenti rappresentativi. | Calcoli e persistenza invariati; annotati completamento autonomo, tempo, aiuti, errori e problemi residui. |
+| UX-01 | Home, priorità, accessi rapidi, menu, Indietro e ricerca cliente. | Da eseguire |
+| UX-02 | Scheda cliente a tab e informazioni calcolate/AI in tabelle. | Da eseguire |
+| UX-03 | Creazione da cliente/fattura/Home, calendario Mese/Settimana/Giorno, stesso record nell’elenco. | Da eseguire |
+| UX-04 | Report, filtri cliente/scadenza, CSV e chiarezza del limite sullo storico. | Da eseguire |
+| UX-05 | Tastiera, finestra stretta, errori, assenza dati e leggibilità. | Da eseguire |
 
-## Evidenze iniziali
+La CI copre i flussi e la regressione (36 Python, 11 Node, 20 Chromium e 39 prove funzionali PostgreSQL). Non sostituisce il giudizio dell’utente né una sessione con prospect. I dettagli ripetibili e i campi esito/data/versione/osservazioni sono nel registro Excel da 48 casi.
 
-- La vecchia colonna Punteggi e dati rendeva poco evidente la criticita'. L'utente ha chiesto di mantenere le colonne e sostituire solo il trattino della posizione con Non classificato: requisito mantenuto.
-- Apri scheda cliente cambia il contenuto visibile ma il menu puo' restare selezionato su Analisi clienti: comportamento da riesaminare in UX-01.
-- Le copie ZIP e le cartelle di backup hanno generato confusione sul server avviato: D08 affronta l'avvio, non sostituisce la revisione delle schermate.
-- AC-01–AC-06 e AC-10 confermati dall'utente; AC-08 resta parziale. I test guidati non equivalgono a una sessione senza aiuto con prospect.
+Conservati punteggi e parità della classifica, Non classificato, importi, controlli email e bozza D06 nella pagina aperta. A06 resta aperta; lo storico completo D11 è da pianificare. Prima di F5 salvare testi non confermati. Per il collaudo lasciare spento il worker.
 
-## Perimetro e dipendenze
-
-Nessun gestionale reale e' necessario per disegnare e collaudare questi flussi sui dati demo. Gli adattamenti legati a dati e operazioni reali saranno riesaminati dopo A06–A07. Accessi, ruoli e vincoli di sicurezza del pilota rimangono A09–A10.
-
-Non si introduce ora un nuovo modulo di business o un provider esterno. La stima della revisione va definita dopo UX-01 e la scelta del campione UX-03. [Piano generale](Piano-generale.md), [protocollo di usabilita'](Collaudo-usabilita-demo.md).
+Per utenti rappresentativi eseguire anche [US-01–US-08](Collaudo-usabilita-demo.md), annotando completamento autonomo, tempo, aiuti, errori e problemi residui. Non viene dichiarata una certificazione di accessibilità.
