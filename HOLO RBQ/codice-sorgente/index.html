@@ -95,7 +95,7 @@ label{display:block;font-size:12px;font-weight:600;color:#c6c7d0;margin-bottom:1
 <h3 id="client-name"></h3>
 <p class="hint" hidden="" id="client-contact"></p>
 <div class="table-scroll"><table aria-label="Situazione economica" class="data-table compact"><tbody><tr><th scope="row">Situazione economica</th><td id="client-remaining" role="status"></td></tr></tbody></table></div>
-<div aria-label="Sezioni cliente" class="tabbar" role="tablist"><button data-client-tab="overview" role="tab" type="button">Riepilogo</button><button data-client-tab="documents" role="tab" type="button">Documenti e incassi</button><button data-client-tab="activities" role="tab" type="button">Attività</button><button data-client-tab="analysis" role="tab" type="button">Analisi AI</button></div><div data-client-panel="documents" hidden="" role="tabpanel"><h4>Preventivi in bozza</h4><ul id="client-drafts"></ul>
+<div aria-label="Sezioni cliente" class="tabbar" role="tablist"><button data-client-tab="overview" role="tab" type="button">Riepilogo</button><button data-client-tab="documents" role="tab" type="button">Documenti e incassi</button><button data-client-tab="activities" role="tab" type="button">Attività</button><button data-client-tab="analysis" role="tab" type="button">Analisi AI</button></div><div data-client-panel="overview" role="tabpanel"><div class="table-scroll"><table aria-label="Riepilogo cliente" class="data-table"><thead><tr><th>Indicatore</th><th>Situazione</th></tr></thead><tbody><tr><td>Fatture aperte</td><td id="client-overview-open">—</td></tr><tr><td>Fatture scadute</td><td id="client-overview-overdue">—</td></tr><tr><td>Prossimo follow-up aperto</td><td id="client-overview-next">—</td></tr></tbody></table></div><div class="line"><button id="client-overview-plan" type="button">Pianifica follow-up</button><button class="secondary" id="client-overview-docs" type="button">Apri documenti</button><button class="secondary" id="client-overview-analysis" type="button">Vai all’analisi</button></div></div><div data-client-panel="documents" hidden="" role="tabpanel"><h4>Preventivi in bozza</h4><ul id="client-drafts"></ul>
 <h4>Fatture e scadenze</h4><ul id="client-invoices"></ul>
 </div><div data-client-panel="activities" hidden="" role="tabpanel"><h4>Follow-up del cliente</h4>
 <details id="follow-up-editor">
@@ -669,6 +669,9 @@ async function showClient(id) {
 function renderClientAnalysis(client) {
   const open = client.invoices.filter(invoice => invoice.remaining > 0);
   const overdue = open.filter(invoice => invoice.status === 'Scaduta');
+  byId('client-overview-open').textContent=open.length;byId('client-overview-overdue').textContent=overdue.length;
+  byId('client-overview-plan').onclick=()=>openGlobalFollowUp(client.id);
+  byId('client-overview-docs').onclick=()=>selectClientTab('documents');byId('client-overview-analysis').onclick=()=>selectClientTab('analysis');
   const invoice = overdue[0] || open[0];
   const money = amount => currency.format(amount / 100);
   const hasHistory = Boolean(client.invoices.length || client.drafts.length);
@@ -934,6 +937,7 @@ async function renderClientFollowUps(openEmailFor) {
     const items = await request('/api/follow-ups?client_id=' + encodeURIComponent(activeClient));
     if (sequence === clientFollowUpRequest && clientSequence === clientRequest) {
       renderFollowUpRows(list, items, status, false, openEmailFor);
+      const pending=items.filter(x=>!x.completed).sort((a,b)=>a.due_date.localeCompare(b.due_date));byId('client-overview-next').textContent=pending.length?pending[0].title+' · '+displayDay(pending[0].due_date):'Nessuna attività aperta';
     }
   } catch (error) {
     if (sequence === clientFollowUpRequest && clientSequence === clientRequest) status.textContent = error.message;
