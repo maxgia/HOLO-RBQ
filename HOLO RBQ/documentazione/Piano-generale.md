@@ -1,5 +1,13 @@
 # Piano generale HOLO RBQ
 
+## D06 / T04 — correzione del 22 novembre 2026
+
+Corretto il testo email perso durante la riprogrammazione: una bozza per attività conserva oggetto, testo, ora e apertura pannello nelle due viste. Il cambio giorno mantiene l’ora scelta. Non programma invii e non scrive automaticamente sul database; F5 o chiusura pagina perdono il testo non confermato. Conferma, annullamento e completamento eliminano la bozza dopo successo.
+
+[PR #11](https://github.com/maxgia/HOLO-RBQ/pull/11), codice `4cf953d`, [CI 45039238415](https://github.com/maxgia/HOLO-RBQ/actions/runs/45039238415): 36 Python, 11 Node, 17 Chromium e 36 prove funzionali del runner PostgreSQL, oltre al preflight Windows. Due scenari browser nuovi verificano T04 su SQLite e PostgreSQL. Nessun invio reale; schema e backend invariati. [Passi di collaudo e limiti](Correzione-bozza-email-D06.md).
+
+D06 implementato e verificato automaticamente, T04 utente ancora Da eseguire. Excel: 43 casi e nove esiti umani Superato invariati. PG-03–05 restano nei rispettivi stati; A06 gestionale resta aperta, D09 UX/UI ancora pianificata.
+
 ## Collaudo del 22 novembre 2026
 
 Migrazione sul PC Windows e primo avvio PostgreSQL confermati dall’utente. Copiate e verificate otto tabelle: 4 clienti, 0 anteprime, 1 bozza, 5 fatture, 1 incasso, 0 follow-up, 1 modifica, 0 email. Assenza dei follow-up accettata. PG-01–02 Superato; PG-03 e AC-11 In corso; PG-04–05 ancora da eseguire sul PC.
@@ -47,7 +55,7 @@ Aggiornato il 21 novembre 2026 dopo il collaudo utente e la preparazione della d
 | D03 | Email programmate e verifica saldo | Implementato; collaudo storico parziale | Prove esterne rinviate; worker non avviato da D08. |
 | D04 | Classifiche clienti e azioni AI locali | Implementato; AC-01–06 e AC-10 confermati | AC-07 e usabilita' AC-08 ancora aperti; AC-09 coperto automaticamente. |
 | D05 | Tracciabilita' e registro Excel | Aggiornato, 38 casi | Registrare ogni nuova prova con data, versione e osservato. |
-| D06 | Conservazione testo email non confermato | Da sviluppare, difetto T04 aperto | Correggere e testare riprogrammazione senza invii reali. |
+| D06 | Conservazione testo email non confermato | Fix verificato automaticamente | Collaudo manuale T04 da eseguire; bozza limitata alla pagina aperta. |
 | D07 | Consolidamento della demo | Incluso nel rilascio della PR #8 su main | Verificare esito merge e conservare riferimento al rilascio. |
 | D08 | Avvio locale semplificato | Implementato; verificato su Windows in CI | Collaudo utente AC-11 del doppio clic e dell'apertura browser. |
 | D09 | Revisione UX/UI | PIANIFICATA, dopo D10 | Analisi dei flussi, campione di interfaccia, revisione e test dopo copia e verifica dei dati. |

@@ -1,5 +1,13 @@
 # Specifica tecnica HOLO RBQ
 
+## D06 / T04 — correzione del 22 novembre 2026
+
+Corretto il testo email perso durante la riprogrammazione: una bozza per attività conserva oggetto, testo, ora e apertura pannello nelle due viste. Il cambio giorno mantiene l’ora scelta. Non programma invii e non scrive automaticamente sul database; F5 o chiusura pagina perdono il testo non confermato. Conferma, annullamento e completamento eliminano la bozza dopo successo.
+
+[PR #11](https://github.com/maxgia/HOLO-RBQ/pull/11), codice `4cf953d`, [CI 45039238415](https://github.com/maxgia/HOLO-RBQ/actions/runs/45039238415): 36 Python, 11 Node, 17 Chromium e 36 prove funzionali del runner PostgreSQL, oltre al preflight Windows. Due scenari browser nuovi verificano T04 su SQLite e PostgreSQL. Nessun invio reale; schema e backend invariati. [Passi di collaudo e limiti](Correzione-bozza-email-D06.md).
+
+D06 implementato e verificato automaticamente, T04 utente ancora Da eseguire. Excel: 43 casi e nove esiti umani Superato invariati. PG-03–05 restano nei rispettivi stati; A06 gestionale resta aperta, D09 UX/UI ancora pianificata.
+
 ## Collaudo del 22 novembre 2026
 
 Migrazione sul PC Windows e primo avvio PostgreSQL confermati dall’utente. Copiate e verificate otto tabelle: 4 clienti, 0 anteprime, 1 bozza, 5 fatture, 1 incasso, 0 follow-up, 1 modifica, 0 email. Assenza dei follow-up accettata. PG-01–02 Superato; PG-03 e AC-11 In corso; PG-04–05 ancora da eseguire sul PC.
@@ -51,6 +59,8 @@ Evidenza automatica sul commit `c40639f`: [CI 44881200826](https://github.com/ma
 ## Obiettivi e contesto
 
 HOLO RBQ supporta freelance e titolari di partita IVA nella preparazione dei preventivi, nella consultazione di fatture e incassi, nella gestione dei clienti e nella pianificazione dei ricontatti. L'MVP locale usa dati demo per le presentazioni ai prospect. La fase successiva prevede un pilota con una partita IVA o azienda di prova e un gestionale reale. TeamSystem e Buffetti sono ipotesi espresse dall'utente. Selezione del prodotto, disponibilità API e azienda di test rientrano in A06, rinviata. Il codice legacy di Holo e la demo esistente sono riferimenti per la ricostruzione delle funzioni.
+
+Nuovo RF-23: conservare oggetto, testo e ora non confermati durante riprogrammazione e aggiornamento delle viste, separati per attività, senza programmazione implicita. Limite: memoria della pagina fino a ricaricamento. Test automatici in e2e/test_fatture_guida.py; collaudo utente T04 pendente.
 
 ## Requisiti raccolti e criteri di accettazione
 
