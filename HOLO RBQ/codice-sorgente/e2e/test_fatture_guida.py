@@ -274,6 +274,7 @@ class FattureGuidaBrowserTest(unittest.TestCase):
 
 
 
+    @patch.dict("os.environ", {"HOLO_TEST_RECIPIENT": "collaudo@example.com"})
     def test_unconfirmed_email_survives_reschedule_and_client_view(self):
         page = self.page
         base = page.url.split('#')[0]
@@ -297,6 +298,7 @@ class FattureGuidaBrowserTest(unittest.TestCase):
         expect(row.get_by_label('Testo', exact=True)).to_have_value('Testo da conservare: accenti è e <tag> letterale.')
         page.unroute('**/api/follow-ups/*')
         row.get_by_role('button', name='Riprogramma', exact=True).click()
+        expect(row).to_contain_text('03/07/2099')
         expect(row.get_by_label('Nuova data')).to_have_value('2099-07-03')
         expect(row.locator('details')).to_have_attribute('open', '')
         expect(row.get_by_label('Oggetto', exact=True)).to_have_value('Oggetto personalizzato')
@@ -314,6 +316,7 @@ class FattureGuidaBrowserTest(unittest.TestCase):
         records = page.request.get(base + 'api/follow-ups').json()
         self.assertTrue(all(item['email_status'] is None for item in records))
 
+    @patch.dict("os.environ", {"HOLO_TEST_RECIPIENT": "collaudo@example.com"})
     def test_email_draft_blank_fields_confirmation_and_cancel(self):
         page = self.page
         base = page.url.split('#')[0]
@@ -327,6 +330,7 @@ class FattureGuidaBrowserTest(unittest.TestCase):
         row.get_by_label('Testo', exact=True).fill('')
         row.get_by_label('Nuova data').fill('2099-07-03')
         row.get_by_role('button', name='Riprogramma', exact=True).click()
+        expect(row).to_contain_text('03/07/2099')
         expect(row.get_by_label('Oggetto', exact=True)).to_have_value('')
         row.get_by_role('button', name='Conferma invio programmato', exact=True).click()
         expect(row).to_contain_text('Compila oggetto e testo')
