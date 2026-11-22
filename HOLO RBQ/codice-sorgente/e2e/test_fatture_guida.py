@@ -271,3 +271,75 @@ class FattureGuidaBrowserTest(unittest.TestCase):
         self.page.get_by_role("link", name="Analisi clienti", exact=True).click()
         expect(self.page.get_by_role("table", name="Confronto clienti")).to_be_visible()
         expect(self.page.locator("#portfolio-rows").get_by_role("row")).to_have_count(3)
+
+
+
+    def test_unconfirmed_email_survives_reschedule_and_client_view(self):
+        page = self.page
+        base = page.url.split('#')[0]
+        for title in ('Bozza da conservare', 'Altra attivita'):
+            response = page.request.post(base + 'api/clients/studio-rossi/follow-ups', data={
+                'title': title, 'due_date': '2099-07-02'})
+            self.assertEqual(response.status, 201)
+        page.reload()
+        row = page.locator('#follow-up-list').get_by_role('listitem').filter(has_text='Bozza da conservare')
+        row.get_by_text('Programma email di prova', exact=True).click()
+        row.get_by_label('Oggetto', exact=True).fill('Oggetto personalizzato')
+        row.get_by_label('Testo', exact=True).fill('Testo da conservare: accenti è e <tag> letterale.')
+        row.locator('[name=send_at]').fill('2099-07-02T12:35')
+        # Un errore di rete non deve cancellare la bozza ne programmare email.
+        page.route('**/api/follow-ups/*', lambda route: route.fulfill(
+            status=503, content_type='application/json', body='{"detail":"Errore di prova"}')
+            if route.request.method == 'PATCH' else route.continue_())
+        row.get_by_label('Nuova data').fill('2099-07-03')
+        row.get_by_role('button', name='Riprogramma', exact=True).click()
+        expect(page.locator('#follow-up-status')).to_contain_text('Errore di prova')
+        expect(row.get_by_label('Testo', exact=True)).to_have_value('Testo da conservare: accenti è e <tag> letterale.')
+        page.unroute('**/api/follow-ups/*')
+        row.get_by_role('button', name='Riprogramma', exact=True).click()
+        expect(row.get_by_label('Nuova data')).to_have_value('2099-07-03')
+        expect(row.locator('details')).to_have_attribute('open', '')
+        expect(row.get_by_label('Oggetto', exact=True)).to_have_value('Oggetto personalizzato')
+        expect(row.locator('[name=send_at]')).to_have_value('2099-07-03T12:35')
+        expect(row.get_by_label('Testo', exact=True)).to_have_value('Testo da conservare: accenti è e <tag> letterale.')
+        other = page.locator('#follow-up-list').get_by_role('listitem').filter(has_text='Altra attivita')
+        other.get_by_text('Programma email di prova', exact=True).click()
+        expect(other.get_by_label('Testo', exact=True)).to_have_value('')
+        directory = page.locator('#clienti')
+        directory.get_by_label('Nome cliente').fill('Studio Rossi')
+        directory.get_by_role('button', name='Cerca clienti', exact=True).click()
+        directory.get_by_role('button', name='Studio Rossi', exact=True).click()
+        client_row = directory.locator('#client-follow-ups').get_by_role('listitem').filter(has_text='Bozza da conservare')
+        expect(client_row.get_by_label('Testo', exact=True)).to_have_value('Testo da conservare: accenti è e <tag> letterale.')
+        records = page.request.get(base + 'api/follow-ups').json()
+        self.assertTrue(all(item['email_status'] is None for item in records))
+
+    def test_email_draft_blank_fields_confirmation_and_cancel(self):
+        page = self.page
+        base = page.url.split('#')[0]
+        response = page.request.post(base + 'api/clients/studio-rossi/follow-ups', data={
+            'title': 'Conferma bozza email', 'due_date': '2099-07-02'})
+        self.assertEqual(response.status, 201)
+        page.reload()
+        row = page.locator('#follow-up-list').get_by_role('listitem').filter(has_text='Conferma bozza email')
+        row.get_by_text('Programma email di prova', exact=True).click()
+        row.get_by_label('Oggetto', exact=True).fill('')
+        row.get_by_label('Testo', exact=True).fill('')
+        row.get_by_label('Nuova data').fill('2099-07-03')
+        row.get_by_role('button', name='Riprogramma', exact=True).click()
+        expect(row.get_by_label('Oggetto', exact=True)).to_have_value('')
+        row.get_by_role('button', name='Conferma invio programmato', exact=True).click()
+        expect(row).to_contain_text('Compila oggetto e testo')
+        row.get_by_label('Oggetto', exact=True).fill('Confermata')
+        row.get_by_label('Testo', exact=True).fill('Testo confermato')
+        row.locator('[name=send_at]').fill('2099-07-03T12:35')
+        row.get_by_role('button', name='Conferma invio programmato', exact=True).click()
+        expect(row).to_contain_text('Email: Programmata')
+        page.reload()
+        row.get_by_text('Programma email di prova', exact=True).click()
+        expect(row.get_by_label('Testo', exact=True)).to_have_value('Testo confermato')
+        row.get_by_label('Testo', exact=True).fill('Modifica da scartare')
+        row.get_by_role('button', name='Annulla invio', exact=True).click()
+        expect(row).to_contain_text('Email: Annullata')
+        row.get_by_text('Programma email di prova', exact=True).click()
+        expect(row.get_by_label('Testo', exact=True)).to_have_value('Testo confermato')

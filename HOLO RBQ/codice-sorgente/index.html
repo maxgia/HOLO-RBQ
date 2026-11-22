@@ -720,6 +720,8 @@ const followUpForm = byId('follow-up-form');
 const followUpFilter = byId('follow-up-filter');
 let followUpListRequest = 0;
 let clientFollowUpRequest = 0;
+// Bozze locali alla pagina: nessuna pianificazione finche non viene confermata.
+const emailDrafts = new Map();
 
 function renderFollowUpRows(list, items, status, showClientName, openEmailFor) {
   list.replaceChildren();
@@ -752,6 +754,7 @@ function renderFollowUpRows(list, items, status, showClientName, openEmailFor) {
       try {
         await request('/api/follow-ups/' + item.id, 'PATCH',
           completed ? {completed: true} : {due_date: dateField.value});
+        if (completed) emailDrafts.delete(item.id);
         await Promise.all([renderFollowUps(), renderClientFollowUps()]);
       } catch (error) {
         if (row.isConnected) status.textContent = error.message;
@@ -821,7 +824,7 @@ function renderFollowUpEmail(row, item, open) {
       <p role="status" class="hint"></p>
       <button type="button" class="secondary" hidden>Annulla invio</button>
     </form>`;
-  details.open = open;
+  details.open = open || emailDrafts.get(item.id)?.open || false;
   row.append(details);
   const form = details.querySelector('form');
   const fields = form.elements;
@@ -844,6 +847,30 @@ Grazie.`
     const local = new Date(saved.getTime() - saved.getTimezoneOffset() * 60000);
     fields.send_at.value = local.toISOString().slice(0, 16);
   }
+  const draft = emailDrafts.get(item.id);
+  if (draft) {
+    fields.subject.value = draft.subject;
+    fields.body.value = draft.body;
+    // La riprogrammazione cambia il giorno, conservando l'ora scelta nella bozza.
+    if (draft.due_date !== item.due_date && draft.send_at) {
+      draft.send_at = item.due_date + draft.send_at.slice(10);
+      draft.due_date = item.due_date;
+    }
+    fields.send_at.value = draft.send_at;
+  }
+  function rememberDraft(isOpen = details.open) {
+    emailDrafts.set(item.id, {
+      subject: fields.subject.value, body: fields.body.value,
+      send_at: fields.send_at.value, due_date: item.due_date, open: isOpen,
+    });
+  }
+  form.addEventListener('input', () => rememberDraft());
+  form.addEventListener('change', () => rememberDraft());
+  details.querySelector('summary').addEventListener('click', () => rememberDraft(!details.open));
+  const draftHint = document.createElement('p');
+  draftHint.className = 'hint';
+  draftHint.textContent = 'Le modifiche non confermate restano in questa pagina. Per salvare la pianificazione usa Conferma invio programmato.';
+  form.append(draftHint);
   const [saveButton, cancelButton] = form.querySelectorAll('button');
   cancelButton.hidden = !['scheduled', 'review'].includes(item.email_status);
   const url = '/api/follow-ups/' + item.id + '/email';
@@ -852,6 +879,7 @@ Grazie.`
     feedback.textContent = 'Salvataggio in corso…';
     try {
       await request(url, method, data);
+      emailDrafts.delete(item.id);
       await Promise.all([renderFollowUps(), renderClientFollowUps()]);
     } catch (error) {
       feedback.textContent = error.message;
@@ -1174,3 +1202,4 @@ renderInvoices();
 message('Cerca un cliente o chiedimi di compilare un preventivo. Prima del salvataggio potrai verificare i dati.');
 </script>
 </html>
+
