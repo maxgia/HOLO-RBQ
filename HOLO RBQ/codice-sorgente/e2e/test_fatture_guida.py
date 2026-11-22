@@ -341,6 +341,7 @@ class FattureGuidaBrowserTest(unittest.TestCase):
         other.get_by_text('Programma email di prova', exact=True).click()
         expect(other.get_by_label('Testo', exact=True)).to_have_value('')
         directory = page.locator('#clienti')
+        page.get_by_role('link',name='Clienti',exact=True).click()
         directory.get_by_label('Nome cliente').fill('Studio Rossi')
         directory.get_by_role('button', name='Cerca clienti', exact=True).click()
         directory.get_by_role('button', name='Studio Rossi', exact=True).click()
