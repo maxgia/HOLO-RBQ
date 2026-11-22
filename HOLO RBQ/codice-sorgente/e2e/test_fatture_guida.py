@@ -23,16 +23,26 @@ class FattureGuidaBrowserTest(unittest.TestCase):
         self.addCleanup(server.__exit__, None, None, None)
         self.page = browser.new_page()
         self.page.goto(url)
+        name = self._testMethodName
+        route = ('Home' if name in ('test_riepilogo_e_navigazione_del_nuovo_layout', 'test_standard_reload_keeps_customer_analysis_available') else
+                 'Attività' if 'email_draft' in name or 'unconfirmed_email' in name else
+                 'Assistente' if name in ('test_fatture_da_chat_e_filtri','test_guida_con_fonte_e_domanda_fuori_copertura') else
+                 'Analisi clienti' if name.startswith('test_portfolio') else
+                 'Fatture e scadenze' if name == 'test_registra_incasso_demo' else 'Clienti')
+        self.page.get_by_role('link', name=route, exact=True).click()
 
     def ask(self, question):
+        self.page.get_by_role("link", name="Assistente", exact=True).click()
         chat = self.page.locator("#chat")
         chat.get_by_label("Richiesta").fill(question)
         chat.get_by_role("button", name="Invia").click()
+        if question.startswith(("Cosa", "Quanto")):
+            self.page.get_by_role("link", name="Fatture e scadenze", exact=True).click()
 
     def test_fatture_da_chat_e_filtri(self):
         page = self.page
         rows = page.locator("#invoice-rows").get_by_role("row")
-        messages = page.get_by_role("log")
+        messages = page.locator("#messages")
         self.ask("Cosa deve ancora pagare Rossi?")
         expect(messages).to_contain_text(re.compile(r"3 fatture per «Rossi»\. Residuo complessivo 1[.\s]?200,00"))
         expect(rows).to_have_count(3)
@@ -48,7 +58,7 @@ class FattureGuidaBrowserTest(unittest.TestCase):
         expect(rows).to_have_count(1)
         expect(rows.first.get_by_role("cell")).to_have_text([
             "F-001", "Studio Rossi", re.compile(r"\d{2}/\d{2}/\d{4}"),
-            "800,00 €", "300,00 €", "500,00 €", "Scaduta",
+            "800,00 €", "300,00 €", "500,00 €", "Scaduta", "Pianifica follow-up",
         ])
         search.get_by_label("Stato").select_option("paid")
         search.get_by_role("button", name="Cerca fatture").click()
@@ -87,6 +97,7 @@ class FattureGuidaBrowserTest(unittest.TestCase):
 
     def test_registra_incasso_demo(self):
         page = self.page
+        page.get_by_role("link", name="Fatture e scadenze", exact=True).click()
         payment = page.locator("#demo-payment")
         payment.get_by_label("Fattura da incassare").select_option("F-001")
         payment.get_by_label("Importo incassato (€)").fill("100")
@@ -107,11 +118,15 @@ class FattureGuidaBrowserTest(unittest.TestCase):
         expect(results).to_have_count(2)
         directory.get_by_role("button", name="Studio Rossi", exact=True).click()
         expect(directory.locator("#client-remaining")).to_contain_text("950,00")
+        directory.get_by_role("tab", name="Documenti e incassi", exact=True).click()
         expect(directory.locator("#client-invoices")).to_contain_text("F-001")
+        directory.get_by_role("tab", name="Documenti e incassi", exact=True).click()
         expect(directory.locator("#client-invoices")).not_to_contain_text("F-003")
         directory.get_by_role("button", name="Martina Rossi", exact=True).click()
         expect(directory.locator("#client-remaining")).to_contain_text("250,00")
+        directory.get_by_role("tab", name="Documenti e incassi", exact=True).click()
         expect(directory.locator("#client-invoices")).to_contain_text("F-003")
+        directory.get_by_role("tab", name="Documenti e incassi", exact=True).click()
         expect(directory.locator("#client-invoices")).not_to_contain_text("F-001")
 
     def test_analisi_cliente_e_sollecito_dopo_incasso(self):
@@ -120,7 +135,7 @@ class FattureGuidaBrowserTest(unittest.TestCase):
         directory.get_by_label("Nome cliente").fill("Rossi")
         directory.get_by_role("button", name="Cerca clienti").click()
         directory.get_by_role("button", name="Studio Rossi", exact=True).click()
-        directory.get_by_text("Analizza cliente", exact=True).click()
+        directory.get_by_role("tab", name="Analisi AI", exact=True).click()
         analysis = directory.locator("#client-analysis")
         table = analysis.get_by_role("table", name="Risultato dell’analisi cliente")
         expect(table.get_by_role("columnheader")).to_have_text(["Indicatore", "Valore"])
@@ -134,10 +149,12 @@ class FattureGuidaBrowserTest(unittest.TestCase):
         analysis.get_by_role("button", name="Apri fattura").click()
         expect(page.locator("#invoice-F-001")).to_be_focused()
 
+        page.get_by_role("link", name="Fatture e scadenze", exact=True).click()
         payment = page.locator("#demo-payment")
         payment.get_by_label("Fattura da incassare").select_option("F-001")
         payment.get_by_label("Importo incassato (€)").fill("100")
         payment.get_by_role("button", name="Registra incasso demo").click()
+        page.get_by_role("link", name="Clienti", exact=True).click()
         expect(analysis.locator("#client-analysis-summary")).to_contain_text("850,00")
         expect(table.get_by_role("row").filter(has_text="Residuo della fattura")).to_contain_text("400,00")
         expect(draft).to_be_hidden()
@@ -145,7 +162,7 @@ class FattureGuidaBrowserTest(unittest.TestCase):
         expect(draft).to_have_value(re.compile(r"F-001.*400,00", re.S))
 
         directory.get_by_role("button", name="Martina Rossi", exact=True).click()
-        directory.get_by_text("Analizza cliente", exact=True).click()
+        directory.get_by_role("tab", name="Analisi AI", exact=True).click()
         expect(analysis.locator("#client-analysis-summary")).to_contain_text("250,00")
         expect(analysis.locator("#client-analysis-priority")).to_contain_text("F-003")
         expect(analysis.get_by_role("button", name="Prepara sollecito")).to_be_hidden()
@@ -155,13 +172,14 @@ class FattureGuidaBrowserTest(unittest.TestCase):
         page = self.page
         page.get_by_role("link", name="Clienti", exact=True).click()
         directory = page.locator("#clienti")
+        page.get_by_role("link", name="Clienti", exact=True).click()
         directory.get_by_text("Nuovo cliente", exact=True).click()
         directory.get_by_label("Nome o ragione sociale").fill("Studio Verdi")
         directory.get_by_label("Email (facoltativa)").fill("studio@example.com")
         directory.get_by_role("button", name="Salva cliente").click()
         expect(directory.locator("#client-name")).to_have_text("Studio Verdi")
         expect(directory.locator("#client-contact")).to_have_text("studio@example.com")
-        directory.get_by_text("Analizza cliente", exact=True).click()
+        directory.get_by_role("tab", name="Analisi AI", exact=True).click()
         expect(directory.locator("#client-analysis-empty")).to_be_visible()
         expect(directory.get_by_role("table", name="Risultato dell’analisi cliente")).to_be_hidden()
         expect(directory.get_by_role("button", name="Apri fattura")).to_be_hidden()
@@ -170,16 +188,18 @@ class FattureGuidaBrowserTest(unittest.TestCase):
     def test_follow_up_da_fattura_e_completamento(self):
         page = self.page
         directory = page.locator("#clienti")
+        page.get_by_role("link", name="Clienti", exact=True).click()
         directory.get_by_label("Nome cliente").fill("Studio Rossi")
         directory.get_by_role("button", name="Cerca clienti").click()
         directory.get_by_role("button", name="Studio Rossi", exact=True).click()
-        directory.get_by_text("Analizza cliente", exact=True).click()
+        directory.get_by_role("tab", name="Analisi AI", exact=True).click()
         directory.get_by_role("button", name="Pianifica follow-up").click()
         expect(directory.get_by_label("Documento collegato")).to_have_value("invoice:F-001")
         directory.get_by_label("Data follow-up").fill("2000-01-01")
         directory.get_by_role("button", name="Salva follow-up").click()
         expect(directory.locator("#client-follow-ups")).to_contain_text("F-001")
         page.reload()
+        page.get_by_role("link", name="Attività", exact=True).click()
         activity = page.locator("#attivita")
         activity.get_by_label("Stato attività").select_option("overdue")
         row = activity.get_by_role("listitem").filter(has_text="F-001")
@@ -189,10 +209,13 @@ class FattureGuidaBrowserTest(unittest.TestCase):
         expect(row).to_have_count(0)
         activity.get_by_label("Stato attività").select_option("upcoming")
         expect(row).to_contain_text("01/01/2099")
+        page.get_by_role("link", name="Clienti", exact=True).click()
         directory.get_by_label("Nome cliente").fill("Studio Rossi")
         directory.get_by_role("button", name="Cerca clienti").click()
         directory.get_by_role("button", name="Studio Rossi", exact=True).click()
+        directory.get_by_role("tab", name="Attività", exact=True).click()
         directory.get_by_role("button", name="Completa", exact=True).click()
+        page.get_by_role("link", name="Attività", exact=True).click()
         expect(row).to_have_count(0)
         activity.get_by_label("Stato attività").select_option("completed")
         expect(row).to_contain_text("Completata")
@@ -200,10 +223,13 @@ class FattureGuidaBrowserTest(unittest.TestCase):
 
     @patch.dict("os.environ", {"HOLO_TEST_RECIPIENT": "collaudo@example.com"})
     def test_pannello_email_si_apre_dopo_salvataggio(self):
+        page = self.page
         directory = self.page.locator("#clienti")
+        page.get_by_role("link", name="Clienti", exact=True).click()
         directory.get_by_label("Nome cliente").fill("Studio Rossi")
         directory.get_by_role("button", name="Cerca clienti").click()
         directory.get_by_role("button", name="Studio Rossi", exact=True).click()
+        directory.get_by_role("tab", name="Attività", exact=True).click()
         directory.get_by_text("Nuovo follow-up", exact=True).click()
         directory.get_by_label("Titolo", exact=True).fill("Collaudo pannello email")
         directory.get_by_label("Data follow-up").fill("2099-01-01")
@@ -236,6 +262,7 @@ class FattureGuidaBrowserTest(unittest.TestCase):
         expect(section.locator("#portfolio-advice")).to_contain_text("Modello simulato")
         section.get_by_role("button", name="Apri scheda cliente", exact=True).click()
         expect(page.locator("#client-name")).to_have_text("Studio Rossi")
+        page.get_by_role("link", name="Analisi clienti", exact=True).click()
         section.get_by_label("Cerca nel portafoglio").fill("Martina")
         section.get_by_role("button", name="Aggiorna analisi").click()
         expect(table.locator("tbody tr")).to_have_count(1)
@@ -247,18 +274,23 @@ class FattureGuidaBrowserTest(unittest.TestCase):
         section = page.locator("#analisi-portafoglio")
         row = section.get_by_role("row").filter(has_text="Studio Rossi")
         expect(row).to_contain_text("500,00")
+        page.get_by_role("link", name="Fatture e scadenze", exact=True).click()
         payment = page.locator("#demo-payment")
         payment.get_by_label("Fattura da incassare").select_option("F-001")
         payment.get_by_label("Importo incassato (€)").fill("500")
         payment.get_by_role("button", name="Registra incasso demo").click()
+        page.get_by_role("link", name="Analisi clienti", exact=True).click()
         expect(row.get_by_role("cell").nth(6)).to_have_text("0,00 €")
         page.reload()
+        page.get_by_role("link", name="Analisi clienti", exact=True).click()
         expect(row.get_by_role("cell").nth(6)).to_have_text("0,00 €")
         directory = page.locator("#clienti")
+        page.get_by_role("link", name="Clienti", exact=True).click()
         directory.get_by_text("Nuovo cliente", exact=True).click()
         directory.get_by_label("Nome o ragione sociale").fill("<Studio Nuovo>")
         directory.get_by_role("button", name="Salva cliente").click()
         new_row = section.get_by_role("row").filter(has_text="<Studio Nuovo>")
+        page.get_by_role("link", name="Analisi clienti", exact=True).click()
         expect(new_row).to_contain_text("Nessuna fattura")
         expect(new_row.get_by_role("cell").first).to_have_text("Non classificato")
         new_row.get_by_role("button", name="Analizza <Studio Nuovo>", exact=True).click()
@@ -311,6 +343,7 @@ class FattureGuidaBrowserTest(unittest.TestCase):
         directory.get_by_label('Nome cliente').fill('Studio Rossi')
         directory.get_by_role('button', name='Cerca clienti', exact=True).click()
         directory.get_by_role('button', name='Studio Rossi', exact=True).click()
+        directory.get_by_role("tab", name="Attività", exact=True).click()
         client_row = directory.locator('#client-follow-ups').get_by_role('listitem').filter(has_text='Bozza da conservare')
         expect(client_row.get_by_label('Testo', exact=True)).to_have_value('Testo da conservare: accenti è e <tag> letterale.')
         records = page.request.get(base + 'api/follow-ups').json()

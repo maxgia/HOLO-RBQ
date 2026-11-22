@@ -16,12 +16,14 @@ class PreventiviBrowserTest(unittest.TestCase):
             try:
                 with serve(database) as url:
                     page = browser.new_page()
-                    page.goto(url)
+                    page.goto(url + "#preventivi")
+                    page.get_by_role("link", name="Assistente", exact=True).click()
                     page.get_by_role("button", name="Usa una richiesta di esempio").click()
                     page.locator("#chat").get_by_role("button", name="Invia").click()
                     expect(page.locator("#messages")).to_contain_text(
                         re.compile(r"Studio Rossi e Martina Rossi|Martina Rossi e Studio Rossi")
                     )
+                    page.get_by_role("link", name="Preventivi", exact=True).click()
                     page.locator("#quote").get_by_label("Cliente").select_option("studio-rossi")
                     page.get_by_role("button", name="Mostra anteprima").click()
                     expect(page.locator("#preview")).to_contain_text("720,00")
@@ -46,7 +48,7 @@ class PreventiviBrowserTest(unittest.TestCase):
 
                 with serve(database) as url:
                     page = browser.new_page()
-                    page.goto(url)
+                    page.goto(url + "#preventivi")
                     rows = page.locator("#drafts").get_by_role("listitem")
                     expect(rows).to_have_count(1)
                     expect(rows).to_contain_text(draft_id)
@@ -61,7 +63,7 @@ class PreventiviBrowserTest(unittest.TestCase):
                 browser = playwright.chromium.launch()
                 try:
                     page = browser.new_page()
-                    page.goto(url)
+                    page.goto(url + "#preventivi")
                     quote = page.locator("#quote")
                     quote.get_by_label("Cliente").select_option("studio-rossi")
                     quote.get_by_label("Oggetto").fill("Consulenza da annullare")
