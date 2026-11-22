@@ -8,6 +8,8 @@ Su richiesta dell’utente, il logo allegato è adattato su fondo trasparente e 
 
 Il PNG con alpha è incorporato in index.html: per aggiornare non servono file asset aggiuntivi, dipendenze o modifiche PostgreSQL. Nessuna richiesta a servizi esterni durante l’uso del logo. La prova browser UX verifica visibilità e caricamento del logo su tutte le route; il parser Node conserva le undici prove. Gli esiti umani restano invariati: verificare aspetto e leggibilità durante UX-01 e UX-05, poi proseguire con gli altri casi ancora aperti. Nessun worker necessario.
 
+Verifica marchio: codice `ce91706`, [CI 45045149166](https://github.com/maxgia/HOLO-RBQ/actions/runs/45045149166) superata nei tre job (regressione, PostgreSQL, avvio Windows). Controllate anche le schermate Chromium desktop e mobile. Il primo controllo aveva un URL di test con doppia barra: corretto nel test senza modificare il codice applicativo. Gli esiti utente del registro Excel restano aperti e invariati.
+
 ## Organizzazione realizzata
 
 | Pagina | Contenuto e azioni |
