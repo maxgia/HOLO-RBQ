@@ -6,18 +6,13 @@ const vm = require('node:vm');
 
 const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
 const script = html.match(/<script>([\s\S]*?)<\/script>/)[1];
-const element = () => ({ value: '', addEventListener() {}, append() {}, replaceChildren() {}, scrollIntoView() {} });
-const elements = new Map();
-const document = {
-  createElement: element,
-  getElementById(id) {
-    if (!elements.has(id)) elements.set(id, element());
-    return elements.get(id);
-  }
-};
-document.getElementById('quote').elements = {};
-const context = vm.createContext({ document, URLSearchParams, setInterval() {}, fetch: () => new Promise(() => {}) });
-vm.runInContext(script, context);
+// Parser unit tests stay independent of DOM/navigation; compile the full script too.
+new vm.Script(script);
+const start = script.indexOf('function parseInvoiceSearch(');
+const end = script.indexOf('async function showInvoiceSearch(', start);
+assert.ok(start >= 0 && end > start);
+const context = vm.createContext({});
+vm.runInContext(script.slice(start, end), context);
 
 for (const [question, query, status] of [
   ['Cosa deve ancora pagare Rossi?', 'Rossi', 'open'],
