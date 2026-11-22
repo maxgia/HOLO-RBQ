@@ -1,5 +1,13 @@
 # Piano generale HOLO RBQ
 
+## Collaudo del 22 novembre 2026
+
+Migrazione sul PC Windows e primo avvio PostgreSQL confermati dall’utente. Copiate e verificate otto tabelle: 4 clienti, 0 anteprime, 1 bozza, 5 fatture, 1 incasso, 0 follow-up, 1 modifica, 0 email. Assenza dei follow-up accettata. PG-01–02 Superato; PG-03 e AC-11 In corso; PG-04–05 ancora da eseguire sul PC.
+
+[CI 45037721777](https://github.com/maxgia/HOLO-RBQ/actions/runs/45037721777), codice `bc20dfc`: 34 prove funzionali originali rieseguite su PostgreSQL (20 Python e 14 Chromium), tutte superate. Superati anche nove test PostgreSQL specifici, i controlli di configurazione e launcher, gli 11 Node e la regressione SQLite. Sender e AI simulati; nessun accesso al database operativo e nessun invio reale. [Report per caso](Regressione-PostgreSQL-2026-11-22.md).
+
+Registro Excel: 43 casi, 9 nuovi esiti umani Superato complessivi. Le sette conferme precedenti restano storiche. D10 in collaudo; D09 UX/UI segue questo passaggio; A06 resta aperta. Le indicazioni del 21 novembre sul trasferimento ancora da eseguire descrivono lo stato precedente.
+
 ## Nuova priorita': D10 PostgreSQL, poi D09 UX/UI
 
 Su richiesta del 21 novembre, prima del ridisegno si passa a PostgreSQL e si trasferisce l'archivio attuale. Backend e procedura della versione 0.3.0-postgres sono preparati e verificati su PostgreSQL 17 reale. **Il trasferimento dei dati effettivi dell'utente e' ancora da eseguire sul suo PC**: servono server/database PostgreSQL e il file SQLite della copia operativa. A06 resta APERTA, distinta da questo cambio di database.
