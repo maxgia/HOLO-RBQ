@@ -2,6 +2,12 @@
 
 Richiesta del 22 novembre 2026: ridurre le informazioni mostrate insieme, facilitare l’accesso alle azioni, presentare dati calcolati e AI in tabelle, organizzare follow-up in Attività con elenco/calendario e predisporre un report. [PR #12](https://github.com/maxgia/HOLO-RBQ/pull/12).
 
+## Marchio RBQ — aggiornamento del 22 novembre 2026
+
+Su richiesta dell’utente, il logo allegato è adattato su fondo trasparente e inserito nella navigazione condivisa. Rimane visibile in tutte le otto aree, compresi Home, Clienti, Attività e Report. Il collegamento del marchio riporta a Home; testo alternativo e focus da tastiera sono presenti. Dimensioni adattate alle finestre strette.
+
+Il PNG con alpha è incorporato in index.html: per aggiornare non servono file asset aggiuntivi, dipendenze o modifiche PostgreSQL. Nessuna richiesta a servizi esterni durante l’uso del logo. La prova browser UX verifica visibilità e caricamento del logo su tutte le route; il parser Node conserva le undici prove. Gli esiti umani restano invariati: verificare aspetto e leggibilità durante UX-01 e UX-05, poi proseguire con gli altri casi ancora aperti. Nessun worker necessario.
+
 ## Organizzazione realizzata
 
 | Pagina | Contenuto e azioni |

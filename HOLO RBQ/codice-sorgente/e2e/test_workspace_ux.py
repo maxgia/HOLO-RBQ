@@ -21,6 +21,12 @@ class WorkspaceUXTests(unittest.TestCase):
 
     def test_home_navigation_client_tabs_and_small_screen(self):
         page=self.page
+        logo=page.get_by_role('img',name='Logo RBQ',exact=True)
+        for route in ['home','clienti','preventivi','invoice-section','attivita','analisi-portafoglio','report','assistant']:
+            page.goto(self.url+'/#'+route)
+            expect(logo).to_be_visible()
+            self.assertTrue(logo.evaluate('(img) => img.complete && img.naturalWidth > 0'))
+        page.goto(self.url+'/#home')
         expect(page.locator('[data-page]:visible')).to_have_count(1)
         expect(page.locator('#home')).to_be_visible()
         expect(page.get_by_role('table',name='Priorità e problemi clienti')).to_contain_text('F-001')
