@@ -1,0 +1,16 @@
+﻿Caso;Cliente;Verifica;Fatture;Fatturato euro;Incassato euro;Residuo euro;Scaduto euro alla data di caricamento;Esito utente;Data test;Osservazioni
+DEMO-01;DEMO | Cliente consolidato;Tre fatture saldate: alto valore registrato, nessuno scaduto.;3;4500,00;4500,00;0,00;0,00;Da eseguire;;
+DEMO-02;DEMO | Rapporto continuativo;Storico misto, prossimo incasso futuro.;3;2700,00;1800,00;900,00;0,00;Da eseguire;;
+DEMO-03;DEMO | Incasso parziale;Fattura scaduta con residuo diverso dal totale originario.;1;1000,00;400,00;600,00;600,00;Da eseguire;;
+DEMO-04;DEMO | Scaduto anziano;"Due scaduti oltre sessanta giorni; verificare criticità elevata.";2;3000,00;100,00;2900,00;2900,00;Da eseguire;;
+DEMO-05;DEMO | Scadenza oggi;La fattura di oggi non è ancora scaduta.;1;750,00;0,00;750,00;0,00;Da eseguire;;
+DEMO-06;DEMO | Scadenze future;Una scadenza entro sette giorni e una successiva.;2;1100,00;0,00;1100,00;0,00;Da eseguire;;
+DEMO-07;DEMO | Senza storico;"Nessuna fattura o bozza; posizione Non classificato.";0;0,00;0,00;0,00;0,00;Da eseguire;;
+DEMO-08;DEMO | Solo preventivi;Due bozze senza fatture: niente fatturato e Non classificato.;0;0,00;0,00;0,00;0,00;Da eseguire;;
+DEMO-09;DEMO | Studio Aurora;Nome simile ad altro cliente: verificare separazione documenti.;1;320,00;0,00;320,00;320,00;Da eseguire;;
+DEMO-10;DEMO | Aurora Studio;Nome simile ad altro cliente, importo e scadenza differenti.;1;640,00;0,00;640,00;0,00;Da eseguire;;
+DEMO-11;DEMO | Importo minimo;Un centesimo: importi e arrotondamenti leggibili.;1;0,01;0,00;0,01;0,00;Da eseguire;;
+DEMO-12;DEMO | Officina & Servizi «Èlite»;Accenti, simboli e centesimi nei filtri e nel CSV.;1;1234,56;234,56;1000,00;1000,00;Da eseguire;;
+DEMO-13;DEMO | Parità Alfa;Una fattura saldata come Parità Beta: stesso punteggio di valore.;1;500,00;500,00;0,00;0,00;Da eseguire;;
+DEMO-14;DEMO | Parità Beta;Una fattura saldata come Parità Alfa: stessa posizione in valore.;1;500,00;500,00;0,00;0,00;Da eseguire;;
+DEMO-15;DEMO | Valore con criticità;Incassi consistenti e scaduto: valore e rischio sono distinti.;3;9000,00;4000,00;5000,00;5000,00;Da eseguire;;
