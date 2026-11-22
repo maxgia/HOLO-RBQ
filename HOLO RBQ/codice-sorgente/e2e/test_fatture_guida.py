@@ -22,6 +22,7 @@ class FattureGuidaBrowserTest(unittest.TestCase):
         url = server.__enter__()
         self.addCleanup(server.__exit__, None, None, None)
         self.page = browser.new_page()
+        self.page.set_default_timeout(8000)
         self.page.goto(url)
         name = self._testMethodName
         route = ('Home' if name in ('test_riepilogo_e_navigazione_del_nuovo_layout', 'test_standard_reload_keeps_customer_analysis_available') else

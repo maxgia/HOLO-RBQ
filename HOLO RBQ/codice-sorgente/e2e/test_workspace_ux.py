@@ -13,6 +13,7 @@ class WorkspaceUXTests(unittest.TestCase):
         browser=p.chromium.launch();self.addCleanup(browser.close)
         self.page=browser.new_page(viewport={'width':1440,'height':1000});self.errors=[]
         self.page.on('pageerror',lambda e:self.errors.append(str(e)))
+        self.page.set_default_timeout(8000)
         self.page.goto(self.url)
 
     def tearDown(self):
