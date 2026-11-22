@@ -1,5 +1,11 @@
 # Piano generale HOLO RBQ
 
+## D12 — dataset dimostrativo esteso, 22 novembre 2026
+
+Preparati 15 clienti sintetici, 21 fatture, 12 incassi, 6 bozze e 9 attività, riconoscibili da DEMO |. Caricatore additivo con anteprima, conferma locale, transazione, protezione dai duplicati e nessuna email creata. [Casi e procedura](Dataset-demo-v1.md), [registro scenari per Excel](Scenari-demo-v1.csv). Il caricamento sul PC è ancora da eseguire; i dati esistenti non sono stati raggiunti.
+
+D12 implementato e verificato: sei nuovi test superati, inclusi tre su PostgreSQL reale; CI 45046830014 verde anche per regressione e Windows. Caricamento locale ancora da eseguire. Il dataset amplia i casi del collaudo, non chiude i test umani. UX-01 e UX-02 sono stati confermati nella prima sessione; l’utente ha chiesto di ripartire da UX-01 al prossimo incontro. UX-03–UX-05 restano da eseguire. Il logo è stato confermato sul PC. A06 e pubblicazione online rimangono rinviate.
+
 ## D09 — nuova esperienza operativa, 22 novembre 2026
 
 Implementate Home sintetica, pagine dedicate, scheda cliente a tab, pianificazione follow-up con calendario e Report con esportazione CSV. Dati calcolati e proposte AI sono in tabelle. Grafica scura con accenti lavanda, azioni principali evidenti e tabelle scorrevoli. [Specifica e passi di prova](UX-UI-D09.md), [PR #12](https://github.com/maxgia/HOLO-RBQ/pull/12).
