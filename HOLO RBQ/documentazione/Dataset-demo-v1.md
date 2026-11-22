@@ -52,4 +52,4 @@ Il dataset non copre test negativi (importi non validi, riferimenti a clienti er
 
 Tre test di piano verificano conteggi, date bisestili, centesimi/sconti, coerenza incassi, identificativi e anteprima/annullamento senza database. Tre test PostgreSQL isolati verificano preservazione dell’archivio, ripetizione dopo modifiche utente, rollback su collisioni/dataset parziale, ranking, scadenza odierna, bozze e incasso idempotente tramite API reali. Nessun accesso al database operativo durante la CI.
 
-Stato iniziale: tre prove di piano superate localmente; tre PostgreSQL in attesa della CI. Il caricamento sul PC utente resta da eseguire e non viene dichiarato completato.
+Verifica completata: codice `6826399`, [CI 45046830014](https://github.com/maxgia/HOLO-RBQ/actions/runs/45046830014) superata nei tre job regressione, PostgreSQL e avvio Windows. Superati tutti i sei nuovi test, inclusi i tre PostgreSQL reali, e la regressione precedente. Il caricamento sul PC utente resta da eseguire e non viene dichiarato completato.
