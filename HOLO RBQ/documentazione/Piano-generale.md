@@ -1,5 +1,13 @@
 # Piano generale HOLO RBQ
 
+## D09 — nuova esperienza operativa, 22 novembre 2026
+
+Implementate Home sintetica, pagine dedicate, scheda cliente a tab, pianificazione follow-up con calendario e Report con esportazione CSV. Dati calcolati e proposte AI sono in tabelle. Grafica scura con accenti lavanda, azioni principali evidenti e tabelle scorrevoli. [Specifica e passi di prova](UX-UI-D09.md), [PR #12](https://github.com/maxgia/HOLO-RBQ/pull/12).
+
+Codice `fcd9643`, [CI 45042571780](https://github.com/maxgia/HOLO-RBQ/actions/runs/45042571780): 36 Python, 11 Node, 20 Chromium superati; 39 prove funzionali ripetute su PostgreSQL reale e preflight Windows superati. AI e SMTP simulati. Registro Excel aggiornato a 48 casi: nove esiti umani Superato preservati, cinque nuovi casi UX-01–UX-05 Da eseguire. PG-03/AC-11 restano In corso, PG-04–05 e T04 non chiusi dal collaudo automatico.
+
+D09 implementato, da validare sul PC. A06 gestionale resta aperta. Il Report fotografa lo stato corrente: lo storico completo richiede D11, ancora da pianificare. Nessuna modifica al database, nuova migrazione o nuovo invio esterno.
+
 ## D06 / T04 — correzione del 22 novembre 2026
 
 Corretto il testo email perso durante la riprogrammazione: una bozza per attività conserva oggetto, testo, ora e apertura pannello nelle due viste. Il cambio giorno mantiene l’ora scelta. Non programma invii e non scrive automaticamente sul database; F5 o chiusura pagina perdono il testo non confermato. Conferma, annullamento e completamento eliminano la bozza dopo successo.
@@ -35,9 +43,9 @@ Aggiornato il 21 novembre 2026 dopo il collaudo utente e la preparazione della d
 | ID | Attivita' | Stato attuale | Condizione per chiuderla |
 |---|---|---|---|
 | A01 | MVP locale, repository e runbook | Realizzata | Conservare avvio riproducibile e documentazione a ogni rilascio. |
-| A02 | Regressione API e riconoscimento | Realizzata, estesa | Suite corrente 25 Python e 11 Node. |
+| A02 | Regressione API e riconoscimento | Realizzata, estesa | Suite corrente 36 Python e 11 Node. |
 | A03 | Collaudo browser preventivi e CI | Realizzata | Regressione mantenuta sul rilascio. |
-| A04 | Browser fatture e guida | Realizzata, estesa | Suite corrente 14 Chromium e collaudo avvio Windows. |
+| A04 | Browser fatture e guida | Realizzata, estesa | Suite corrente 20 Chromium e collaudo avvio Windows. |
 | A05 | Prima prova di sviluppo multiagente | Prova storica eseguita | Non equivale a orchestrazione continuativa: questa resta da progettare e sviluppare. |
 | A06 | Gestionale reale e definizione pilota | APERTA, ricerca in corso | Identificare prodotto, referente, azienda di prova, accessi e criteri di accettazione. |
 | A07 | Integrazione gestionale in lettura | In attesa di A06 | Confronto anagrafiche, fatture, scadenze e incassi con dati reali. |
@@ -54,18 +62,17 @@ Aggiornato il 21 novembre 2026 dopo il collaudo utente e la preparazione della d
 | D02 | Analisi scheda, domande e attivita' | Implementato, confermato nei flussi provati | Valutare qualita' su piu' casi. |
 | D03 | Email programmate e verifica saldo | Implementato; collaudo storico parziale | Prove esterne rinviate; worker non avviato da D08. |
 | D04 | Classifiche clienti e azioni AI locali | Implementato; AC-01–06 e AC-10 confermati | AC-07 e usabilita' AC-08 ancora aperti; AC-09 coperto automaticamente. |
-| D05 | Tracciabilita' e registro Excel | Aggiornato, 38 casi | Registrare ogni nuova prova con data, versione e osservato. |
+| D05 | Tracciabilita' e registro Excel | Aggiornato, 48 casi | Registrare ogni nuova prova con data, versione e osservato. |
 | D06 | Conservazione testo email non confermato | Fix verificato automaticamente | Collaudo manuale T04 da eseguire; bozza limitata alla pagina aperta. |
 | D07 | Consolidamento della demo | Incluso nel rilascio della PR #8 su main | Verificare esito merge e conservare riferimento al rilascio. |
 | D08 | Avvio locale semplificato | Implementato; verificato su Windows in CI | Collaudo utente AC-11 del doppio clic e dell'apertura browser. |
-| D09 | Revisione UX/UI | PIANIFICATA, dopo D10 | Analisi dei flussi, campione di interfaccia, revisione e test dopo copia e verifica dei dati. |
-| D10 | PostgreSQL e trasferimento archivio | Codice verificato; migrazione reale APERTA | Configurazione sul PC, PG-01–PG-05 e accettazione dei dati copiati. |
+| D09 | Revisione UX/UI | Implementata e verificata in CI | UX-01–UX-05 sul PC e usabilità con utenti rappresentativi. |
+| D10 | PostgreSQL e trasferimento archivio | Migrazione e primo avvio utente confermati | PG-03 in corso, PG-04–05 da eseguire. |
+| D11 | Registro storico delle operazioni | Da pianificare | Definire eventi, autori, date, conservazione e prove; nessuna ricostruzione retroattiva. |
 
-## Prossima fase: UX/UI senza attendere A06
+## Prossima verifica: D09 sul PC, senza attendere A06
 
-La [fase D09](Piano-UX-UI.md) affronta navigazione, gerarchia delle informazioni, leggibilita' delle tabelle, distinzione tra regole e AI, stati di caricamento/errore/assenza dati, tastiera e finestre strette. Prima si verifica un campione con l'utente, poi si estende il disegno. Il riferimento grafico precedente resta Linear.
-
-La revisione demo puo' procedere mentre la ricerca del gestionale e' aperta. Dopo A06–A07 si adatteranno i flussi alle operazioni e ai dati reali. Non sono ancora state applicate modifiche grafiche della fase D09.
+La [fase D09](UX-UI-D09.md) è implementata. Seguire i cinque nuovi casi dell’Excel e il protocollo di usabilità, annotando autonomia, tempi, aiuti ed errori. Conservare il contesto PostgreSQL e lasciare il worker spento. Dopo la revisione utente, pianificare D11 e i controlli interni del pilota; A07 rimane dipendente dalla scelta A06.
 
 ## Evidenze della consegna
 
@@ -78,7 +85,7 @@ La revisione demo puo' procedere mentre la ricerca del gestionale e' aperta. Dop
 
 ## Tempi e dipendenze
 
-La precedente stima A06–A11 di **18–33 giorni-persona** resta una previsione da rivedere quando sara' definito il pilota; non e' una data di consegna e non include automaticamente tutti gli ampliamenti. La stima precedente D06 era 0,5–1 giorno-persona, da verificare all'avvio. D09 verra' stimata dopo analisi dei flussi e scelta del campione.
+La precedente stima A06–A11 di **18–33 giorni-persona** resta una previsione da rivedere quando sara' definito il pilota; non e' una data di consegna e non include automaticamente tutti gli ampliamenti. La stima precedente D06 era 0,5–1 giorno-persona, da verificare all'avvio. La prima implementazione D09 è consegnata; tempi del collaudo umano, correzioni e D11 saranno stimati separatamente.
 
 La disponibilita' del gestionale condiziona integrazione e pilota, non il perfezionamento interno della demo. Nessuna percentuale complessiva viene ricavata contando attivita' di dimensioni diverse.
 

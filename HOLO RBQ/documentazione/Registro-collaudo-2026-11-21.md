@@ -1,5 +1,15 @@
 # Registro di collaudo — 21 novembre 2026
 
+## D09 — nuova esperienza operativa, 22 novembre 2026
+
+Implementate Home sintetica, pagine dedicate, scheda cliente a tab, pianificazione follow-up con calendario e Report con esportazione CSV. Dati calcolati e proposte AI sono in tabelle. Grafica scura con accenti lavanda, azioni principali evidenti e tabelle scorrevoli. [Specifica e passi di prova](UX-UI-D09.md), [PR #12](https://github.com/maxgia/HOLO-RBQ/pull/12).
+
+Codice `fcd9643`, [CI 45042571780](https://github.com/maxgia/HOLO-RBQ/actions/runs/45042571780): 36 Python, 11 Node, 20 Chromium superati; 39 prove funzionali ripetute su PostgreSQL reale e preflight Windows superati. AI e SMTP simulati. Registro Excel aggiornato a 48 casi: nove esiti umani Superato preservati, cinque nuovi casi UX-01–UX-05 Da eseguire. PG-03/AC-11 restano In corso, PG-04–05 e T04 non chiusi dal collaudo automatico.
+
+D09 implementato, da validare sul PC. A06 gestionale resta aperta. Il Report fotografa lo stato corrente: lo storico completo richiede D11, ancora da pianificare. Nessuna modifica al database, nuova migrazione o nuovo invio esterno.
+
+Evidenza per caso PostgreSQL: [Regressione-UX-2026-11-22.json](Regressione-UX-2026-11-22.json). Le schermate di collaudo restano negli artifact della CI; non vengono pubblicate nel repository.
+
 ## D06 / T04 — correzione del 22 novembre 2026
 
 Corretto il testo email perso durante la riprogrammazione: una bozza per attività conserva oggetto, testo, ora e apertura pannello nelle due viste. Il cambio giorno mantiene l’ora scelta. Non programma invii e non scrive automaticamente sul database; F5 o chiusura pagina perdono il testo non confermato. Conferma, annullamento e completamento eliminano la bozza dopo successo.

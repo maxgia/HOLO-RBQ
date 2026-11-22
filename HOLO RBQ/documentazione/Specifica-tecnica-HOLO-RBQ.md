@@ -1,5 +1,13 @@
 # Specifica tecnica HOLO RBQ
 
+## D09 — nuova esperienza operativa, 22 novembre 2026
+
+Implementate Home sintetica, pagine dedicate, scheda cliente a tab, pianificazione follow-up con calendario e Report con esportazione CSV. Dati calcolati e proposte AI sono in tabelle. Grafica scura con accenti lavanda, azioni principali evidenti e tabelle scorrevoli. [Specifica e passi di prova](UX-UI-D09.md), [PR #12](https://github.com/maxgia/HOLO-RBQ/pull/12).
+
+Codice `fcd9643`, [CI 45042571780](https://github.com/maxgia/HOLO-RBQ/actions/runs/45042571780): 36 Python, 11 Node, 20 Chromium superati; 39 prove funzionali ripetute su PostgreSQL reale e preflight Windows superati. AI e SMTP simulati. Registro Excel aggiornato a 48 casi: nove esiti umani Superato preservati, cinque nuovi casi UX-01–UX-05 Da eseguire. PG-03/AC-11 restano In corso, PG-04–05 e T04 non chiusi dal collaudo automatico.
+
+D09 implementato, da validare sul PC. A06 gestionale resta aperta. Il Report fotografa lo stato corrente: lo storico completo richiede D11, ancora da pianificare. Nessuna modifica al database, nuova migrazione o nuovo invio esterno.
+
 ## D06 / T04 — correzione del 22 novembre 2026
 
 Corretto il testo email perso durante la riprogrammazione: una bozza per attività conserva oggetto, testo, ora e apertura pannello nelle due viste. Il cambio giorno mantiene l’ora scelta. Non programma invii e non scrive automaticamente sul database; F5 o chiusura pagina perdono il testo non confermato. Conferma, annullamento e completamento eliminano la bozza dopo successo.
@@ -86,9 +94,17 @@ Nuovo RF-23: conservare oggetto, testo e ora non confermati durante riprogrammaz
 | RF-18 | Evitare la riproposizione di HTML vecchio dopo aggiornamento e riavvio. | Risposta `/` con Cache-Control no-store, test API di nuova pagina e browser con reload normale. Una scheda aperta richiede ricaricamento; vecchia cache può richiedere Ctrl+F5 una volta. AC-10. |
 | RF-19 | Mantenere le colonne e indicare Non classificato nella posizione del cliente senza storico. | Solo etichetta frontend, nessuna modifica ai punteggi o alle parità. Test Chromium e ricontrollo utente AC-10. |
 | RF-20 | Avviare la demo da una copia ZIP senza dover ricostruire manualmente ambiente e comandi. | Launcher .cmd e PowerShell con percorso stabile, .venv e preparazione dipendenze, controllo porta e apertura browser; AC-11. |
-| RF-21 | Rivedere UX/UI dopo il consolidamento, mantenendo aperta la ricerca del gestionale. | Fase D09 pianificata, audit flussi e campione prima del ridisegno completo. Nessun nuovo layout incluso qui. |
+| RF-21 | Rivedere UX/UI dopo il consolidamento, mantenendo aperta la ricerca del gestionale. | D09 implementata; verifica utente UX-01–UX-05 ancora da eseguire. |
+| RF-24 | Home sintetica con urgenze, azioni e problemi cliente rappresentati dai dati. | Massimo otto segnalazioni prioritarie con totale dichiarato, origine e collegamento operativo. Nessun giudizio su problemi non registrati. |
+| RF-25 | Mostrare tutte le informazioni calcolate e dedotte dall’AI in forma tabellare. | Home, anteprima, importi, scheda, classifica, proposte e risposte informative in tabelle; origine distinta. |
+| RF-26 | Pianificare follow-up in un’area dedicata e accedervi dal contesto. | Attività con Elenco e Calendario Mese/Settimana/Giorno; stesso record da Home, cliente o fattura. Nessun invio implicito. |
+| RF-27 | Report finale delle cose fatte e da fare. | Prima realizzazione come fotografia dei record presenti, filtri sulle scadenze e CSV; D11 necessario per audit storico completo. |
 
 La modifica dei clienti esistenti, l'analisi predittiva dello storico e la ricerca prospect sono state discusse come possibili evoluzioni.
+
+## Contratti tecnici D09
+
+Frontend nello stesso index.html, con una sola pagina visibile e routing hash; tab cliente con navigazione da tastiera. Si riusano API e tabelle PostgreSQL correnti, senza nuovi endpoint o migrazioni. Il calendario rappresenta la data attività, non l’ora email. Il report filtra scadenze, non date di incasso/completamento indisponibili; CSV con neutralizzazione delle formule. Richieste obsolete non sovrascrivono le più recenti; errori di lettura eliminano gli indicatori non verificati. Dettagli e limiti in [UX-UI-D09.md](UX-UI-D09.md).
 
 ## Architettura e requisiti tecnici
 

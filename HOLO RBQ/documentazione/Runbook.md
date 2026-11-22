@@ -1,5 +1,11 @@
 # Avvio e aggiornamento HOLO RBQ
 
+## Aggiornare alla nuova UX D09
+
+Sulla copia PostgreSQL già funzionante non rieseguire Configura-Postgres.cmd. Conservare data (incluso postgres.json) e .venv; salvare eventuali testi non confermati. La modifica applicativa D09 è in index.html: sostituire quel file con la versione main, oppure aggiornare i sorgenti preservando le due cartelle. Riavviare con Avvia-HOLO.cmd e ricaricare http://127.0.0.1:8002/; all’apertura compare Home. Nessuna nuova dipendenza o migrazione.
+
+Nel menu sono disponibili Clienti, Preventivi (con bozze), Fatture e scadenze, Attività, Analisi clienti, Report e Assistente. In Attività scegliere Elenco o Calendario. Seguire UX-01–UX-05 del registro Excel; lasciare spento il worker. Il report mostra lo stato corrente, lo storico completo è D11. [Dettagli](UX-UI-D09.md).
+
 ## D06 / T04 — correzione del 22 novembre 2026
 
 Corretto il testo email perso durante la riprogrammazione: una bozza per attività conserva oggetto, testo, ora e apertura pannello nelle due viste. Il cambio giorno mantiene l’ora scelta. Non programma invii e non scrive automaticamente sul database; F5 o chiusura pagina perdono il testo non confermato. Conferma, annullamento e completamento eliminano la bozza dopo successo.
