@@ -1201,6 +1201,7 @@ function activatePage(name, focus = false) {
   if (!pageNames[name]) name = 'home';
   for (const section of document.querySelectorAll('[data-page]')) section.hidden = section.dataset.page !== name;
   byId('page-title').textContent = pageNames[name];
+  document.title='HOLO RBQ | '+pageNames[name];
   for (const link of byId('workspace-nav').querySelectorAll('a')) {
     const current = link.hash === '#' + name;
     link.classList.toggle('active',current);
