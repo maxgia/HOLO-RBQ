@@ -1,0 +1,354 @@
+{
+  "backend": "PostgreSQL",
+  "original_assertions": true,
+  "external_email_sent": false,
+  "ollama": "mocked",
+  "test_schemas": 57,
+  "postgres_app_instances": 65,
+  "tests_run": 57,
+  "passed": true,
+  "results": [
+    {
+      "test": "test_mvp.MVPTests.test_client_details_keep_rossi_accounts_separate",
+      "backend": "PostgreSQL",
+      "status": "passed",
+      "seconds": 0.201
+    },
+    {
+      "test": "test_mvp.MVPTests.test_concurrent_confirmation_and_restart",
+      "backend": "PostgreSQL",
+      "status": "passed",
+      "seconds": 0.341
+    },
+    {
+      "test": "test_mvp.MVPTests.test_customer_assistant_prefers_explicit_invoice_to_balance_intent",
+      "backend": "PostgreSQL",
+      "status": "passed",
+      "seconds": 0.142
+    },
+    {
+      "test": "test_mvp.MVPTests.test_customer_assistant_scopes_answers_and_reads_latest_payments",
+      "backend": "PostgreSQL",
+      "status": "passed",
+      "seconds": 0.143
+    },
+    {
+      "test": "test_mvp.MVPTests.test_demo_payment_is_persistent_and_idempotent",
+      "backend": "PostgreSQL",
+      "status": "passed",
+      "seconds": 0.183
+    },
+    {
+      "test": "test_mvp.MVPTests.test_edit_and_stale_preview",
+      "backend": "PostgreSQL",
+      "status": "passed",
+      "seconds": 0.178
+    },
+    {
+      "test": "test_mvp.MVPTests.test_guide",
+      "backend": "PostgreSQL",
+      "status": "passed",
+      "seconds": 0.121
+    },
+    {
+      "test": "test_mvp.MVPTests.test_home_and_client_search",
+      "backend": "PostgreSQL",
+      "status": "passed",
+      "seconds": 0.118
+    },
+    {
+      "test": "test_mvp.MVPTests.test_home_is_not_cached_and_reads_updated_page_after_restart",
+      "backend": "PostgreSQL",
+      "status": "passed",
+      "seconds": 0.131
+    },
+    {
+      "test": "test_mvp.MVPTests.test_invoices",
+      "backend": "PostgreSQL",
+      "status": "passed",
+      "seconds": 0.154
+    },
+    {
+      "test": "test_mvp.MVPTests.test_legacy_database",
+      "backend": "PostgreSQL",
+      "status": "passed",
+      "seconds": 0.217
+    },
+    {
+      "test": "test_mvp.MVPTests.test_manual_client_persists_and_can_receive_a_quote",
+      "backend": "PostgreSQL",
+      "status": "passed",
+      "seconds": 0.277
+    },
+    {
+      "test": "test_mvp.MVPTests.test_validation_and_cancel",
+      "backend": "PostgreSQL",
+      "status": "passed",
+      "seconds": 0.129
+    },
+    {
+      "test": "test_customer_analysis.CustomerAnalysisTests.test_empty_client_has_no_rank_and_skips_model",
+      "backend": "PostgreSQL",
+      "status": "passed",
+      "seconds": 0.129
+    },
+    {
+      "test": "test_customer_analysis.CustomerAnalysisTests.test_model_proposal_is_bounded_to_customer_facts",
+      "backend": "PostgreSQL",
+      "status": "passed",
+      "seconds": 0.282
+    },
+    {
+      "test": "test_customer_analysis.CustomerAnalysisTests.test_payment_updates_analysis_and_restart",
+      "backend": "PostgreSQL",
+      "status": "passed",
+      "seconds": 0.145
+    },
+    {
+      "test": "test_customer_analysis.CustomerAnalysisTests.test_scores_match_demo_and_search_keeps_portfolio_rank",
+      "backend": "PostgreSQL",
+      "status": "passed",
+      "seconds": 0.127
+    },
+    {
+      "test": "test_customer_analysis.CustomerAnalysisTests.test_structured_model_transport_is_loopback_and_validated",
+      "backend": "PostgreSQL",
+      "status": "passed",
+      "seconds": 0.114
+    },
+    {
+      "test": "test_customer_analysis.CustomerAnalysisTests.test_zero_totals_and_due_today_are_not_overdue",
+      "backend": "PostgreSQL",
+      "status": "passed",
+      "seconds": 0.127
+    },
+    {
+      "test": "test_follow_up_email.ScheduledEmailTests.test_schedule_send_cancel_and_check_residual",
+      "backend": "PostgreSQL",
+      "status": "passed",
+      "seconds": 0.324
+    },
+    {
+      "test": "test_preventivi.PreventiviBrowserTest.test_annullamento_anteprima_senza_bozza",
+      "backend": "PostgreSQL",
+      "status": "passed",
+      "seconds": 1.414
+    },
+    {
+      "test": "test_preventivi.PreventiviBrowserTest.test_creazione_modifica_e_persistenza",
+      "backend": "PostgreSQL",
+      "status": "passed",
+      "seconds": 2.84
+    },
+    {
+      "test": "test_fatture_guida.FattureGuidaBrowserTest.test_anagrafica_clienti_e_residuo",
+      "backend": "PostgreSQL",
+      "status": "passed",
+      "seconds": 1.494
+    },
+    {
+      "test": "test_fatture_guida.FattureGuidaBrowserTest.test_analisi_cliente_e_sollecito_dopo_incasso",
+      "backend": "PostgreSQL",
+      "status": "passed",
+      "seconds": 1.795
+    },
+    {
+      "test": "test_fatture_guida.FattureGuidaBrowserTest.test_email_draft_blank_fields_confirmation_and_cancel",
+      "backend": "PostgreSQL",
+      "status": "passed",
+      "seconds": 2.013
+    },
+    {
+      "test": "test_fatture_guida.FattureGuidaBrowserTest.test_fatture_da_chat_e_filtri",
+      "backend": "PostgreSQL",
+      "status": "passed",
+      "seconds": 2.304
+    },
+    {
+      "test": "test_fatture_guida.FattureGuidaBrowserTest.test_follow_up_da_fattura_e_completamento",
+      "backend": "PostgreSQL",
+      "status": "passed",
+      "seconds": 2.536
+    },
+    {
+      "test": "test_fatture_guida.FattureGuidaBrowserTest.test_guida_con_fonte_e_domanda_fuori_copertura",
+      "backend": "PostgreSQL",
+      "status": "passed",
+      "seconds": 2.115
+    },
+    {
+      "test": "test_fatture_guida.FattureGuidaBrowserTest.test_inserimento_manuale_cliente",
+      "backend": "PostgreSQL",
+      "status": "passed",
+      "seconds": 1.498
+    },
+    {
+      "test": "test_fatture_guida.FattureGuidaBrowserTest.test_pannello_email_si_apre_dopo_salvataggio",
+      "backend": "PostgreSQL",
+      "status": "passed",
+      "seconds": 1.889
+    },
+    {
+      "test": "test_fatture_guida.FattureGuidaBrowserTest.test_portfolio_ranking_detail_and_internal_ai",
+      "backend": "PostgreSQL",
+      "status": "passed",
+      "seconds": 2.511
+    },
+    {
+      "test": "test_fatture_guida.FattureGuidaBrowserTest.test_portfolio_updates_after_payment_and_new_client",
+      "backend": "PostgreSQL",
+      "status": "passed",
+      "seconds": 2.461
+    },
+    {
+      "test": "test_fatture_guida.FattureGuidaBrowserTest.test_registra_incasso_demo",
+      "backend": "PostgreSQL",
+      "status": "passed",
+      "seconds": 1.6
+    },
+    {
+      "test": "test_fatture_guida.FattureGuidaBrowserTest.test_riepilogo_e_navigazione_del_nuovo_layout",
+      "backend": "PostgreSQL",
+      "status": "passed",
+      "seconds": 1.189
+    },
+    {
+      "test": "test_fatture_guida.FattureGuidaBrowserTest.test_standard_reload_keeps_customer_analysis_available",
+      "backend": "PostgreSQL",
+      "status": "passed",
+      "seconds": 1.279
+    },
+    {
+      "test": "test_fatture_guida.FattureGuidaBrowserTest.test_unconfirmed_email_survives_reschedule_and_client_view",
+      "backend": "PostgreSQL",
+      "status": "passed",
+      "seconds": 2.221
+    },
+    {
+      "test": "test_workspace_ux.WorkspaceUXTests.test_calendar_create_follow_up_and_same_activity_in_list",
+      "backend": "PostgreSQL",
+      "status": "passed",
+      "seconds": 2.036
+    },
+    {
+      "test": "test_workspace_ux.WorkspaceUXTests.test_home_navigation_client_tabs_and_small_screen",
+      "backend": "PostgreSQL",
+      "status": "passed",
+      "seconds": 2.549
+    },
+    {
+      "test": "test_workspace_ux.WorkspaceUXTests.test_report_filter_export_and_dashboard_failure",
+      "backend": "PostgreSQL",
+      "status": "passed",
+      "seconds": 1.733
+    },
+    {
+      "test": "test_assistant.AssistantTests.test_ambiguity_selection_and_forged_selection",
+      "backend": "PostgreSQL",
+      "status": "passed",
+      "seconds": 0.266
+    },
+    {
+      "test": "test_assistant.AssistantTests.test_balance_invoice_precedence_and_fresh_payment",
+      "backend": "PostgreSQL",
+      "status": "passed",
+      "seconds": 0.136
+    },
+    {
+      "test": "test_assistant.AssistantTests.test_catalogue_read_operations_match_current_data",
+      "backend": "PostgreSQL",
+      "status": "passed",
+      "seconds": 0.139
+    },
+    {
+      "test": "test_assistant.AssistantTests.test_client_context_followups_and_global_reset",
+      "backend": "PostgreSQL",
+      "status": "passed",
+      "seconds": 0.133
+    },
+    {
+      "test": "test_assistant.AssistantTests.test_database_read_only_transaction_is_enforced",
+      "backend": "PostgreSQL",
+      "status": "passed",
+      "seconds": 0.13
+    },
+    {
+      "test": "test_assistant.AssistantTests.test_domain_words_are_not_implicit_demo_clients",
+      "backend": "PostgreSQL",
+      "status": "passed",
+      "seconds": 0.118
+    },
+    {
+      "test": "test_assistant.AssistantTests.test_explicit_invoice_changes_owner_but_named_client_is_enforced",
+      "backend": "PostgreSQL",
+      "status": "passed",
+      "seconds": 0.139
+    },
+    {
+      "test": "test_assistant.AssistantTests.test_large_result_is_limited_and_declares_total",
+      "backend": "PostgreSQL",
+      "status": "passed",
+      "seconds": 0.308
+    },
+    {
+      "test": "test_assistant.AssistantTests.test_log_contains_trace_without_raw_question",
+      "backend": "PostgreSQL",
+      "status": "passed",
+      "seconds": 0.122
+    },
+    {
+      "test": "test_assistant.AssistantTests.test_missing_client_and_model_invented_reference",
+      "backend": "PostgreSQL",
+      "status": "passed",
+      "seconds": 0.13
+    },
+    {
+      "test": "test_assistant.AssistantTests.test_model_outage_invalid_body_and_no_fake_answer",
+      "backend": "PostgreSQL",
+      "status": "passed",
+      "seconds": 0.14
+    },
+    {
+      "test": "test_assistant.AssistantTests.test_relative_dates_empty_results_and_invalid_period",
+      "backend": "PostgreSQL",
+      "status": "passed",
+      "seconds": 0.175
+    },
+    {
+      "test": "test_assistant.AssistantTests.test_unavailable_metrics_do_not_become_fake_rankings",
+      "backend": "PostgreSQL",
+      "status": "passed",
+      "seconds": 0.123
+    },
+    {
+      "test": "test_assistant.AssistantTests.test_write_requests_are_blocked_before_model_and_database_unchanged",
+      "backend": "PostgreSQL",
+      "status": "passed",
+      "seconds": 0.127
+    },
+    {
+      "test": "test_assistant.ConversationTests.test_expiry_limit_and_revision_protect_context",
+      "backend": "PostgreSQL",
+      "status": "passed",
+      "seconds": 0.0
+    },
+    {
+      "test": "test_assistant_browser.AssistantBrowserTests.test_ambiguity_context_payment_and_safe_navigation",
+      "backend": "PostgreSQL",
+      "status": "passed",
+      "seconds": 4.24
+    },
+    {
+      "test": "test_assistant_browser.AssistantBrowserTests.test_errors_unsupported_and_mobile_tables_are_safe",
+      "backend": "PostgreSQL",
+      "status": "passed",
+      "seconds": 2.39
+    },
+    {
+      "test": "test_assistant_browser.AssistantBrowserTests.test_quotes_followups_examples_and_trace_table",
+      "backend": "PostgreSQL",
+      "status": "passed",
+      "seconds": 1.43
+    }
+  ]
+}

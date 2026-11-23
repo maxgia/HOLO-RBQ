@@ -115,7 +115,7 @@ def main():
     sandbox = Sandbox()
     suite = unittest.TestSuite()
     names = ['test_mvp', 'test_customer_analysis', 'test_follow_up_email',
-             'test_preventivi', 'test_fatture_guida', 'test_workspace_ux']
+             'test_preventivi', 'test_fatture_guida', 'test_workspace_ux', 'test_assistant', 'test_assistant_browser']
     try:
         browser = importlib.import_module('browser_server')
         browser.create_app = sandbox.application

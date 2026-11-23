@@ -7,16 +7,19 @@ from pathlib import Path
 import sqlite3
 from typing import Literal
 from uuid import UUID, uuid4
+from time import monotonic
 
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field, field_validator
+from sqlalchemy.exc import SQLAlchemyError
 
 from customer_assistant import CustomerQuestion, answer_customer_question
 from guide import find_articles
 from customer_analysis import analyse_customers, local_customer_advice
 from database import PostgresStore, postgres_url
 from follow_up_email import EMAIL_SCHEMA, ScheduledEmail, flag_paid_follow_up_emails, in_send_window, utc_now
+from assistant_service import AssistantInput, Conversations, prepare, answer as assistant_answer, trace
 
 ROOT = Path(__file__).resolve().parent
 DEMO_CLIENTS = {
@@ -158,6 +161,42 @@ def create_app(database: Path | str | None = None) -> FastAPI:
 
     application = FastAPI(title="HOLO RBQ · Preventivi locali", lifespan=lifespan)
     application.state.store = store
+    assistant_sessions = Conversations()
+    application.state.assistant_sessions = assistant_sessions
+
+    @application.post('/api/assistant/query')
+    def assistant_query(data: AssistantInput):
+        started, request_id, operation = monotonic(), str(uuid4()), 'unresolved'
+        try:
+            key, state, plan = prepare(data, assistant_sessions)
+            operation = plan.operation
+            if operation == 'unsupported':
+                result = {'status':'unsupported','operation':operation,
+                          'columns':['Esito'],'rows':[['Questa prima versione consulta clienti, fatture, scadenze, bozze, attività e classifiche. Non modifica dati e non invia messaggi.']],
+                          'links':[],'filters':{},'total_rows':1,'read_at':None,
+                          'source':'Catalogo delle operazioni consentite'}
+                context,pending=state['context'],None
+            else:
+                # Il modello termina prima di aprire la transazione. Una fotografia nuova per domanda.
+                with closing(connect()) as db, db:
+                    if store is not None:
+                        db.execute('BEGIN READ ONLY')
+                    else:
+                        db.execute('PRAGMA query_only = ON')
+                        db.execute('BEGIN')
+                    result,context,pending=assistant_answer(db,data.question,plan,state['context'],data.selected_client_id)
+                    result['source']='PostgreSQL · calcoli e regole HOLO' if store else 'Fixture SQLite di collaudo · calcoli e regole HOLO'
+            assistant_sessions.put(key,state,context,pending)
+            trace(request_id,data.question,operation,result['status'],monotonic()-started,result['filters'])
+            return result | {'request_id':request_id,'conversation_id':key,
+                             'context':{'client':context.get('client_name'),'invoice':context.get('invoice_number')},
+                             'interpreter':'Ollama locale' if operation!='unsupported' else 'Controllo consultivo'}
+        except HTTPException as error:
+            trace(request_id,data.question,operation,'error_'+str(error.status_code),monotonic()-started)
+            raise
+        except (SQLAlchemyError, sqlite3.Error) as error:
+            trace(request_id,data.question,operation,'database_error',monotonic()-started)
+            raise HTTPException(503,'Archivio non disponibile per questa lettura. Riprova; nessuna risposta è stata ricostruita da dati precedenti.') from error
 
     def draft_data(row):
         return {

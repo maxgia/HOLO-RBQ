@@ -1,5 +1,13 @@
 # Specifica tecnica HOLO RBQ
 
+## D13 — assistente conversazionale consultivo, 23 novembre 2026
+
+Implementata la prima versione trasversale: clienti, saldo, singola fattura, scadenze, bozze, attività e classifica. Risposte tabellari, ambiguità con scelta, contesto temporaneo e lettura PostgreSQL READ ONLY / REPEATABLE READ a ogni domanda. Modello Ollama locale interpreta soltanto un piano validato; nessun SQL libero o invio. [Specifica, limiti e prova sul PC](Assistente-D13.md), [PR #15](https://github.com/maxgia/HOLO-RBQ/pull/15).
+
+Registro Excel aggiornato a 58 casi. Confermati sul PC logo e caricamento del dataset (BR-01 e DM-01), con 11 esiti umani Superato complessivi. La prima sessione UX-01/02 resta evidenza storica; la ripetizione da UX-01 è ancora da fare come richiesto. Otto nuovi casi AS-01–AS-08 Da eseguire con Ollama reale. Modello simulato nella CI; i risultati automatici non diventano conferme utente.
+
+D13 implementato, collaudo utente aperto. Nessuna migrazione o nuova dipendenza. Per aggiornare servono app.py, database.py, customer_assistant.py, il nuovo assistant_service.py e index.html; conservare data/postgres.json e .venv. A06 gestionale, pubblicazione online e D11 audit storico restano rinviati o da pianificare.
+
 ## D09 — nuova esperienza operativa, 22 novembre 2026
 
 Implementate Home sintetica, pagine dedicate, scheda cliente a tab, pianificazione follow-up con calendario e Report con esportazione CSV. Dati calcolati e proposte AI sono in tabelle. Grafica scura con accenti lavanda, azioni principali evidenti e tabelle scorrevoli. [Specifica e passi di prova](UX-UI-D09.md), [PR #12](https://github.com/maxgia/HOLO-RBQ/pull/12).
@@ -58,7 +66,7 @@ L'[Excel aggiornato](HOLO-RBQ-Registro-test-2026-11-21.xlsx) contiene **37 casi*
 
 ## Stato corrente — 21 novembre 2026
 
-Requisiti aggiunti oggi: RF-14 confronto portafoglio, RF-15 azioni AI interne, RF-16 registro dei collaudi e RF-17 esclusione di nuove interazioni esterne. [Specifica di dettaglio del modulo](Analisi-portafoglio-clienti.md), [piano aggiornato](Piano-generale.md), [Excel con 36 casi](HOLO-RBQ-Registro-test-2026-11-21.xlsx). Il ramo della PR #8 include i sorgenti e la documentazione consolidata, mentre l'integrazione in main resta aperta.
+Requisiti aggiunti oggi: RF-14 confronto portafoglio, RF-15 azioni AI interne, RF-16 registro dei collaudi e RF-17 esclusione di nuove interazioni esterne. [Specifica di dettaglio del modulo](Analisi-portafoglio-clienti.md), [piano aggiornato](Piano-generale.md), [Excel con 58 casi](HOLO-RBQ-Registro-test-2026-11-21.xlsx). Il ramo della PR #8 include i sorgenti e la documentazione consolidata, mentre l'integrazione in main resta aperta.
 
 Evidenza automatica sul commit `c40639f`: [CI 44881200826](https://github.com/maxgia/HOLO-RBQ/actions/runs/44881200826), 19 test Python, 11 Node e 13 Chromium superati. Email e AI simulate; modello reale non disponibile nell'ambiente. Nessuna nuova prova SMTP, usabilità con utenti o attestazione di conformità. Le sezioni datate sotto conservano la cronologia: pannello email, consegna reale e sospensione per saldo sono stati confermati dall'utente il 20 novembre. Restano aperti T04 e i casi indicati nel registro.
 
@@ -89,7 +97,7 @@ Nuovo RF-23: conservare oggetto, testo e ora non confermati durante riprogrammaz
 | RF-13 | Consultare e collaudare il flusso con il gestionale reale. | A06–A07. Prima integrazione prevista in sola lettura, con confronto tra anagrafiche, fatture, incassi e scadenze. |
 | RF-14 | Confrontare clienti per valore registrato e criticità degli incassi. | PR #8. Punteggi distinti, ricerca, ordinamento e dati di supporto; niente valutazione predittiva o di margine senza dati. AC-01–04. |
 | RF-15 | Ottenere suggerimenti AI di azioni interne di gestione e fidelizzazione. | PR #8. Regole sempre disponibili, Ollama locale facoltativo con scelta vincolata e nessun invio. AC-05–07. |
-| RF-16 | Riprendere il collaudo senza confondere test automatici e conferme personali. | Excel con 36 casi, storico, passi, attesi, copertura automatica e campi modificabili per nuovo esito, data, versione, osservazioni. |
+| RF-16 | Riprendere il collaudo senza confondere test automatici e conferme personali. | Excel con 58 casi, storico, passi, attesi, copertura automatica e campi modificabili per nuovo esito, data, versione, osservazioni. |
 | RF-17 | Avanzare soltanto su funzionalità interne. | Nessuna nuova integrazione esterna o invio reale; worker non necessario. Test SMTP simulati e prove esterne rinviate. |
 | RF-18 | Evitare la riproposizione di HTML vecchio dopo aggiornamento e riavvio. | Risposta `/` con Cache-Control no-store, test API di nuova pagina e browser con reload normale. Una scheda aperta richiede ricaricamento; vecchia cache può richiedere Ctrl+F5 una volta. AC-10. |
 | RF-19 | Mantenere le colonne e indicare Non classificato nella posizione del cliente senza storico. | Solo etichetta frontend, nessuna modifica ai punteggi o alle parità. Test Chromium e ricontrollo utente AC-10. |
@@ -105,6 +113,18 @@ La modifica dei clienti esistenti, l'analisi predittiva dello storico e la ricer
 ## Contratti tecnici D09
 
 Frontend nello stesso index.html, con una sola pagina visibile e routing hash; tab cliente con navigazione da tastiera. Si riusano API e tabelle PostgreSQL correnti, senza nuovi endpoint o migrazioni. Il calendario rappresenta la data attività, non l’ora email. Il report filtra scadenze, non date di incasso/completamento indisponibili; CSV con neutralizzazione delle formule. Richieste obsolete non sovrascrivono le più recenti; errori di lettura eliminano gli indicatori non verificati. Dettagli e limiti in [UX-UI-D09.md](UX-UI-D09.md).
+
+## Requisiti aggiuntivi D13
+
+| ID | Requisito | Realizzazione e verifica |
+|---|---|---|
+| RF-28 | Interrogare trasversalmente l’applicazione in italiano con dati aggiornati. | Endpoint POST /api/assistant/query; nuovo snapshot dopo l’interpretazione di ogni domanda. AS-01 e AS-02. |
+| RF-29 | Chiarire nomi ambigui e mantenere un contesto temporaneo. | Scelte validate per domanda/conversazione; contesto cliente/documento e Nuova conversazione. AS-03. |
+| RF-30 | Risultati calcolati tabellari, verificabili e con accesso ai record. | Colonne/righe, origine, ora, filtri, ID richiesta e link locali; massimo 50 righe dichiarato. AS-04–AS-06 e AS-08. |
+| RF-31 | Prima versione esclusivamente consultiva. | Catalogo chiuso, richieste scrittura/invio rifiutate e transazione READ ONLY. AS-07. |
+| RF-32 | Distinguere dati mancanti ed errori da risultati validi. | Nessuna risposta ricostruita dopo 502/503; metriche e periodi non disponibili respinti. AS-04 e AS-07. |
+
+Tecnica: assistant_service.py valida un QueryPlan Pydantic; customer_assistant.py riusa Ollama loopback con JSON Schema e budget D13 separato. Il modello non vede credenziali o intero archivio e non genera importi/SQL. database.py supporta BEGIN READ ONLY; app.py governa snapshot e errori. Sessioni in memoria, 30 minuti, massimo 200, revisione contro risposte concorrenti obsolete. Logging con ID/hash domanda/filtri/esito/durata su console. Nessun nuovo schema o autenticazione; esercizio locale a singolo processo. [Contratto completo e limiti](Assistente-D13.md).
 
 ## Architettura e requisiti tecnici
 

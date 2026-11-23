@@ -1,10 +1,18 @@
 # Piano generale HOLO RBQ
 
+## D13 — assistente conversazionale consultivo, 23 novembre 2026
+
+Implementata la prima versione trasversale: clienti, saldo, singola fattura, scadenze, bozze, attività e classifica. Risposte tabellari, ambiguità con scelta, contesto temporaneo e lettura PostgreSQL READ ONLY / REPEATABLE READ a ogni domanda. Modello Ollama locale interpreta soltanto un piano validato; nessun SQL libero o invio. [Specifica, limiti e prova sul PC](Assistente-D13.md), [PR #15](https://github.com/maxgia/HOLO-RBQ/pull/15).
+
+Registro Excel aggiornato a 58 casi. Confermati sul PC logo e caricamento del dataset (BR-01 e DM-01), con 11 esiti umani Superato complessivi. La prima sessione UX-01/02 resta evidenza storica; la ripetizione da UX-01 è ancora da fare come richiesto. Otto nuovi casi AS-01–AS-08 Da eseguire con Ollama reale. Modello simulato nella CI; i risultati automatici non diventano conferme utente.
+
+Codice c9baaaf, CI 45122619109: 57 Python, 11 Node, 23 Chromium e 57 prove funzionali sul runner PostgreSQL superati, con preflight Windows. [Risultati per caso](Regressione-Assistente-2026-11-23.json). D13 implementato, collaudo utente aperto. Nessuna migrazione o nuova dipendenza. Per aggiornare servono app.py, database.py, customer_assistant.py, il nuovo assistant_service.py e index.html; conservare data/postgres.json e .venv. A06 gestionale, pubblicazione online e D11 audit storico restano rinviati o da pianificare.
+
 ## D12 — dataset dimostrativo esteso, 22 novembre 2026
 
-Preparati 15 clienti sintetici, 21 fatture, 12 incassi, 6 bozze e 9 attività, riconoscibili da DEMO |. Caricatore additivo con anteprima, conferma locale, transazione, protezione dai duplicati e nessuna email creata. [Casi e procedura](Dataset-demo-v1.md), [registro scenari per Excel](Scenari-demo-v1.csv). Il caricamento sul PC è ancora da eseguire; i dati esistenti non sono stati raggiunti.
+Preparati 15 clienti sintetici, 21 fatture, 12 incassi, 6 bozze e 9 attività, riconoscibili da DEMO |. Caricatore additivo con anteprima, conferma locale, transazione, protezione dai duplicati e nessuna email creata. [Casi e procedura](Dataset-demo-v1.md), [registro scenari per Excel](Scenari-demo-v1.csv). Il caricamento sul PC è stato confermato dall’utente il 22 novembre. La CI non accede al database operativo.
 
-D12 implementato e verificato: sei nuovi test superati, inclusi tre su PostgreSQL reale; CI 45046830014 verde anche per regressione e Windows. Caricamento locale ancora da eseguire. Il dataset amplia i casi del collaudo, non chiude i test umani. UX-01 e UX-02 sono stati confermati nella prima sessione; l’utente ha chiesto di ripartire da UX-01 al prossimo incontro. UX-03–UX-05 restano da eseguire. Il logo è stato confermato sul PC. A06 e pubblicazione online rimangono rinviate.
+D12 implementato e verificato: sei nuovi test superati, inclusi tre su PostgreSQL reale; CI 45046830014 verde anche per regressione e Windows. Caricamento locale confermato; collaudo analitico dei 15 scenari ancora aperto. Il dataset amplia i casi del collaudo, non chiude i test umani. UX-01 e UX-02 sono stati confermati nella prima sessione; l’utente ha chiesto di ripartire da UX-01 al prossimo incontro. UX-03–UX-05 restano da eseguire. Il logo è stato confermato sul PC. A06 e pubblicazione online rimangono rinviate.
 
 ## D09 — nuova esperienza operativa, 22 novembre 2026
 
@@ -49,9 +57,9 @@ Aggiornato il 21 novembre 2026 dopo il collaudo utente e la preparazione della d
 | ID | Attivita' | Stato attuale | Condizione per chiuderla |
 |---|---|---|---|
 | A01 | MVP locale, repository e runbook | Realizzata | Conservare avvio riproducibile e documentazione a ogni rilascio. |
-| A02 | Regressione API e riconoscimento | Realizzata, estesa | Suite corrente 36 Python e 11 Node. |
+| A02 | Regressione API e riconoscimento | Realizzata, estesa | Suite corrente 57 Python e 11 Node. |
 | A03 | Collaudo browser preventivi e CI | Realizzata | Regressione mantenuta sul rilascio. |
-| A04 | Browser fatture e guida | Realizzata, estesa | Suite corrente 20 Chromium e collaudo avvio Windows. |
+| A04 | Browser fatture e guida | Realizzata, estesa | Suite corrente 23 Chromium e collaudo avvio Windows. |
 | A05 | Prima prova di sviluppo multiagente | Prova storica eseguita | Non equivale a orchestrazione continuativa: questa resta da progettare e sviluppare. |
 | A06 | Gestionale reale e definizione pilota | APERTA, ricerca in corso | Identificare prodotto, referente, azienda di prova, accessi e criteri di accettazione. |
 | A07 | Integrazione gestionale in lettura | In attesa di A06 | Confronto anagrafiche, fatture, scadenze e incassi con dati reali. |
@@ -68,13 +76,15 @@ Aggiornato il 21 novembre 2026 dopo il collaudo utente e la preparazione della d
 | D02 | Analisi scheda, domande e attivita' | Implementato, confermato nei flussi provati | Valutare qualita' su piu' casi. |
 | D03 | Email programmate e verifica saldo | Implementato; collaudo storico parziale | Prove esterne rinviate; worker non avviato da D08. |
 | D04 | Classifiche clienti e azioni AI locali | Implementato; AC-01–06 e AC-10 confermati | AC-07 e usabilita' AC-08 ancora aperti; AC-09 coperto automaticamente. |
-| D05 | Tracciabilita' e registro Excel | Aggiornato, 48 casi | Registrare ogni nuova prova con data, versione e osservato. |
+| D05 | Tracciabilita' e registro Excel | Aggiornato, 58 casi | Registrare ogni nuova prova con data, versione e osservato. |
 | D06 | Conservazione testo email non confermato | Fix verificato automaticamente | Collaudo manuale T04 da eseguire; bozza limitata alla pagina aperta. |
 | D07 | Consolidamento della demo | Incluso nel rilascio della PR #8 su main | Verificare esito merge e conservare riferimento al rilascio. |
 | D08 | Avvio locale semplificato | Implementato; verificato su Windows in CI | Collaudo utente AC-11 del doppio clic e dell'apertura browser. |
 | D09 | Revisione UX/UI | Implementata e verificata in CI | UX-01–UX-05 sul PC e usabilità con utenti rappresentativi. |
 | D10 | PostgreSQL e trasferimento archivio | Migrazione e primo avvio utente confermati | PG-03 in corso, PG-04–05 da eseguire. |
 | D11 | Registro storico delle operazioni | Da pianificare | Definire eventi, autori, date, conservazione e prove; nessuna ricostruzione retroattiva. |
+| D12 | Dataset dimostrativo esteso | Caricamento utente confermato | Verificare i 15 scenari analitici del CSV; DM-01 superato. |
+| D13 | Assistente conversazionale consultivo | Implementato e verificato in CI | AS-01–AS-08 con Ollama reale sul PC; esiti utente ancora aperti. |
 
 ## Prossima verifica: D09 sul PC, senza attendere A06
 
@@ -88,6 +98,13 @@ La [fase D09](UX-UI-D09.md) è implementata. Seguire i cinque nuovi casi dell’
 - Utente: sette casi AC-01–AC-06 e AC-10 superati. AC-10 confermato dopo aggiornamento dei file nella cartella effettiva; include F5 normale dopo riavvio e Non classificato.
 - Nessun nuovo invio SMTP o collegamento a gestionale reale. Test automatici dell'AI con simulazioni; due scenari Ollama reali verificati dall'utente.
 - [Registro Excel](HOLO-RBQ-Registro-test-2026-11-21.xlsx), [registro delle prove](Registro-collaudo-2026-11-21.md), [avvio](Runbook.md).
+
+## Prossime verifiche dopo D13
+
+1. Riprendere UX-01 dall’inizio con il dataset attuale; UX-03–05 sono ancora aperti.
+2. Eseguire AS-01–AS-08 con Ollama locale reale e confrontare i risultati con le pagine, annotando domanda e interpretazione errata se presente.
+3. Collaudare separatamente i 15 scenari del CSV DEMO: caricamento riuscito non significa verifica analitica completata.
+4. Completare PG-03–05 e T04 nei rispettivi stati; poi consolidare il pilota interno e pianificare D11. A07 dipende ancora da A06.
 
 ## Tempi e dipendenze
 

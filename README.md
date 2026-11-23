@@ -1,5 +1,13 @@
 # HOLO RBQ — PostgreSQL
 
+## Assistente consultivo D13
+
+Chat sui dati correnti di clienti, fatture, scadenze, bozze, attività e portafoglio. Risposte tabellari con filtri, lettura e collegamenti; nomi ambigui richiedono una scelta. Nessuna modifica o invio automatico. Richiede Ollama locale; la CI usa un modello simulato. [Specifica e prova](HOLO%20RBQ/documentazione/Assistente-D13.md).
+
+Per questa versione aggiornare app.py, database.py, customer_assistant.py, il nuovo assistant_service.py e index.html, conservando data/postgres.json e .venv. Avviare Ollama e Avvia-HOLO.cmd, poi aprire /#assistant. Nessuna nuova migrazione.
+
+Registro Excel: 58 casi, otto nuovi AS-01–AS-08 da eseguire e 11 conferme umane Superato complessive. Prima sessione UX-01/02 storica; ripetizione da UX-01 ancora aperta. Caricamento DEMO confermato, scenari analitici da collaudare. A06, cloud e D11 restano aperti.
+
 ## Nuova UX D09 — Home e pagine operative
 
 Home sintetica con urgenze e azioni; pagine dedicate; Clienti a tab; Attività con calendario Mese/Settimana/Giorno; analisi AI e calcoli in tabelle; Report dello stato corrente con CSV. Tema scuro e accenti lavanda. [Specifica e collaudo](HOLO%20RBQ/documentazione/UX-UI-D09.md).
@@ -42,7 +50,7 @@ A06 resta aperta per la ricerca del gestionale reale. D10 PostgreSQL precede la 
 - [Avvio e aggiornamento](HOLO%20RBQ/documentazione/Runbook.md)
 - [Piano generale](HOLO%20RBQ/documentazione/Piano-generale.md)
 - [Specifica tecnica](HOLO%20RBQ/documentazione/Specifica-tecnica-HOLO-RBQ.md)
-- [Registro Excel, 48 casi](HOLO%20RBQ/documentazione/HOLO-RBQ-Registro-test-2026-11-21.xlsx)
+- [Registro Excel, 58 casi](HOLO%20RBQ/documentazione/HOLO-RBQ-Registro-test-2026-11-21.xlsx)
 - [Evidenze dei test](HOLO%20RBQ/documentazione/Registro-collaudo-2026-11-21.md)
 - [Piano UX/UI](HOLO%20RBQ/documentazione/Piano-UX-UI.md)
 

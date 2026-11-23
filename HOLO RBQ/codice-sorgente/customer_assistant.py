@@ -45,12 +45,12 @@ def classify_question(question: str) -> QuestionIntent:
     return local_structured_response(QuestionIntent, payload["messages"])
 
 
-def local_structured_response(schema, messages):
+def local_structured_response(schema, messages, max_tokens=128):
     payload = {
         "model": os.getenv("HOLO_OLLAMA_MODEL", "qwen2.5:3b"),
         "stream": False,
         "format": schema.model_json_schema(),
-        "options": {"temperature": 0, "num_predict": 128},
+        "options": {"temperature": 0, "num_predict": max_tokens},
         "messages": messages,
     }
     request = Request(

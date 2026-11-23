@@ -34,6 +34,7 @@ class FattureGuidaBrowserTest(unittest.TestCase):
 
     def ask(self, question):
         self.page.get_by_role("link", name="Assistente", exact=True).click()
+        self.page.locator("#guided-tools").evaluate("element => element.open = true")
         chat = self.page.locator("#chat")
         chat.get_by_label("Richiesta").fill(question)
         chat.get_by_role("button", name="Invia").click()
