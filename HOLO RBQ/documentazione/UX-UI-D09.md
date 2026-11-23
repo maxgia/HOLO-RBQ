@@ -10,6 +10,14 @@ Il PNG con alpha è incorporato in index.html: per aggiornare non servono file a
 
 Verifica marchio: codice `ce91706`, [CI 45045149166](https://github.com/maxgia/HOLO-RBQ/actions/runs/45045149166) superata nei tre job (regressione, PostgreSQL, avvio Windows). Controllate anche le schermate Chromium desktop e mobile. Il primo controllo aveva un URL di test con doppia barra: corretto nel test senza modificare il codice applicativo. Gli esiti utente del registro Excel restano aperti e invariati.
 
+## Correzione menu laterale — 23 novembre 2026
+
+Segnalazione utente: le voci inferiori del menu non erano raggiungibili nella finestra con altezza disponibile ridotta. Il desktop ora usa una sidebar vincolata alla viewport (vh/dvh), overflow verticale indipendente, scrollbar coerente con il tema ed elementi non compressi. I titoli lunghi possono andare a capo. Il layout mobile mantiene lo scorrimento orizzontale del menu.
+
+Modifica applicativa limitata al CSS di index.html: nessuna variazione a logica, API o dati. La verifica UX esistente viene eseguita a 1440×480 invece di 1440×1000, conservando le asserzioni su navigazione e mobile. Gli 11 controlli Node sono passati localmente. Il browser locale non è avviabile per restrizioni dell’ambiente; le prove Chromium vengono eseguite in CI.
+
+Verifica sul PC ancora da eseguire, inclusa in UX-05: aggiornare index.html, ricaricare, ridurre l’altezza o aumentare lo zoom e scorrere nella colonna sinistra fino ad Assistente e Guida operativa. Deve scorrere il menu senza richiedere di spostare il contenuto principale. Codice `7d981e3`, [CI 45130646194](https://github.com/maxgia/HOLO-RBQ/actions/runs/45130646194): regressione, PostgreSQL e avvio Windows superati. Nessun nuovo esito utente registrato; controllo nel perimetro UX-05 ancora da confermare sul PC.
+
 ## Organizzazione realizzata
 
 | Pagina | Contenuto e azioni |
