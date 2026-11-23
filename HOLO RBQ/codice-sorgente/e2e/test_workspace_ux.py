@@ -11,7 +11,7 @@ class WorkspaceUXTests(unittest.TestCase):
         scope=serve(Path(folder.name)/'ux.sqlite3');self.url=scope.__enter__();self.addCleanup(scope.__exit__,None,None,None)
         runtime=sync_playwright();p=runtime.__enter__();self.addCleanup(runtime.__exit__,None,None,None)
         browser=p.chromium.launch();self.addCleanup(browser.close)
-        self.page=browser.new_page(viewport={'width':1440,'height':1000});self.errors=[]
+        self.page=browser.new_page(viewport={'width':1440,'height':480});self.errors=[]
         self.page.on('pageerror',lambda e:self.errors.append(str(e)))
         self.page.set_default_timeout(8000)
         self.page.goto(self.url)
