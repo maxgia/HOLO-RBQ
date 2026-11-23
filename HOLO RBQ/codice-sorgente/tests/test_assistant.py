@@ -121,8 +121,9 @@ class AssistantTests(unittest.TestCase):
         self.assertEqual(self.api.get('/api/clients?q=Forbidden').json(),[])
 
     def test_model_outage_invalid_body_and_no_fake_answer(self):
-        with patch('assistant_service.local_structured_response',side_effect=HTTPException(503,'Ollama non disponibile')):
+        with patch('assistant_service.local_structured_response',side_effect=HTTPException(503,'Ollama non disponibile')) as model:
             response=self.api.post('/api/assistant/query',json={'question':'Residuo totale'})
+        self.assertEqual(model.call_args.kwargs['max_tokens'],384)
         self.assertEqual(response.status_code,503);self.assertNotIn('rows',response.json())
         for body in [{'question':'   '},{'question':'a'*601},{'question':'Elenca','sql':'SELECT * FROM clients'}]:
             self.assertEqual(self.api.post('/api/assistant/query',json=body).status_code,422)
