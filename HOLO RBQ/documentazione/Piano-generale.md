@@ -1,5 +1,13 @@
 # Piano generale HOLO RBQ
 
+## D13 — assistente conversazionale consultivo, 23 novembre 2026
+
+Implementata la prima versione trasversale: clienti, saldo, singola fattura, scadenze, bozze, attività e classifica. Risposte tabellari, ambiguità con scelta, contesto temporaneo e lettura PostgreSQL READ ONLY / REPEATABLE READ a ogni domanda. Modello Ollama locale interpreta soltanto un piano validato; nessun SQL libero o invio. [Specifica, limiti e prova sul PC](Assistente-D13.md), [PR #15](https://github.com/maxgia/HOLO-RBQ/pull/15).
+
+Registro Excel aggiornato a 58 casi. Confermati sul PC logo e caricamento del dataset (BR-01 e DM-01), con 11 esiti umani Superato complessivi. La prima sessione UX-01/02 resta evidenza storica; la ripetizione da UX-01 è ancora da fare come richiesto. Otto nuovi casi AS-01–AS-08 Da eseguire con Ollama reale. Modello simulato nella CI; i risultati automatici non diventano conferme utente.
+
+Codice c9baaaf, CI 45122619109: 57 Python, 11 Node, 23 Chromium e 57 prove funzionali sul runner PostgreSQL superati, con preflight Windows. [Risultati per caso](Regressione-Assistente-2026-11-23.json). D13 implementato, collaudo utente aperto. Nessuna migrazione o nuova dipendenza. Per aggiornare servono app.py, database.py, customer_assistant.py, il nuovo assistant_service.py e index.html; conservare data/postgres.json e .venv. A06 gestionale, pubblicazione online e D11 audit storico restano rinviati o da pianificare.
+
 ## D12 — dataset dimostrativo esteso, 22 novembre 2026
 
 Preparati 15 clienti sintetici, 21 fatture, 12 incassi, 6 bozze e 9 attività, riconoscibili da DEMO |. Caricatore additivo con anteprima, conferma locale, transazione, protezione dai duplicati e nessuna email creata. [Casi e procedura](Dataset-demo-v1.md), [registro scenari per Excel](Scenari-demo-v1.csv). Il caricamento sul PC è ancora da eseguire; i dati esistenti non sono stati raggiunti.
@@ -88,6 +96,13 @@ La [fase D09](UX-UI-D09.md) è implementata. Seguire i cinque nuovi casi dell’
 - Utente: sette casi AC-01–AC-06 e AC-10 superati. AC-10 confermato dopo aggiornamento dei file nella cartella effettiva; include F5 normale dopo riavvio e Non classificato.
 - Nessun nuovo invio SMTP o collegamento a gestionale reale. Test automatici dell'AI con simulazioni; due scenari Ollama reali verificati dall'utente.
 - [Registro Excel](HOLO-RBQ-Registro-test-2026-11-21.xlsx), [registro delle prove](Registro-collaudo-2026-11-21.md), [avvio](Runbook.md).
+
+## Prossime verifiche dopo D13
+
+1. Riprendere UX-01 dall’inizio con il dataset attuale; UX-03–05 sono ancora aperti.
+2. Eseguire AS-01–AS-08 con Ollama locale reale e confrontare i risultati con le pagine, annotando domanda e interpretazione errata se presente.
+3. Collaudare separatamente i 15 scenari del CSV DEMO: caricamento riuscito non significa verifica analitica completata.
+4. Completare PG-03–05 e T04 nei rispettivi stati; poi consolidare il pilota interno e pianificare D11. A07 dipende ancora da A06.
 
 ## Tempi e dipendenze
 

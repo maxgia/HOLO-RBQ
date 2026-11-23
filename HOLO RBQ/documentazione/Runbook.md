@@ -1,5 +1,11 @@
 # Avvio e aggiornamento HOLO RBQ
 
+## Avvio dell’assistente D13
+
+Fermare il server. Aggiornare app.py, database.py, customer_assistant.py, assistant_service.py e index.html dai sorgenti main, preservando data/postgres.json e .venv. Non ripetere migrazione o caricamento DEMO. Avviare Ollama e verificare il modello configurato (default qwen2.5:3b, oppure HOLO_OLLAMA_MODEL). Eseguire Avvia-HOLO.cmd e aprire http://127.0.0.1:8002/#assistant, ricaricando la pagina.
+
+Usare Domanda sui dati e Interroga HOLO. Gli strumenti preesistenti restano in Strumenti guidati e guida operativa. Se il contesto scade o il server viene riavviato usare Nuova conversazione. Lasciare il worker spento. AS-01–AS-08 nel registro Excel sono ancora da eseguire. [Passi, esempi e limiti](Assistente-D13.md).
+
 ## Aggiornare alla nuova UX D09
 
 Sulla copia PostgreSQL già funzionante non rieseguire Configura-Postgres.cmd. Conservare data (incluso postgres.json) e .venv; salvare eventuali testi non confermati. La modifica applicativa D09 è in index.html: sostituire quel file con la versione main, oppure aggiornare i sorgenti preservando le due cartelle. Riavviare con Avvia-HOLO.cmd e ricaricare http://127.0.0.1:8002/; all’apertura compare Home. Nessuna nuova dipendenza o migrazione.
