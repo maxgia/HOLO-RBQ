@@ -18,6 +18,7 @@ class PreventiviBrowserTest(unittest.TestCase):
                     page = browser.new_page()
                     page.goto(url + "#preventivi")
                     page.get_by_role("link", name="Assistente", exact=True).click()
+                    page.get_by_text("Strumenti guidati e guida operativa",exact=True).click()
                     page.get_by_role("button", name="Usa una richiesta di esempio").click()
                     page.locator("#chat").get_by_role("button", name="Invia").click()
                     expect(page.locator("#messages")).to_contain_text(

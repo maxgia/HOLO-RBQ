@@ -113,6 +113,9 @@ class Connection:
         if command == 'BEGIN':
             self.connection.execute(text('SET TRANSACTION ISOLATION LEVEL REPEATABLE READ'))
             return None
+        if command == 'BEGIN READ ONLY':
+            self.connection.execute(text('SET TRANSACTION ISOLATION LEVEL REPEATABLE READ, READ ONLY'))
+            return None
         if command.startswith(('INSERT', 'UPDATE', 'DELETE')):
             self.lock()
         if isinstance(params, dict):
