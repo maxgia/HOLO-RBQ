@@ -10,9 +10,9 @@ Codice c9baaaf, CI 45122619109: 57 Python, 11 Node, 23 Chromium e 57 prove funzi
 
 ## D12 — dataset dimostrativo esteso, 22 novembre 2026
 
-Preparati 15 clienti sintetici, 21 fatture, 12 incassi, 6 bozze e 9 attività, riconoscibili da DEMO |. Caricatore additivo con anteprima, conferma locale, transazione, protezione dai duplicati e nessuna email creata. [Casi e procedura](Dataset-demo-v1.md), [registro scenari per Excel](Scenari-demo-v1.csv). Il caricamento sul PC è ancora da eseguire; i dati esistenti non sono stati raggiunti.
+Preparati 15 clienti sintetici, 21 fatture, 12 incassi, 6 bozze e 9 attività, riconoscibili da DEMO |. Caricatore additivo con anteprima, conferma locale, transazione, protezione dai duplicati e nessuna email creata. [Casi e procedura](Dataset-demo-v1.md), [registro scenari per Excel](Scenari-demo-v1.csv). Il caricamento sul PC è stato confermato dall’utente il 22 novembre. La CI non accede al database operativo.
 
-D12 implementato e verificato: sei nuovi test superati, inclusi tre su PostgreSQL reale; CI 45046830014 verde anche per regressione e Windows. Caricamento locale ancora da eseguire. Il dataset amplia i casi del collaudo, non chiude i test umani. UX-01 e UX-02 sono stati confermati nella prima sessione; l’utente ha chiesto di ripartire da UX-01 al prossimo incontro. UX-03–UX-05 restano da eseguire. Il logo è stato confermato sul PC. A06 e pubblicazione online rimangono rinviate.
+D12 implementato e verificato: sei nuovi test superati, inclusi tre su PostgreSQL reale; CI 45046830014 verde anche per regressione e Windows. Caricamento locale confermato; collaudo analitico dei 15 scenari ancora aperto. Il dataset amplia i casi del collaudo, non chiude i test umani. UX-01 e UX-02 sono stati confermati nella prima sessione; l’utente ha chiesto di ripartire da UX-01 al prossimo incontro. UX-03–UX-05 restano da eseguire. Il logo è stato confermato sul PC. A06 e pubblicazione online rimangono rinviate.
 
 ## D09 — nuova esperienza operativa, 22 novembre 2026
 
@@ -57,9 +57,9 @@ Aggiornato il 21 novembre 2026 dopo il collaudo utente e la preparazione della d
 | ID | Attivita' | Stato attuale | Condizione per chiuderla |
 |---|---|---|---|
 | A01 | MVP locale, repository e runbook | Realizzata | Conservare avvio riproducibile e documentazione a ogni rilascio. |
-| A02 | Regressione API e riconoscimento | Realizzata, estesa | Suite corrente 36 Python e 11 Node. |
+| A02 | Regressione API e riconoscimento | Realizzata, estesa | Suite corrente 57 Python e 11 Node. |
 | A03 | Collaudo browser preventivi e CI | Realizzata | Regressione mantenuta sul rilascio. |
-| A04 | Browser fatture e guida | Realizzata, estesa | Suite corrente 20 Chromium e collaudo avvio Windows. |
+| A04 | Browser fatture e guida | Realizzata, estesa | Suite corrente 23 Chromium e collaudo avvio Windows. |
 | A05 | Prima prova di sviluppo multiagente | Prova storica eseguita | Non equivale a orchestrazione continuativa: questa resta da progettare e sviluppare. |
 | A06 | Gestionale reale e definizione pilota | APERTA, ricerca in corso | Identificare prodotto, referente, azienda di prova, accessi e criteri di accettazione. |
 | A07 | Integrazione gestionale in lettura | In attesa di A06 | Confronto anagrafiche, fatture, scadenze e incassi con dati reali. |
@@ -76,13 +76,15 @@ Aggiornato il 21 novembre 2026 dopo il collaudo utente e la preparazione della d
 | D02 | Analisi scheda, domande e attivita' | Implementato, confermato nei flussi provati | Valutare qualita' su piu' casi. |
 | D03 | Email programmate e verifica saldo | Implementato; collaudo storico parziale | Prove esterne rinviate; worker non avviato da D08. |
 | D04 | Classifiche clienti e azioni AI locali | Implementato; AC-01–06 e AC-10 confermati | AC-07 e usabilita' AC-08 ancora aperti; AC-09 coperto automaticamente. |
-| D05 | Tracciabilita' e registro Excel | Aggiornato, 48 casi | Registrare ogni nuova prova con data, versione e osservato. |
+| D05 | Tracciabilita' e registro Excel | Aggiornato, 58 casi | Registrare ogni nuova prova con data, versione e osservato. |
 | D06 | Conservazione testo email non confermato | Fix verificato automaticamente | Collaudo manuale T04 da eseguire; bozza limitata alla pagina aperta. |
 | D07 | Consolidamento della demo | Incluso nel rilascio della PR #8 su main | Verificare esito merge e conservare riferimento al rilascio. |
 | D08 | Avvio locale semplificato | Implementato; verificato su Windows in CI | Collaudo utente AC-11 del doppio clic e dell'apertura browser. |
 | D09 | Revisione UX/UI | Implementata e verificata in CI | UX-01–UX-05 sul PC e usabilità con utenti rappresentativi. |
 | D10 | PostgreSQL e trasferimento archivio | Migrazione e primo avvio utente confermati | PG-03 in corso, PG-04–05 da eseguire. |
 | D11 | Registro storico delle operazioni | Da pianificare | Definire eventi, autori, date, conservazione e prove; nessuna ricostruzione retroattiva. |
+| D12 | Dataset dimostrativo esteso | Caricamento utente confermato | Verificare i 15 scenari analitici del CSV; DM-01 superato. |
+| D13 | Assistente conversazionale consultivo | Implementato e verificato in CI | AS-01–AS-08 con Ollama reale sul PC; esiti utente ancora aperti. |
 
 ## Prossima verifica: D09 sul PC, senza attendere A06
 

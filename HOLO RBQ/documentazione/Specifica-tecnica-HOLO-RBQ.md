@@ -66,7 +66,7 @@ L'[Excel aggiornato](HOLO-RBQ-Registro-test-2026-11-21.xlsx) contiene **37 casi*
 
 ## Stato corrente — 21 novembre 2026
 
-Requisiti aggiunti oggi: RF-14 confronto portafoglio, RF-15 azioni AI interne, RF-16 registro dei collaudi e RF-17 esclusione di nuove interazioni esterne. [Specifica di dettaglio del modulo](Analisi-portafoglio-clienti.md), [piano aggiornato](Piano-generale.md), [Excel con 36 casi](HOLO-RBQ-Registro-test-2026-11-21.xlsx). Il ramo della PR #8 include i sorgenti e la documentazione consolidata, mentre l'integrazione in main resta aperta.
+Requisiti aggiunti oggi: RF-14 confronto portafoglio, RF-15 azioni AI interne, RF-16 registro dei collaudi e RF-17 esclusione di nuove interazioni esterne. [Specifica di dettaglio del modulo](Analisi-portafoglio-clienti.md), [piano aggiornato](Piano-generale.md), [Excel con 58 casi](HOLO-RBQ-Registro-test-2026-11-21.xlsx). Il ramo della PR #8 include i sorgenti e la documentazione consolidata, mentre l'integrazione in main resta aperta.
 
 Evidenza automatica sul commit `c40639f`: [CI 44881200826](https://github.com/maxgia/HOLO-RBQ/actions/runs/44881200826), 19 test Python, 11 Node e 13 Chromium superati. Email e AI simulate; modello reale non disponibile nell'ambiente. Nessuna nuova prova SMTP, usabilità con utenti o attestazione di conformità. Le sezioni datate sotto conservano la cronologia: pannello email, consegna reale e sospensione per saldo sono stati confermati dall'utente il 20 novembre. Restano aperti T04 e i casi indicati nel registro.
 
@@ -97,7 +97,7 @@ Nuovo RF-23: conservare oggetto, testo e ora non confermati durante riprogrammaz
 | RF-13 | Consultare e collaudare il flusso con il gestionale reale. | A06–A07. Prima integrazione prevista in sola lettura, con confronto tra anagrafiche, fatture, incassi e scadenze. |
 | RF-14 | Confrontare clienti per valore registrato e criticità degli incassi. | PR #8. Punteggi distinti, ricerca, ordinamento e dati di supporto; niente valutazione predittiva o di margine senza dati. AC-01–04. |
 | RF-15 | Ottenere suggerimenti AI di azioni interne di gestione e fidelizzazione. | PR #8. Regole sempre disponibili, Ollama locale facoltativo con scelta vincolata e nessun invio. AC-05–07. |
-| RF-16 | Riprendere il collaudo senza confondere test automatici e conferme personali. | Excel con 36 casi, storico, passi, attesi, copertura automatica e campi modificabili per nuovo esito, data, versione, osservazioni. |
+| RF-16 | Riprendere il collaudo senza confondere test automatici e conferme personali. | Excel con 58 casi, storico, passi, attesi, copertura automatica e campi modificabili per nuovo esito, data, versione, osservazioni. |
 | RF-17 | Avanzare soltanto su funzionalità interne. | Nessuna nuova integrazione esterna o invio reale; worker non necessario. Test SMTP simulati e prove esterne rinviate. |
 | RF-18 | Evitare la riproposizione di HTML vecchio dopo aggiornamento e riavvio. | Risposta `/` con Cache-Control no-store, test API di nuova pagina e browser con reload normale. Una scheda aperta richiede ricaricamento; vecchia cache può richiedere Ctrl+F5 una volta. AC-10. |
 | RF-19 | Mantenere le colonne e indicare Non classificato nella posizione del cliente senza storico. | Solo etichetta frontend, nessuna modifica ai punteggi o alle parità. Test Chromium e ricontrollo utente AC-10. |
