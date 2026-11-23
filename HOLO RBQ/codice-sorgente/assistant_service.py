@@ -49,6 +49,7 @@ def fold(value):
 
 
 WRITE = re.compile(r'\b(cancella|elimina|modifica|registra|paga|salda|invia|spedisci|programma|riprogramma|crea|delete|drop|alter|insert|update|truncate)\b', re.I)
+UNAVAILABLE = re.compile(r'\b(margine|margini|redditivita|redditizio|redditizi|costi|previsioni|prevedi|solvibilita|puntualita)\b')
 REFERENCE = re.compile(r'(?<![\w-])(?:RBQ-D\d{2}-F\d{2}|F-\d+)(?![\w-])', re.I)
 LOG = logging.getLogger('holo.assistant')
 if not LOG.handlers:
@@ -139,14 +140,14 @@ def scope_clients(clients, question, plan, context):
     aliases = [(c, fold(c['name']).removeprefix('demo | ').strip()) for c in clients]
     full = [c for c, name in aliases if re.search(r'(?<!\w)'+re.escape(fold(c['name']))+r'(?!\w)',q) or
             (re.search(r'(?<!\w)'+re.escape(name)+r'(?!\w)',q) and
-             ((set(re.findall(r'\w+',name))-stop) or re.search(r'\b(cliente|di|del|per)\s+'+re.escape(name)+r'(?!\w)',q)))]
+             ((set(re.findall(r'\w+',name))-stop) or name.startswith('cliente ') or re.search(r'\b(cliente|di|del|per)\s+'+re.escape(name)+r'(?!\w)',q)))]
     if full:
         return (full[0]['id'], []) if len(full)==1 else (None, full)
     if plan.client_query:
         requested = fold(plan.client_query.strip())
         if not requested or requested not in q:
             raise HTTPException(502, 'Nome cliente non verificabile nella domanda. Specifica il nome completo.')
-        if not (set(re.findall(r'\w+',requested))-stop) and not re.search(r'\b(cliente|di|del|per)\s+'+re.escape(requested)+r'(?!\w)',q) and 'demo |' not in requested:
+        if not (set(re.findall(r'\w+',requested))-stop) and not requested.startswith('cliente ') and not re.search(r'\b(cliente|di|del|per)\s+'+re.escape(requested)+r'(?!\w)',q) and 'demo |' not in requested:
             raise HTTPException(502,'Il filtro cliente è ambiguo con i termini della domanda. Specifica il nome completo oppure tutti i clienti.')
         candidates = [c for c in clients if requested in fold(c['name'])]
         return (candidates[0]['id'], []) if len(candidates)==1 else (None, candidates or [{'missing':True}])
@@ -186,6 +187,7 @@ def result_table(operation, clients, invoices, drafts, activities, analysis, cid
         inv=[r for r in inv if {'open':r['amount']>r['paid'],'overdue':r['amount']>r['paid'] and r['due_date']<today.isoformat(),'paid':r['amount']==r['paid']}[plan.invoice_status]]
     links=[]
     if operation == 'search_clients':
+        if start or end:raise HTTPException(422,'Le anagrafiche non hanno una data storica disponibile: rimuovi il filtro temporale.')
         chosen = [c for c in clients if not cid or c['id']==cid]
         columns=['Cliente','Email','Telefono']
         rows=[[c['name'],c['email'] or 'Non indicata',c['phone'] or 'Non indicato'] for c in chosen]
@@ -281,7 +283,10 @@ def prepare(data, sessions):
         if not pending or data.selected_client_id not in pending['ids'] or data.question!=pending['question']:
             raise HTTPException(422,'Selezione cliente non valida per questa richiesta.')
         return key,state,QueryPlan.model_validate(pending['plan'])
-    if WRITE.search(data.question):
+    normalized=fold(data.question)
+    historical_payments=bool(re.search(r'\b(incassi|incassato|pagamenti)\b',normalized) and
+                             re.search(r'\b(mese|anno|settimana|ieri|gennaio|febbraio|marzo|aprile|maggio|giugno|luglio|agosto|settembre|ottobre|novembre|dicembre)\b',normalized))
+    if WRITE.search(data.question) or UNAVAILABLE.search(normalized) or historical_payments:
         return key,state,QueryPlan(operation='unsupported')
     return key,state,interpret(data.question,state['context'])
 

@@ -95,6 +95,14 @@ class AssistantTests(unittest.TestCase):
         self.assertEqual(self.ask('Fatture nel periodo','list_invoices',date_from=date(2030,2,1),date_to=date(2030,1,1)).status_code,422)
         self.assertEqual(self.ask('Bozze di oggi','list_quotes',period='today').status_code,422)
         self.assertEqual(self.ask('Classifica oggi','portfolio_analysis',period='today').status_code,422)
+        self.assertEqual(self.ask('Clienti di oggi','search_clients',period='today').status_code,422)
+
+    def test_unavailable_metrics_do_not_become_fake_rankings(self):
+        for question in ['Quale cliente è più redditizio?','Prevedi gli incassi','Puntualità storica di Rossi','Quanto ho incassato a novembre?']:
+            with patch('assistant_service.local_structured_response') as model:
+                result=self.api.post('/api/assistant/query',json={'question':question}).json()
+            model.assert_not_called()
+            self.assertEqual(result['status'],'unsupported');self.assertIsNone(result['read_at'])
 
     def test_write_requests_are_blocked_before_model_and_database_unchanged(self):
         before=self.api.get('/api/invoices').json()
@@ -138,6 +146,8 @@ class AssistantTests(unittest.TestCase):
         self.assertIsNone(cid);self.assertEqual(choices,[])
         cid,_=scope_clients(clients,'Fatture del cliente Scadenza oggi',QueryPlan(operation='list_invoices'),{})
         self.assertEqual(cid,'today')
+        cid,_=scope_clients([{'id':'first','name':'DEMO | Cliente consolidato'}],'Situazione del cliente consolidato',QueryPlan(operation='client_balance',client_query='cliente consolidato'),{})
+        self.assertEqual(cid,'first')
 
 
 class ConversationTests(unittest.TestCase):
